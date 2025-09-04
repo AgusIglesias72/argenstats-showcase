@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para indicadores generales
+model Indicator {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String?
+  unit        String?
+  source      String?
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  values      IndicatorValue[]
+  
+  @@index([slug])
+  @@map("indicators")
+}
+
+// Valores de indicadores
+model IndicatorValue {
+  id          String    @id @default(uuid())
+  indicatorId String
+  date        DateTime
+  value       Float
+  variation   Float?
+  metadata    Json?     // Para datos adicionales
+  createdAt   DateTime  @default(now())
+  
+  indicator   Indicator @relation(fields: [indicatorId], references: [id])
+  
+  @@unique([indicatorId, date])
+  @@index([date])
+  @@map("indicator_values")
+}
+
+// EMAE - Estimador Mensual de Actividad Económica
+model Emae {
+  id                      String    @id @default(uuid())
+  date                    DateTime  @db.Date
+  sectorCode              String    @map("sector_code")
+  sectorName              String    @map("sector_name")
+  originalValue           Float     @map("original_value")
+  seasonallyAdjustedValue Float?    @map("seasonally_adjusted_value")
+  cycleTrendValue         Float?    @map("cycle_trend_value")
+  monthlyVariation        Float?    @map("monthly_variation")
+  yearlyVariation         Float?    @map("yearly_variation")
+  cycleTrendVariation     Float?    @map("cycle_trend_variation")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  @@unique([date, sectorCode], name: "date_sectorCode")
+  @@map("emae")
+}
+
+// IPC - Índice de Precios al Consumidor
+model Ipc {
+  id                      String   @id @default(uuid())
+  date                    DateTime
+  component               String
+  componentCode           String   @map("component_code")
+  componentType           String   @map("component_type") @default("RUBRO")
+  indexValue              Float    @map("index_value")
+  monthlyPctChange        Float?   @map("monthly_pct_change")
+  yearlyPctChange         Float?   @map("yearly_pct_change")
+  accumulatedPctChange    Float?   @map("accumulated_pct_change")
+  region                  String   @default("Nacional")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@unique([date, componentCode, region])
+  @@index([date, region])
+  @@index([componentCode])
+  @@map("ipc")
+}
+
+
+// Dolar - Valores del Dolar
+model DollarRates {
+  id         String   @id @default(uuid())
+  date       DateTime @db.Date
+  dollarType String   @map("dollar_type")
+  buyPrice   Float    @map("buy_price")
+  sellPrice  Float    @map("sell_price")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  @@unique([date, dollarType], name: "date_dollarType")
+  @@index([dollarType])
+  @@index([date])
+  @@map("dollar_rates")
+}
+
+// Datos de Mercado de Trabajo
+model LaborMarket {
+  id                            String   @id @default(uuid())
+  date                          DateTime @db.Date
+  period                        String
+  dataType                      String   @map("data_type")
+  region                        String
+  gender                        String?
+  ageGroup                      String?  @map("age_group")
+  demographicSegment            String?  @map("demographic_segment")
+  activityRate                  Float?   @map("activity_rate")
+  employmentRate                Float?   @map("employment_rate")
+  unemploymentRate              Float?   @map("unemployment_rate")
+  totalPopulation               Float?   @map("total_population")
+  economicallyActivePopulation  Float?   @map("economically_active_population")
+  employedPopulation            Float?   @map("employed_population")
+  unemployedPopulation          Float?   @map("unemployed_population")
+  inactivePopulation            Float?   @map("inactive_population")
+  sourceFile                    String?  @map("source_file")
+  createdAt                     DateTime @default(now()) @map("created_at")
+  updatedAt                     DateTime @updatedAt @map("updated_at")
+  
+  @@unique([date, region, gender, ageGroup, demographicSegment], name: "unique_labor_market_record")
+  @@index([dataType])
+  @@index([region])
+  @@index([date])
+  @@map("labor_market")
+}
+
+// Datos de Pobreza e Indigencia
+model PovertyData {
+  id                        String   @id @default(uuid())
+  date                      DateTime @db.Date
+  period                    String
+  semester                  Int
+  year                      Int
+  dataType                  String   @map("data_type")
+  region                    String
+  cuadroSource              String?  @map("cuadro_source")
+  povertyRatePersons        Float?   @map("poverty_rate_persons")
+  povertyRateHouseholds     Float?   @map("poverty_rate_households")
+  indigenceRatePersons      Float?   @map("indigence_rate_persons")
+  indigenceRateHouseholds   Float?   @map("indigence_rate_households")
+  indigenceGap              Float?   @map("indigence_gap")
+  povertyGap                Float?   @map("poverty_gap")
+  indigenceSeverity         Float?   @map("indigence_severity")
+  povertySeverity           Float?   @map("poverty_severity")
+  variableName              String?  @map("variable_name")
+  variableValue             Float?   @map("variable_value")
+  sourceFile                String?  @map("source_file")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+  
+  @@unique([date, region], name: "unique_poverty_record")
+  @@index([dataType])
+  @@index([region])
+  @@index([date])
+  @@index([year])
+  @@index([semester])
+  @@map("poverty_data")
+}
+
+model BcraVariable {
+  id                String   @id @default(uuid())
+  variableId        Int      @map("variable_id")
+  variableName      String   @map("variable_name")
+  description       String?
+  category          String?
+  seriesType        String?  @map("series_type")
+  periodicity       String?
+  unitExpression    String?  @map("unit_expression")
+  currency          String?
+  firstDateInformed DateTime? @map("first_date_informed") @db.Date
+  lastDateInformed  DateTime? @map("last_date_informed") @db.Date
+  lastValueInformed Float?   @map("last_value_informed")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  data              BcraData[]
+  
+  @@unique([variableId])
+  @@index([variableName])
+  @@map("bcra_variables")
+}
+
+model BcraData {
+  id         String       @id @default(uuid())
+  variableId Int          @map("variable_id")
+  date       DateTime     @db.Date
+  value      Float
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  
+  variable   BcraVariable @relation(fields: [variableId], references: [variableId])
+  
+  @@unique([variableId, date])
+  @@index([date])
+  @@index([variableId])
+  @@map("bcra_data")
+}
+
+// Contry Risk
+model CountryRisk {
+  id               String   @id @default(uuid())
+  date             DateTime @db.Date
+  embiOfficial     Float?   @map("embi_official")      // Índice oficial JP Morgan
+  embiEstimated    Float?   @map("embi_estimated")     // Tu índice estimador
+  lastUpdate       DateTime @map("last_update")         // Para trackear actualizaciones intradiarias
+  sourceOfficial   String?  @map("source_official")     // "JP Morgan" 
+  sourceEstimated  String?  @map("source_estimated")    // "ArgentStats Estimator"
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  
+  @@unique([date])
+  @@index([date])
+  @@map("country_risk")
+}
+
+// Registro de ejecuciones de cron
+model CronExecution {
+  id            String   @id @default(uuid())
+  taskName      String   @map("task_name")
+  executionTime DateTime @map("execution_time")
+  status        String   // 'success', 'error', 'partial'
+  results       Json
+  errorDetails  String?  @map("error_details")
+  recordsProcessed Int   @map("records_processed") @default(0)
+  createdAt     DateTime @default(now())
+  
+  @@index([taskName, executionTime])
+  @@map("cron_executions")
+}
+
+// Para dashboard y usuarios
+model DashboardWidget {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   // 'indicator', 'chart', 'table', etc.
+  config      Json     // Configuración del widget
+  position    Int
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("dashboard_widgets")
+}
