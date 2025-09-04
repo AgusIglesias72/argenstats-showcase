@@ -1,7 +1,22 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { LoginModal } from '@/components/auth/login-modal'
-import { ConversorUsdArs } from '@/components/conversor/conversor'
+import DollarConverter from '@/components/conversor/conversor'
+import { 
+  Clock, 
+  ChevronRight,
+  BarChart,
+  Zap,
+  ArrowRight
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 export const metadata: Metadata = {
   title: 'Conversor de Dólar a Peso Argentino - USD a ARS en Tiempo Real | ArgenStats',
@@ -31,14 +46,14 @@ export default function ConversorPage() {
       
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 py-12">
+        <section className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 pt-12 pb-8">
           <div className="container mx-auto px-4 max-w-4xl">
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
                 Conversor de Dólar a Peso Argentino{' '}
                 <span className="text-green-600 dark:text-green-400">en Tiempo Real</span>
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                 Calculadora de dólar a peso argentino hoy - Conversor USD ARS con cotización 
                 dólar blue, oficial, MEP y CCL actualizado minuto a minuto.
               </p>
@@ -47,91 +62,304 @@ export default function ConversorPage() {
         </section>
 
         {/* Conversor Component */}
-        <section className="py-8">
+        <section className="pb-12 -mt-4">
           <div className="container mx-auto px-4 max-w-4xl">
-            <ConversorUsdArs />
+            <DollarConverter />
           </div>
         </section>
 
-        {/* Info Section */}
-        <section className="py-12 bg-white dark:bg-gray-800">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg mb-4">
-                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+        {/* Features Grid */}
+        <section className="py-16 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                La Herramienta de Conversión Más Completa
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Convertí USD a ARS con todas las cotizaciones del mercado argentino actualizadas en tiempo real
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="group hover:scale-105 transition-transform duration-200">
+                <div className="h-full bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-800">
+                  <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-xl flex items-center justify-center mb-4">
+                    <Zap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    Actualización Instantánea
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Cotizaciones actualizadas de manera constante
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tiempo Real</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Cotizaciones actualizadas al instante desde múltiples fuentes confiables
-                </p>
               </div>
-              
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg mb-4">
-                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+
+              <div className="group hover:scale-105 transition-transform duration-200">
+                <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center mb-4">
+                    <BarChart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    7 Tipos de Cambio
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Oficial, Blue, MEP, CCL, Crypto, Mayorista y Tarjeta en un solo lugar
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Múltiples Tipos</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Oficial, Blue, MEP, CCL, Crypto, Mayorista y Tarjeta en una sola herramienta
-                </p>
               </div>
-              
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg mb-4">
-                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+
+              <div className="group hover:scale-105 transition-transform duration-200">
+                <div className="h-full bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center mb-4">
+                    <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    Datos Históricos
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Consultá cotizaciones de cualquier fecha pasada para análisis y comparación
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Datos Históricos</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Consulta cotizaciones de fechas anteriores para análisis y comparación
-                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section className="py-12 bg-gray-50 dark:bg-gray-900">
+        {/* How to Use Section */}
+        <section className="py-16 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                ¿Cómo Usar el Conversor?
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300">
+                Convertí dólares a pesos argentinos en 3 simples pasos
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="relative">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-4">
+                    1
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Ingresá el Monto
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Escribí la cantidad de dólares o pesos que querés convertir
+                  </p>
+                </div>
+                <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600" />
+              </div>
+
+              <div className="relative">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-4">
+                    2
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Elegí el Tipo
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Seleccioná entre Blue, Oficial, MEP, CCL y más tipos de cambio
+                  </p>
+                </div>
+                <ArrowRight className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600" />
+              </div>
+
+              <div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-4">
+                    3
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Obtené el Resultado
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Mirá instantáneamente el valor convertido con la cotización actual
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Dollar Types Explanation */}
+        <section className="py-16 bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+                Tipos de Dólar en Argentina
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    Dólar Oficial
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Cotización establecida por el Banco Central de la República Argentina (BCRA). 
+                    Es el tipo de cambio utilizado para operaciones oficiales y tiene restricciones de acceso.
+                  </p>
+                </div>
+
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                    Dólar Blue
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Cotización del mercado informal o paralelo. Es el valor del dólar en casas de cambio 
+                    no oficiales, generalmente más alto que el oficial.
+                  </p>
+                </div>
+
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Dólar MEP
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Dólar Mercado Electrónico de Pagos. Se obtiene mediante la compra y venta de bonos 
+                    en el mercado de valores local.
+                  </p>
+                </div>
+
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    Dólar CCL
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Contado con Liquidación. Similar al MEP pero permite transferir divisas al exterior 
+                    mediante operaciones con bonos.
+                  </p>
+                </div>
+
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Dólar Crypto
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Valor del dólar en el mercado de criptomonedas, calculado a través de stablecoins 
+                    como USDT o USDC.
+                  </p>
+                </div>
+
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    Dólar Tarjeta
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Cotización aplicada a compras con tarjeta en el exterior. Incluye el dólar oficial 
+                    más impuestos (PAIS, Ganancias).
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section with Accordion */}
+        <section className="py-16 bg-gray-50 dark:bg-gray-900">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">
               Preguntas Frecuentes
             </h2>
-            <div className="grid gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  ¿Con qué frecuencia se actualizan las cotizaciones?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Nuestras cotizaciones se actualizan cada 30 minutos durante el horario bancario y de forma continua 
-                  para el dólar blue y crypto. Los datos provienen de fuentes oficiales como DolarAPI y el BCRA.
-                </p>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  ¿Qué diferencia hay entre cada tipo de dólar?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  <strong>Oficial:</strong> Cotización del BCRA. <strong>Blue:</strong> Mercado paralelo. 
-                  <strong>MEP:</strong> Mercado Electrónico de Pagos. <strong>CCL:</strong> Contado con Liquidación. 
-                  Cada uno tiene diferentes regulaciones y disponibilidad.
-                </p>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  ¿Puedo ver cotizaciones históricas?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Sí, puedes seleccionar cualquier fecha anterior usando el selector de fecha y ver 
-                  las cotizaciones que estuvieron vigentes en ese momento.
-                </p>
+            
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1" className="bg-white dark:bg-gray-800 rounded-lg mb-4 px-6">
+                <AccordionTrigger className="text-left hover:no-underline">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ¿Con qué frecuencia se actualizan las cotizaciones?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 dark:text-gray-300">
+                  Nuestras cotizaciones se actualizan automáticamente cada 30 segundos durante el horario bancario. 
+                  Para el dólar blue y crypto, la actualización es continua las 24 horas. Los datos provienen de 
+                  fuentes oficiales como el BCRA y APIs especializadas en el mercado cambiario argentino.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3" className="bg-white dark:bg-gray-800 rounded-lg mb-4 px-6">
+                <AccordionTrigger className="text-left hover:no-underline">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ¿Puedo ver cotizaciones históricas?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 dark:text-gray-300">
+                  Sí, podés consultar cotizaciones de cualquier fecha pasada usando el selector de fecha en la parte 
+                  superior derecha del conversor. Simplemente hacé clic en el ícono del calendario, elegí la fecha 
+                  deseada y el conversor mostrará las cotizaciones de ese día específico.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-5" className="bg-white dark:bg-gray-800 rounded-lg mb-4 px-6">
+                <AccordionTrigger className="text-left hover:no-underline">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ¿De dónde obtienen los datos de las cotizaciones?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 dark:text-gray-300">
+                  Nuestros datos provienen de múltiples fuentes confiables: el Banco Central de la República Argentina 
+                  (BCRA) para el dólar oficial, APIs especializadas en el mercado cambiario para el blue, y datos en 
+                  tiempo real de los principales exchanges y brokers para MEP, CCL y crypto. Esto garantiza la máxima 
+                  precisión y actualización de las cotizaciones.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-6" className="bg-white dark:bg-gray-800 rounded-lg mb-4 px-6">
+                <AccordionTrigger className="text-left hover:no-underline">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                    ¿El conversor es gratuito?
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 dark:text-gray-300">
+                  Sí, nuestro conversor de dólar a peso argentino es completamente gratuito y sin límites de uso. 
+                  Podés realizar todas las conversiones que necesites, consultar datos históricos y cambiar entre 
+                  todos los tipos de dólar sin ningún costo.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-gradient-to-br from-emerald-600 to-green-700">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Explorá Todas las Cotizaciones del Dólar
+              </h2>
+              <p className="text-xl text-emerald-100 mb-8">
+                Accedé a gráficos detallados, análisis de tendencias y herramientas 
+                profesionales para el mercado cambiario argentino
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/dolar">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-emerald-700 hover:bg-emerald-50 px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  >
+                    Ver Todas las Cotizaciones
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="bg-transparent text-white border-2 border-white hover:bg-white hover:text-emerald-700 px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    Dashboard Completo
+                    <BarChart className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

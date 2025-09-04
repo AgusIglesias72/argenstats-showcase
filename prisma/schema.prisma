@@ -255,6 +255,40 @@ model CronExecution {
   @@map("cron_executions")
 }
 
+model ApiKey {
+  id          String    @id @default(uuid())
+  key         String    @unique @default(cuid())
+  name        String
+  userId      String    // ID del usuario de Clerk
+  userEmail   String?   // Email opcional para referencia
+  tier        String    @default("free") // free, basic, pro, enterprise
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  
+  usage       ApiUsage[]
+  
+  @@index([key])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model ApiUsage {
+  id           String   @id @default(uuid())
+  apiKeyId     String   @map("api_key_id")
+  endpoint     String
+  method       String
+  statusCode   Int      @map("status_code")
+  responseTime Int      @map("response_time") // en ms
+  timestamp    DateTime @default(now())
+  
+  apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  
+  @@index([apiKeyId, timestamp])
+  @@map("api_usage")
+}
+
 // Para dashboard y usuarios
 model DashboardWidget {
   id          String   @id @default(uuid())

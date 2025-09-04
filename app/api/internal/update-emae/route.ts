@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { IndecFetcher } from '@/lib/services/indec/indec-fetcher'
+import { invalidateCache } from '@/lib/api/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -136,6 +137,8 @@ async function bulkUpsertEmae(data: any[]): Promise<number> {
       })
       
       totalProcessed += result.count
+      await invalidateCache('economic-activity:')
+
       console.info(`Insertados ${totalProcessed}/${data.length} registros`)
     } catch (error) {
       console.error(`Error en batch ${Math.floor(i/batchSize) + 1}:`, error)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { IndecFetcher } from '@/lib/services/indec/indec-fetcher'
+import { invalidateCache } from '@/lib/api/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +39,10 @@ export async function GET(request: NextRequest) {
     const variationsTime = ((Date.now() - variationsStartTime) / 1000).toFixed(2)
     console.info(`✓ Variaciones calculadas en ${variationsTime}s`)
 
+        // 🔥 AQUÍ: Invalidar todo el cache de inflación después de actualizar
+        await invalidateCache('inflation:')
+        console.info('✓ Cache de inflación invalidado')
+
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2)
 
     await prisma.cronExecution.create({
@@ -53,7 +58,9 @@ export async function GET(request: NextRequest) {
             upsert: `${upsertTime}s`,
             variaciones: `${variationsTime}s`,
             total: `${totalTime}s`
-          }
+          },
+          cacheInvalidated: true
+
         }
       }
     })
@@ -62,7 +69,9 @@ export async function GET(request: NextRequest) {
       success: true, 
       recordsProcessed: totalProcessed,
       executionTime: `${totalTime}s`,
-      message: `Se actualizaron ${totalProcessed} registros del IPC en ${totalTime} segundos`
+      message: `Se actualizaron ${totalProcessed} registros del IPC en ${totalTime} segundos`,
+      cacheInvalidated: true
+
     })
 
   } catch (error) {
