@@ -42,7 +42,7 @@ interface ArgentinaDatosResponse {
     venta: number
   }
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key')
     if (apiKey !== process.env.ADMIN_API_KEY) {

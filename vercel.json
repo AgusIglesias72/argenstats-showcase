@@ -1,0 +1,32 @@
+{
+    "crons": [
+      {
+        "path": "/api/internal/update-dollar",
+        "schedule": "5,35 * * * *"
+      },
+      {
+        "path": "/api/internal/update-country-risk",
+        "schedule": "5,35 * * * *"
+      },
+      {
+        "path": "/api/internal/update-bcra",
+        "schedule": "5 19 * * *"
+      },
+      {
+        "path": "/api/internal/update-emae",
+        "schedule": "5 19 * * *"
+      },
+      {
+        "path": "/api/internal/update-ipc",
+        "schedule": "5 19 * * *"
+      },
+      {
+        "path": "/api/internal/update-labor-market",
+        "schedule": "5 19 * * *"
+      },
+      {
+        "path": "/api/internal/update-poverty",
+        "schedule": "5 19 * * *"
+      }
+    ]
+  }

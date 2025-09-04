@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { BcraFetcher } from '@/lib/services/bcra/bcra-fetcher'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key')
     if (apiKey !== process.env.ADMIN_API_KEY) {
@@ -199,48 +199,5 @@ async function performIncrementalUpdate(fetcher: BcraFetcher) {
     variablesUpdated: existingVariables.length,
     dataPointsAdded: totalDataPoints,
     details
-  }
-}
-
-// Endpoint GET para consultar datos
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const variableId = searchParams.get('variableId')
-    const from = searchParams.get('from')
-    const to = searchParams.get('to')
-    
-    const where: any = {}
-    
-    if (variableId) {
-      where.variableId = parseInt(variableId)
-    }
-    
-    if (from || to) {
-      where.date = {}
-      if (from) where.date.gte = new Date(from)
-      if (to) where.date.lte = new Date(to)
-    }
-    
-    const data = await prisma.bcraData.findMany({
-      where,
-      include: {
-        variable: true
-      },
-      orderBy: { date: 'desc' },
-      take: 1000
-    })
-    
-    return NextResponse.json({
-      success: true,
-      count: data.length,
-      data
-    })
-    
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch BCRA data', details: (error as Error).message },
-      { status: 500 }
-    )
   }
 }

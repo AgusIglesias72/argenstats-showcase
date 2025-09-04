@@ -222,6 +222,24 @@ model CountryRisk {
   @@map("country_risk")
 }
 
+
+// Agregar este modelo al final de tu schema.prisma
+
+// Newsletter Subscriptions
+model Newsletter {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  isActive      Boolean  @default(true)
+  subscribedAt  DateTime @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  source        String?  @default("website") // website, api, import, etc
+  metadata      Json?    // Para guardar info adicional como IP, user agent, etc.
+  
+  @@index([email])
+  @@index([subscribedAt])
+  @@map("newsletter_subscriptions")
+}
+
 // Registro de ejecuciones de cron
 model CronExecution {
   id            String   @id @default(uuid())

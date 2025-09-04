@@ -1,14 +1,58 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ArrowRight, Calendar, TrendingUp, Activity, DollarSign } from 'lucide-react'
+import { ArrowRight, Calendar, TrendingUp, Activity, DollarSign, Mail, ChevronDown, CheckCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const ARGENSTATS_BLUE = '#005288'
 
 export function HeroSection() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState(false)
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email) return
+    
+    setLoading(true)
+    setMessage('')
+    setError(false)
+    
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setMessage(data.message)
+        setError(false)
+        setEmail('') // Limpiar el campo
+      } else {
+        setMessage(data.error || 'Error al suscribirse')
+        setError(true)
+      }
+    } catch (err) {
+      setMessage('Error de conexión. Por favor intentá de nuevo.')
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const scrollToIndicators = () => {
+    const element = document.getElementById('main-indicators')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <section className="relative bg-white dark:bg-gray-900 overflow-hidden">
@@ -61,41 +105,90 @@ export function HeroSection() {
               Accede a indicadores económicos oficiales del INDEC, cotizaciones del dólar y herramientas de análisis profesional.
             </motion.p>
 
-            {/* Search bar */}
-            <motion.form 
+            {/* Newsletter Form */}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="max-w-lg mx-auto lg:ml-0"
-              onSubmit={(e) => {
-                e.preventDefault()
-              }}
             >
-              <label htmlFor="hero-search" className="sr-only">Buscar indicador</label>
-              <div className="relative">
-                <input 
-                  type="search" 
-                  id="hero-search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#005288] focus:border-[#005288] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                  placeholder="Buscar indicador: IPC, EMAE, Dólar..."
-                />
-                <button 
-                  type="submit" 
-                  className="text-white inline-flex items-center absolute right-2.5 bottom-2.5 font-medium rounded-lg text-sm px-4 py-2 cursor-pointer transition-colors"
-                  style={{ backgroundColor: ARGENSTATS_BLUE }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#003d66'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ARGENSTATS_BLUE}
+              <form onSubmit={handleSubscribe}>
+                <label htmlFor="hero-email" className="sr-only">Tu email</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <input 
+                    type="email" 
+                    id="hero-email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="block w-full p-4 pl-12 text-sm text-gray-900 border border-gray-300 
+                    rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#005288] focus:border-[#005288] dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white disabled:opacity-50"
+                    placeholder="Recibí actualizaciones y alertas"
+                    required
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="text-white inline-flex items-center absolute right-2.5 bottom-2.5 font-medium rounded-lg text-sm px-4 py-2 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: loading ? '#003d66' : ARGENSTATS_BLUE }}
+                    onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#003d66')}
+                    onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = ARGENSTATS_BLUE)}
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Suscribiendo...
+                      </span>
+                    ) : (
+                      'Suscribirme'
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Mensaje de feedback */}
+              {message && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mt-3 p-3 rounded-lg flex items-start ${
+                    error 
+                      ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' 
+                      : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                  }`}
                 >
-                  <Search className="w-4 h-4 mr-2" />
-                  Buscar
-                </button>
-              </div>
-            </motion.form>
+                  {!error && <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />}
+                  <span className="text-sm">{message}</span>
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Botón Ver Indicadores */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-6 flex justify-center lg:justify-start"
+            >
+              <button
+                onClick={scrollToIndicators}
+                className="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-all hover:shadow-md cursor-pointer group"
+              >
+                Ver indicadores
+                <ChevronDown className="ml-2 h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
+              </button>
+            </motion.div>
           </div>
-              <div className='hidden lg:block lg:col-span-1'></div>
-          {/* Right content - Browser mockup */}
+              
+          <div className='hidden lg:block lg:col-span-1'></div>
+          
+          {/* Right content - Browser mockup (sin cambios) */}
           <motion.div
             initial={{ opacity: 0, x: 20, rotateY: 15 }}
             whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
@@ -245,21 +338,6 @@ export function HeroSection() {
         </motion.div>
       </div>
     </section>
-  )
-}
-
-function MiniKPI({ label, value, trend, color }: any) {
-  const colorClasses = {
-    red: 'text-red-600 bg-red-50 dark:bg-red-900/20',
-    purple: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20',
-    green: 'text-green-600 bg-green-50 dark:bg-green-900/20'
-  }
-
-  return (
-    <div className={`rounded-lg p-3 ${colorClasses[color as keyof typeof colorClasses]}`}>
-      <div className="text-xs opacity-80 mb-1">{label}</div>
-      <div className="font-bold text-lg">{value}</div>
-    </div>
   )
 }
 

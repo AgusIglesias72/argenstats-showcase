@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { CountryRiskFetcher } from '@/lib/services/country-risk/country-risk-fetcher'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key')
     if (apiKey !== process.env.ADMIN_API_KEY) {
@@ -243,64 +243,6 @@ async function updateTodayOnly(fetcher: any, startTime: number) {
     console.error('Error actualizando datos de hoy:', error)
     return NextResponse.json(
       { error: 'Failed to update today data', details: (error as Error).message },
-      { status: 500 }
-    )
-  }
-}
-
-// GET endpoint para consultar datos
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const from = searchParams.get('from')
-    const to = searchParams.get('to')
-    const latest = searchParams.get('latest')
-    
-    let data
-    
-    if (latest === 'true') {
-      // Obtener último registro con datos más completos
-      data = await prisma.countryRisk.findFirst({
-        where: {
-          OR: [
-            { embiOfficial: { not: null } },
-            { embiEstimated: { not: null } }
-          ]
-        },
-        orderBy: [
-          { date: 'desc' },
-          { lastUpdate: 'desc' }
-        ]
-      })
-    } else {
-      // Obtener rango de datos
-      const where: any = {}
-      
-      if (from || to) {
-        where.date = {}
-        if (from) where.date.gte = new Date(from)
-        if (to) where.date.lte = new Date(to)
-      }
-      
-      data = await prisma.countryRisk.findMany({
-        where,
-        orderBy: [
-          { date: 'desc' },
-          { lastUpdate: 'desc' }
-        ],
-        take: 1000
-      })
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data,
-      timestamp: new Date().toISOString()
-    })
-    
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch country risk data', details: (error as Error).message },
       { status: 500 }
     )
   }
