@@ -10,6 +10,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model UserProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique // ID de Clerk
+  email         String
+  name          String?
+  imageUrl      String?
+  role          String    @default("user") // "user" | "admin"
+  
+  // Redes sociales
+  linkedinUrl   String?
+  xUsername     String?
+  githubUrl     String?
+  websiteUrl    String?
+  
+  // Metadatos
+  bio           String?
+  location      String?
+  company       String?
+  position      String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relaciones
+  apiKeys       ApiKey[]
+  favorites     UserFavorite[]
+  contactSubmissions ContactSubmission[]
+
+  @@index([userId])
+  @@map("user_profiles")
+}
+
+model UserFavorite {
+  id            String    @id @default(uuid())
+  userId        String
+  indicatorType String    // 'ipc', 'cer', 'emae', 'dollar', etc.
+  indicatorId   String?   // ID específico si aplica
+  customName    String?   // Nombre personalizado
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  
+  profile       UserProfile @relation(fields: [userId], references: [userId])
+  
+  @@unique([userId, indicatorType, indicatorId])
+  @@index([userId])
+  @@map("user_favorites")
+}
+
 // Modelo para indicadores generales
 model Indicator {
   id          String   @id @default(uuid())
@@ -260,18 +308,63 @@ model ApiKey {
   key         String    @unique @default(cuid())
   name        String
   userId      String    // ID del usuario de Clerk
-  userEmail   String?   // Email opcional para referencia
-  tier        String    @default("free") // free, basic, pro, enterprise
+  userEmail   String?   
+  tier        String    @default("free")
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   expiresAt   DateTime?
   lastUsedAt  DateTime?
   
   usage       ApiUsage[]
+  profile     UserProfile? @relation(fields: [userId], references: [userId])
   
   @@index([key])
   @@index([userId])
   @@map("api_keys")
+}
+
+model ContactSubmission {
+  id            String    @id @default(uuid())
+  
+  // Datos del contacto
+  name          String
+  email         String
+  subject       String?
+  message       String    @db.Text
+  contactType   String    @map("contact_type") // 'general', 'api', 'bug', 'feature'
+  
+  // Estado y seguimiento
+  status        String    @default("pending") // 'pending', 'in_progress', 'replied', 'resolved'
+  priority      String    @default("normal") // 'low', 'normal', 'high', 'urgent'
+  
+  // Timestamps
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  repliedAt     DateTime? @map("replied_at")
+  resolvedAt    DateTime? @map("resolved_at")
+  
+  // Metadata
+  userAgent     String?   @map("user_agent")
+  ipAddress     String?   @map("ip_address")
+  referrer      String?
+  
+  // Admin
+  adminNotes    String?   @map("admin_notes") @db.Text
+  assignedTo    String?   @map("assigned_to") // ID del admin asignado
+  
+  // Anti-spam
+  isSpam        Boolean   @default(false) @map("is_spam")
+  spamScore     Float?    @map("spam_score")
+  
+  // Relación opcional con usuario registrado
+  userId        String?   @map("user_id")
+  user          UserProfile? @relation(fields: [userId], references: [userId])
+  
+  @@index([status])
+  @@index([contactType])
+  @@index([createdAt])
+  @@index([email])
+  @@map("contact_submissions")
 }
 
 model ApiUsage {

@@ -2,15 +2,16 @@
 
 // Función principal que maneja múltiples indicadores
 export function convertToCSV(data: any, view: string, indicator: string = 'inflation'): string {
-    switch (indicator) {
-      case 'inflation':
-        return convertInflationToCSV(data, view)
-      case 'emae':
-        return convertEmaeToCSV(data, view)
-      // Agregar más indicadores aquí en el futuro
-      default:
-        throw new Error(`Invalid indicator for CSV format: ${indicator}`)
-    }
+  switch (indicator) {
+    case 'inflation':
+      return convertInflationToCSV(data, view)
+    case 'emae':
+      return convertEmaeToCSV(data, view)
+    case 'cer':
+      return convertCERToCSV(data, view)  // ← Agregar esta línea
+    default:
+      throw new Error(`Invalid indicator for CSV format: ${indicator}`)
+  }
   }
   
   // ==================== INFLACIÓN ====================
@@ -294,6 +295,104 @@ export function convertToCSV(data: any, view: string, indicator: string = 'infla
     ].join('\n')
   }
   
+// ==================== CER ====================
+function convertCERToCSV(data: any, view: string): string {
+  switch (view) {
+    case 'current':
+      return formatCurrentCERCSV(data)
+    case 'historical':
+      return formatHistoricalCERCSV(data)
+    case 'calculator':
+      return formatCalculatorCERCSV(data)
+    case 'comparison':
+      return formatComparisonCERCSV(data)
+    default:
+      throw new Error('Invalid view for CER CSV format')
+  }
+}
+
+function formatCurrentCERCSV(data: any): string {
+  const headers = ['Fecha', 'Valor CER', 'Var. Diaria %', 'Var. Mensual %', 'Var. Anual %', 'Var. Acumulada %']
+  const row = [
+    data.date,
+    data.value,
+    data.variations.daily?.toFixed(4) || 'N/A',
+    data.variations.monthly?.toFixed(2) || 'N/A',
+    data.variations.yearly?.toFixed(2) || 'N/A',
+    data.variations.accumulated?.toFixed(2) || 'N/A'
+  ]
+  
+  return [
+    'Coeficiente de Estabilización de Referencia (CER)',
+    'Fuente: Banco Central de la República Argentina',
+    '',
+    headers.join(','),
+    row.map(escapeCSV).join(',')
+  ].join('\n')
+}
+
+function formatHistoricalCERCSV(data: any): string {
+  const headers = ['Fecha', 'Valor CER', 'Var. Diaria %']
+  
+  const rows = data.series.map((item: any) => [
+    item.date,
+    item.value,
+    item.dailyVariation?.toFixed(4) || 'N/A'
+  ])
+  
+  return [
+    'Serie Histórica CER',
+    `Período: ${data.summary.startDate} a ${data.summary.endDate}`,
+    `Variación Total: ${data.summary.totalVariation.toFixed(2)}%`,
+    `Promedio Diario: ${data.summary.averageDailyVariation.toFixed(4)}%`,
+    `Puntos de Datos: ${data.summary.dataPoints}`,
+    '',
+    headers.join(','),
+    ...rows.map((row: any[]) => row.map(escapeCSV).join(','))
+  ].join('\n')
+}
+
+function formatCalculatorCERCSV(data: any): string {
+  const calc = data.calculation
+  const analysis = data.analysis
+  
+  return [
+    'Calculadora de Ajuste por CER',
+    '',
+    'CÁLCULO',
+    `Monto Original,${calc.amount}`,
+    `Fecha Inicial,${calc.fromDate}`,
+    `Fecha Final,${calc.toDate}`,
+    `CER Inicial,${calc.fromCER}`,
+    `CER Final,${calc.toCER}`,
+    `Monto Ajustado,${calc.adjustedAmount.toFixed(2)}`,
+    `Inflación del Período,${calc.inflationRate.toFixed(2)}%`,
+    `Días del Período,${calc.periodInDays}`,
+    calc.annualizedRate ? `Tasa Anualizada,${calc.annualizedRate.toFixed(2)}%` : '',
+    '',
+    'ANÁLISIS',
+    `Ganancia/Pérdida Real,${analysis.realReturn.toFixed(2)}`,
+    `Pérdida de Poder Adquisitivo,${analysis.purchasingPowerLoss.toFixed(2)}%`,
+    `Valor Equivalente Hoy,${analysis.equivalentTodayValue.toFixed(2)}`,
+    '',
+    'INTERPRETACIÓN',
+    `Para mantener el poder adquisitivo, $${calc.amount} del ${calc.fromDate} deberían ser $${calc.adjustedAmount.toFixed(2)} el ${calc.toDate}`
+  ].filter(Boolean).join('\n')
+}
+
+function formatComparisonCERCSV(data: any): string {
+  return [
+    'Comparación CER con Otros Indicadores',
+    `Período: ${data.period.from} a ${data.period.to} (${data.period.days} días)`,
+    '',
+    'Indicador,Valor Inicial,Valor Final,Variación %',
+    `CER,${data.cer.fromValue},${data.cer.toValue},${data.cer.variation.toFixed(2)}%`,
+    // Agregar otros indicadores cuando estén disponibles
+    '',
+    data.comparison.message
+  ].join('\n')
+}
+
   // ==================== HELPERS ====================
   // Helper para escapar valores CSV
   export function escapeCSV(value: any): string {

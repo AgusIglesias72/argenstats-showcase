@@ -80,13 +80,13 @@ const herramientasSubmenu = [
   {
     name: 'Calculadora de Inflación',
     title: 'Calcula el poder adquisitivo en el tiempo',
-    href: '/herramientas/calculadora',
+    href: '/calculadora-inflacion',
     icon: Calculator,
   },
   {
     name: 'Conversor de Divisas',
     title: 'Convierte entre diferentes monedas',
-    href: '/herramientas/conversor',
+    href: '/conversor-dolar-peso-argentino',
     icon: ArrowRightLeft,
   },
 ]
