@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton, SignedIn, SignedOut } from '@clerk/nextjs'
+import { SignedIn, SignedOut } from '@clerk/nextjs'
+import { CustomUserDropdown } from '@/components/auth/custom-user-dropdown'
 import { useTheme } from 'next-themes'
 import { 
   Menu, 
@@ -259,7 +260,7 @@ export function Header() {
               <ThemeToggle />
               
               <SignedIn>
-                <UserButton afterSignOutUrl="/" />
+                <CustomUserDropdown />
               </SignedIn>
 
               <SignedOut>
@@ -332,13 +333,7 @@ export function Header() {
                   <SignedIn>
                     <div className="mb-4 pb-4 border-b dark:border-gray-800">
                       <div className="flex items-center space-x-3">
-                        <UserButton 
-                          appearance={{
-                            elements: {
-                              avatarBox: "h-10 w-10"
-                            }
-                          }}
-                        />
+                        <CustomUserDropdown />
                       </div>
                     </div>
                   </SignedIn>
