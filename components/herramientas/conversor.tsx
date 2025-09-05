@@ -340,13 +340,13 @@ const DollarConverter = memo(function DollarConverter() {
                 className="group relative"
             >
                 <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 to-green-400/20 rounded-2xl blur opacity-50"></div>
-                <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-green-100">
+                <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg border border-green-100 dark:border-green-800">
                     <div className="animate-pulse space-y-6">
-                        <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                         <div className="space-y-4">
-                            <div className="h-12 bg-gray-200 rounded"></div>
-                            <div className="h-12 bg-gray-200 rounded"></div>
-                            <div className="h-16 bg-gray-200 rounded"></div>
+                            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
                         </div>
                     </div>
                 </div>
@@ -365,16 +365,16 @@ const DollarConverter = memo(function DollarConverter() {
             <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 to-green-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
             {/* Main converter card */}
-            <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-green-100">
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg border border-green-100 dark:border-green-800">
                 {/* Header with date selector */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-green-100 rounded-xl flex items-center justify-center">
-                            <Calculator className="h-5 w-5 text-green-600" />
+                        <div className="h-10 w-10 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center">
+                            <Calculator className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900">Conversor de Dólar</h3>
-                            <p className="text-sm text-gray-500">Conversión en tiempo real</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Conversor de Dólar</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Conversión en tiempo real</p>
                         </div>
                     </div>
                     {/* Date selector in top right */}
@@ -385,7 +385,7 @@ const DollarConverter = memo(function DollarConverter() {
                             size="sm"
                             onClick={fetchAllRates}
                             disabled={loading}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                         >
                             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                         </Button>
@@ -444,7 +444,7 @@ const DollarConverter = memo(function DollarConverter() {
 
                     {/* Dollar Type Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Cambio</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Cambio</label>
                         <Popover open={dollarTypeOpen} onOpenChange={setDollarTypeOpen}>
                             <PopoverTrigger asChild>
                                 <Button
@@ -496,7 +496,7 @@ const DollarConverter = memo(function DollarConverter() {
 
                     {/* Price Type Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Precio</label>
                         <Select
                             value={priceType}
                             onValueChange={(value: any) => setPriceType(value as PriceType)}
@@ -526,10 +526,10 @@ const DollarConverter = memo(function DollarConverter() {
 
                     {/* Exchange Rate Display */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Cotización</label>
-                        <div className="h-10 px-3 py-2 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
-                            <span className="text-sm text-green-600">1 USD =</span>
-                            <span className="font-bold text-green-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cotización</label>
+                        <div className="h-10 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg flex items-center justify-between">
+                            <span className="text-sm text-green-600 dark:text-green-400">1 USD =</span>
+                            <span className="font-bold text-green-700 dark:text-green-300">
                                 {loadingHistorical || loading ? '...' : `$${exchangeRate.toFixed(2)}`}
                             </span>
                         </div>
@@ -540,10 +540,10 @@ const DollarConverter = memo(function DollarConverter() {
                 <div className="space-y-4">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                         <div className="flex-1">
-                            <div className="flex items-center gap-3 p-4 border border-gray-300 rounded-xl focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-opacity-20">
+                            <div className="flex items-center gap-3 p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus-within:border-green-500 dark:focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-500 dark:focus-within:ring-green-400 focus-within:ring-opacity-20">
                                 <CountryFlag country={isFromUSD ? 'US' : 'AR'} className="w-8 h-6" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-medium text-gray-500 mb-1 truncate">
+                                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 truncate">
                                         {isFromUSD ? 'Dólares estadounidenses' : 'Pesos argentinos'}
                                     </div>
                                     <input
@@ -551,11 +551,11 @@ const DollarConverter = memo(function DollarConverter() {
                                         value={displayAmount}
                                         onChange={handleAmountChange}
                                         placeholder="100"
-                                        className="w-full text-lg font-bold text-gray-900 bg-transparent border-none outline-none"
+                                        className="w-full text-lg font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none"
                                         disabled={loadingHistorical || loading}
                                     />
                                 </div>
-                                <div className="text-lg font-bold text-gray-600 shrink-0">
+                                <div className="text-lg font-bold text-gray-600 dark:text-gray-300 shrink-0">
                                     {isFromUSD ? 'USD' : 'ARS'}
                                 </div>
                             </div>
@@ -575,17 +575,17 @@ const DollarConverter = memo(function DollarConverter() {
 
                         {/* To Currency Display */}
                         <div className="flex-1">
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
                                 <CountryFlag country={!isFromUSD ? 'US' : 'AR'} className="w-8 h-6" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-medium text-gray-500 mb-1 truncate">
+                                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 truncate">
                                         {!isFromUSD ? 'Dólares estadounidenses' : 'Pesos argentinos'}
                                     </div>
-                                    <div className="text-lg font-bold text-gray-900 truncate">
+                                    <div className="text-lg font-bold text-gray-900 dark:text-white truncate">
                                         {loadingHistorical || loading ? '...' : formatCurrency(conversionResult, !isFromUSD ? 'USD' : 'ARS').replace(/[^\d.,]/g, '')}
                                     </div>
                                 </div>
-                                <div className="text-lg font-bold text-gray-600 shrink-0">
+                                <div className="text-lg font-bold text-gray-600 dark:text-gray-300 shrink-0">
                                     {!isFromUSD ? 'USD' : 'ARS'}
                                 </div>
                             </div>
@@ -599,11 +599,11 @@ const DollarConverter = memo(function DollarConverter() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="mt-6 p-4 bg-green-50/50 border border-green-200 rounded-xl"
+                        className="mt-6 p-4 bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl"
                     >
                         <div className="flex items-start gap-3">
-                            <TrendingUp className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-green-800 leading-relaxed">
+                            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-green-800 dark:text-green-200 leading-relaxed">
                                 {conversionPhrase}
                             </p>
                         </div>
@@ -612,20 +612,20 @@ const DollarConverter = memo(function DollarConverter() {
 
                 {/* Loading indicator for historical data */}
                 {loadingHistorical && (
-                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                            <span className="text-sm text-gray-600">Buscando cotización histórica...</span>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 dark:border-green-400"></div>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Buscando cotización histórica...</span>
                         </div>
                     </div>
                 )}
 
                 {/* No historical data message */}
                 {selectedDate && !loadingHistorical && !historicalRate && (
-                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <Calendar className="h-4 w-4 text-yellow-600" />
-                            <span className="text-sm text-yellow-800">
+                            <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                            <span className="text-sm text-yellow-800 dark:text-yellow-200">
                                 No se encontraron datos para la fecha seleccionada. Mostrando cotización actual.
                             </span>
                         </div>
@@ -634,14 +634,14 @@ const DollarConverter = memo(function DollarConverter() {
 
                 {/* Error state */}
                 {error && !loading && (
-                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl">
                         <div className="flex items-center gap-3">
-                            <span className="text-sm text-red-600">{error}</span>
+                            <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={fetchAllRates}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                             >
                                 Reintentar
                             </Button>

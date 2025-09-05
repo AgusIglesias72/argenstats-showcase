@@ -29,6 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { cerService } from '@/lib/services/cerService';
 
 // Metadata
 export const metadata: Metadata = {
@@ -83,18 +84,18 @@ export const metadata: Metadata = {
   },
 };
 
-// Function to get current CER data from API - Server side
+// Function to get current CER data from service
 async function getCERData() {
   try {
-    // Import directo del servicio - esto funciona en el servidor
-    const cerService = await import('@/lib/api/services/cer');
     const data = await cerService.getCurrentCER();
     
     if (data) {
       return {
         date: data.date,
-        value: data.current_value,
-        yearly_pct_change: data.yearly_change
+        value: data.value,
+        daily_change: data.daily_change,
+        monthly_change: data.monthly_change,
+        yearly_change: data.yearly_change
       };
     }
     return null;
@@ -103,6 +104,7 @@ async function getCERData() {
     return null;
   }
 }
+
 
 export default async function CalculadoraInflacionPage() {
   const cerData = await getCERData();

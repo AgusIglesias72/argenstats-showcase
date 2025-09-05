@@ -10,7 +10,8 @@ import {
   Calendar, 
   Mail, 
   Star,
-  Loader2 
+  Loader2,
+  Shield
 } from 'lucide-react'
 import ProfileTab from '@/components/profile/tabs/ProfileTab'
 import ApiKeysTab from '@/components/profile/tabs/ApiKeysTab'
@@ -18,6 +19,7 @@ import EventsTab from '@/components/profile/tabs/EventsTab'
 import ContactTab from '@/components/profile/tabs/ContactTab'
 import FavoritesTab from '@/components/profile/tabs/FavoritesTab'
 import { Header } from '@/components/layout/header'
+import { useIsAdmin } from '@/lib/hooks/useIsAdmin' // Agregar este import
 
 const tabs = [
   { id: 'profile', label: 'Perfil', icon: User },
@@ -31,6 +33,7 @@ type TabId = typeof tabs[number]['id']
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser()
+  const { isAdmin } = useIsAdmin()
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -65,27 +68,47 @@ export default function ProfilePage() {
       
       {/* Header con info del usuario */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center space-x-4">
-            <img
-              src={user.imageUrl}
-              alt={user.fullName || 'Usuario'}
-              className="w-16 h-16 rounded-full"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {user.fullName || 'Usuario'}
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Miembro desde {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-AR', {
-                  year: 'numeric',
-                  month: 'long'
-                }) : 'fecha desconocida'}
-              </p>
-            </div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-4">
+        <img
+          src={user.imageUrl}
+          alt={user.fullName || 'Usuario'}
+          className="w-16 h-16 rounded-full"
+        />
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {user.fullName || 'Usuario'}
+            </h1>
+            {isAdmin && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <Shield className="w-3 h-3" />
+                Admin
+              </span>
+            )}
           </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Miembro desde {user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-AR', {
+              year: 'numeric',
+              month: 'long'
+            }) : 'fecha desconocida'}
+          </p>
         </div>
       </div>
+      
+      {isAdmin && (
+        <a
+          href="/admin"
+          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+        >
+          <Shield className="w-4 h-4 mr-2" />
+          Panel Admin
+        </a>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* Tabs Navigation */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">

@@ -1,4 +1,6 @@
+// middleware.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -10,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   '/dolar(.*)',
   '/eventos(.*)',
   '/herramientas(.*)',
+  '/contacto(.*)'
 ])
 
 const isInternalApiRoute = createRouteMatcher([
@@ -30,28 +33,45 @@ export default clerkMiddleware(async (auth, req) => {
     return
   }
 
-  // Proteger todas las rutas excepto las públicas
-  if (!isPublicRoute(req)) {
-    await auth.protect()
-  }
-
-  // Protección adicional para rutas admin
+  // Proteger rutas admin
   if (isAdminRoute(req)) {
     const { userId } = await auth()
     
-    // Lista de IDs de usuarios admin (temporalmente hardcodeado)
-    const adminUserIds = (process.env.ADMIN_USER_IDS || '').split(',')
-    
-    if (!userId || !adminUserIds.includes(userId)) {
-      return Response.json({ error: 'Admin access required' }, { status: 403 })
+    if (!userId) {
+      // Redirigir a sign-in si no está autenticado
+      const signInUrl = new URL('/sign-in', req.url)
+      signInUrl.searchParams.set('redirect_url', req.url)
+      return NextResponse.redirect(signInUrl)
     }
+    
+    try {
+      // Importar clerkClient dinámicamente para evitar problemas
+      const { clerkClient } = await import('@clerk/nextjs/server')
+      const client = await clerkClient()
+      const user = await client.users.getUser(userId)
+      const isAdmin = user.publicMetadata?.role === 'admin'
+      
+      if (!isAdmin) {
+        // Redirigir a home si no es admin
+        return NextResponse.redirect(new URL('/', req.url))
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+  }
+
+  // Proteger todas las rutas excepto las públicas
+  if (!isPublicRoute(req)) {
+    await auth.protect()
   }
 })
 
 export const config = {
   matcher: [
-    '/((?!.*\\..*|_next).*)',
-    '/',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 }

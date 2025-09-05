@@ -56,7 +56,7 @@ export default function SignUpPage() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
-        router.push('/dashboard')
+        router.push('/profile')
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Código inválido')
@@ -69,7 +69,7 @@ export default function SignUpPage() {
     signUp?.authenticateWithRedirect({
       strategy: 'oauth_google',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/dashboard',
+      redirectUrlComplete: '/profile',
     })
   }
 
@@ -77,7 +77,7 @@ export default function SignUpPage() {
     signUp?.authenticateWithRedirect({
       strategy: 'oauth_x',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/dashboard',
+      redirectUrlComplete: '/profile',
     })
   }
 
