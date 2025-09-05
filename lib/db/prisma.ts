@@ -1,9 +1,27 @@
+// lib/db/prisma.ts
 import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+const prismaClientSingleton = () => {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      }
+    }
+  })
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+declare global {
+  var prismaGlobal: PrismaClient | undefined
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// En desarrollo, reutilizar la instancia global para evitar múltiples conexiones
+// En producción, crear nueva instancia solo si no existe
+const prisma = global.prismaGlobal || prismaClientSingleton()
+
+if (process.env.NODE_ENV !== 'production') {
+  global.prismaGlobal = prisma
+}
+
+export { prisma }

@@ -159,3 +159,7 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+[role="option"] > span:first-child {
+  display: none !important;
+}
