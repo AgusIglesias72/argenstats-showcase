@@ -466,3 +466,405 @@ export const OrganizationSchema = {
       "name": "Conversor de Dólar ArgenStats"
     }
   });
+
+// Tipos para EMAE - Ajustados a lo que realmente devuelve el servicio
+interface EmaeCurrentData {
+  date: string;
+  value: number;
+  index_value: number;
+  monthly_change: number | null;
+  yearly_change: number | null;
+  monthly_pct_change: number | null;
+  yearly_pct_change: number | null;
+  sector_code: string;
+  sector_name: string;
+}
+
+interface EmaeSectorData {
+  sector_code: string;
+  sector_name: string;
+  current_value: number;
+  monthly_change: number | null;
+  yearly_change: number | null;
+}
+
+interface EmaeStats {
+  lastUpdate: string;
+  general: {
+    index: number;
+    monthly: number | null;
+    yearly: number | null;
+    seasonallyAdjusted: number | null;
+  };
+  topGrowthSectors: EmaeSectorData[];
+  topDeclineSectors: EmaeSectorData[];
+}
+
+// Este es el tipo que devuelve getEmaeData()
+export interface EmaePageData {
+  current: EmaeCurrentData | null;
+  sectors: EmaeSectorData[];
+  historical: EmaeHistoricalData[];
+  stats: EmaeStats | null;
+}
+
+interface EmaeHistoricalData {
+  date: string;
+  value: number;
+  // otros campos según tu servicio
+}
+
+export interface EmaeData {
+  current: EmaeCurrentData | null;
+  sectors: EmaeSectorData[];
+  historical: any[];
+  stats: EmaeStats | null;
+}
+
+// Schema para el EMAE Dataset
+export function generateEmaeSchema(data: EmaeData) {
+  const lastUpdate = data.current?.date || new Date().toISOString()
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "EMAE - Estimador Mensual de Actividad Económica Argentina",
+    "description": "Indicador mensual de la evolución de la actividad económica del conjunto de los sectores productivos a nivel nacional. Base 2004=100.",
+    "url": "https://argentinadatos.com/indicadores/emae",
+    "dateModified": lastUpdate,
+    "datePublished": "2004-01-01",
+    "updateFrequency": "P1M",
+    "creator": {
+      "@type": "Organization",
+      "name": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "url": "https://www.indec.gob.ar"
+    },
+    "publisher": {
+      "@type": "Organization", 
+      "name": "ArgentinaDatos",
+      "url": "https://argentinadatos.com"
+    },
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "spatialCoverage": {
+      "@type": "Place",
+      "name": "Argentina",
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "-38.416097",
+        "longitude": "-63.616672"
+      }
+    },
+    "temporalCoverage": "2004/..",
+    "variableMeasured": [
+      {
+        "@type": "PropertyValue",
+        "name": "Índice base 2004",
+        "value": data.current?.index_value,
+        "unitText": "índice"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación interanual",
+        "value": data.current?.yearly_pct_change,
+        "unitText": "porcentaje"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación mensual",
+        "value": data.current?.monthly_pct_change,
+        "unitText": "porcentaje"
+      }
+    ],
+    "distribution": {
+      "@type": "DataDownload",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://api.argentinadatos.com/v1/emae"
+    },
+    "includedInDataCatalog": {
+      "@type": "DataCatalog",
+      "name": "ArgentinaDatos - Catálogo de Indicadores Económicos"
+    }
+  }
+}
+
+// Schema de análisis económico
+export function generateEmaeAnalysisSchema(data: EmaeData) {
+  const isGrowth = (data.current?.yearly_pct_change || 0) > 0
+  const changeValue = Math.abs(data.current?.yearly_pct_change || 0).toFixed(1)
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "AnalysisNewsArticle",
+    "headline": `EMAE Argentina: Actividad económica ${isGrowth ? 'crece' : 'cae'} ${changeValue}% interanual`,
+    "description": "Análisis detallado del Estimador Mensual de Actividad Económica con datos por sectores productivos",
+    "datePublished": data.current?.date || new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://argentinadatos.com/logo.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://argentinadatos.com/indicadores/emae"
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Economía Argentina",
+      "description": "Indicadores de actividad económica"
+    }
+  }
+}
+
+// Schema FAQ para EMAE
+export function generateEmaeFAQSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es el EMAE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El EMAE (Estimador Mensual de Actividad Económica) es un indicador provisional de la evolución del PBI que refleja la actividad económica mensual de todos los sectores productivos de Argentina. Proporciona información temprana sobre el desempeño económico del país."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Con qué frecuencia se actualiza el EMAE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El EMAE se publica mensualmente por el INDEC, aproximadamente 50 días después del cierre del mes de referencia. Los datos se presentan tanto en forma original como desestacionalizada."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué sectores incluye el EMAE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El EMAE incluye 15 sectores económicos: Agricultura, ganadería, caza y silvicultura; Pesca; Explotación de minas y canteras; Industria manufacturera; Electricidad, gas y agua; Construcción; Comercio mayorista y minorista; Hoteles y restaurantes; Transporte y comunicaciones; Intermediación financiera; Actividades inmobiliarias, empresariales y de alquiler; Administración pública y defensa; Enseñanza; Servicios sociales y de salud; y Otras actividades de servicios."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la diferencia entre el EMAE y el PBI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El EMAE es un indicador mensual provisional que anticipa la tendencia del PBI. Mientras que el PBI es el indicador trimestral definitivo y más completo de la actividad económica, el EMAE ofrece una lectura más frecuente y oportuna del desempeño económico, aunque con menor cobertura y detalle."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo se interpreta el EMAE?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El EMAE se interpreta comparando las variaciones porcentuales interanuales (respecto al mismo mes del año anterior) y mensuales (respecto al mes previo). Un valor positivo indica crecimiento de la actividad económica, mientras que un valor negativo señala contracción."
+        }
+      }
+    ]
+  }
+}
+
+// Tipos para IPC
+interface IPCCurrentData {
+  date: string;
+  value: number;
+  index_value: number;
+  monthly_pct_change: number | null;
+  yearly_pct_change: number | null;
+  component_code: string;
+  component_name: string;
+  component_type: string;
+  region: string;
+}
+
+interface IPCComponentData {
+  component_code: string;
+  component_name: string;
+  component_type: string;
+  current_value: number;
+  monthly_change: number | null;
+  yearly_change: number | null;
+  weight?: number;
+}
+
+interface IPCHistoricalData {
+  date: string;
+  value: number;
+  monthly_pct_change?: number | null;
+  yearly_pct_change?: number | null;
+}
+
+export interface IPCPageData {
+  current: IPCCurrentData | null;
+  components: IPCComponentData[];
+  historical: IPCHistoricalData[];
+}
+
+// Schema para el IPC Dataset
+export function generateIPCSchema(data: IPCPageData) {
+  const lastUpdate = data.current?.date || new Date().toISOString()
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "IPC - Índice de Precios al Consumidor Argentina",
+    "description": "Índice que mide la evolución de los precios de un conjunto de bienes y servicios representativos del consumo de los hogares residentes en áreas urbanas de Argentina.",
+    "url": "https://argentinadatos.com/indicadores/inflacion",
+    "dateModified": lastUpdate,
+    "datePublished": "2016-01-01",
+    "updateFrequency": "P1M",
+    "creator": {
+      "@type": "Organization",
+      "name": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "url": "https://www.indec.gob.ar"
+    },
+    "publisher": {
+      "@type": "Organization", 
+      "name": "ArgentinaDatos",
+      "url": "https://argentinadatos.com"
+    },
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "spatialCoverage": {
+      "@type": "Place",
+      "name": "Argentina",
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "-38.416097",
+        "longitude": "-63.616672"
+      }
+    },
+    "temporalCoverage": "2016/..",
+    "variableMeasured": [
+      {
+        "@type": "PropertyValue",
+        "name": "Índice de Precios al Consumidor",
+        "value": data.current?.index_value,
+        "unitText": "índice base dic-2016=100"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Inflación mensual",
+        "value": data.current?.monthly_pct_change,
+        "unitText": "porcentaje"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Inflación interanual",
+        "value": data.current?.yearly_pct_change,
+        "unitText": "porcentaje"
+      }
+    ],
+    "distribution": {
+      "@type": "DataDownload",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://api.argentinadatos.com/v1/ipc"
+    },
+    "includedInDataCatalog": {
+      "@type": "DataCatalog",
+      "name": "ArgentinaDatos - Catálogo de Indicadores Económicos"
+    }
+  }
+}
+
+// Schema de análisis de inflación
+export function generateIPCAnalysisSchema(data: IPCPageData) {
+  const monthlyInflation = data.current?.monthly_pct_change || 0
+  const yearlyInflation = data.current?.yearly_pct_change || 0
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "AnalysisNewsArticle",
+    "headline": `Inflación Argentina: ${yearlyInflation.toFixed(1)}% interanual y ${monthlyInflation.toFixed(1)}% mensual`,
+    "description": "Análisis detallado del Índice de Precios al Consumidor con desagregación por rubros y regiones",
+    "datePublished": data.current?.date || new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://argentinadatos.com/logo.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://argentinadatos.com/indicadores/inflacion"
+    },
+    "about": {
+      "@type": "Thing",
+      "name": "Inflación Argentina",
+      "description": "Evolución de precios al consumidor"
+    }
+  }
+}
+
+// Schema FAQ para IPC
+export function generateIPCFAQSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es el IPC?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El IPC (Índice de Precios al Consumidor) es un indicador que mide la evolución de los precios de un conjunto de bienes y servicios representativos del consumo de los hogares. Es el principal indicador para medir la inflación en Argentina."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo se calcula la inflación mensual?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La inflación mensual se calcula como la variación porcentual del IPC entre dos meses consecutivos. Por ejemplo, si el IPC de enero es 100 y el de febrero es 103, la inflación mensual es del 3%."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué rubros incluye el IPC?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El IPC incluye 12 divisiones principales: Alimentos y bebidas no alcohólicas, Bebidas alcohólicas y tabaco, Prendas de vestir y calzado, Vivienda y servicios básicos, Equipamiento del hogar, Salud, Transporte, Comunicación, Recreación y cultura, Educación, Restaurantes y hoteles, y Bienes y servicios varios."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el IPC Núcleo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El IPC Núcleo es una medida de inflación que excluye los precios más volátiles como alimentos frescos y combustibles. Proporciona una visión de la tendencia inflacionaria subyacente, eliminando fluctuaciones temporales."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Con qué frecuencia se actualiza el IPC?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El INDEC publica el IPC mensualmente, generalmente entre el día 12 y 15 de cada mes, con los datos correspondientes al mes anterior."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la diferencia entre inflación mensual e interanual?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La inflación mensual compara el índice del mes actual con el mes anterior, mientras que la inflación interanual compara con el mismo mes del año anterior. La interanual muestra la acumulación de 12 meses de inflación."
+        }
+      }
+    ]
+  }
+}

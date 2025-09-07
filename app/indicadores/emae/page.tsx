@@ -1,23 +1,22 @@
-// app/indicadores/emae/page.tsx
 import { Metadata } from 'next'
 import { EmaeClient } from '@/components/indicators/emae/EmaeClient'
 import { emaeService } from '@/lib/services/emae.service'
 import { Header } from '@/components/layout/header'
+import StructuredData from '@/components/StructuredData'
+import { 
+  BreadcrumbSchema,
+  OrganizationSchema,
+  generateEmaeSchema,
+  generateEmaeAnalysisSchema,
+  generateEmaeFAQSchema
+} from '@/lib/schemas'
 
-export const metadata: Metadata = {
-  title: 'EMAE - Estimador Mensual de Actividad Económica | ArgentinaDatos',
-  description: 'Seguimiento de la evolución de la actividad económica a nivel nacional por sectores',
-}
-
+// Función para obtener los datos del EMAE
 async function getEmaeData() {
   try {
-    // Obtener datos actuales
     const current = await emaeService.getCurrentEmae('GENERAL')
-    
-    // Obtener sectores para la tabla
     const sectors = await emaeService.getEmaeSectors()
-
-    // Obtener datos históricos para el gráfico (último año)
+    
     const endDate = new Date()
     const startDate = new Date()
     startDate.setFullYear(startDate.getFullYear() - 1)
@@ -29,7 +28,6 @@ async function getEmaeData() {
       dataType: 'original'
     })
 
-    // Obtener estadísticas
     const stats = await emaeService.getEmaeStats()
 
     return {
@@ -49,12 +47,103 @@ async function getEmaeData() {
   }
 }
 
+// Generar metadata dinámica
+export async function generateMetadata(): Promise<Metadata> {
+  const data = await getEmaeData()
+  
+  const currentValue = data.current?.values?.yearly 
+    ? `${data.current.values.yearly > 0 ? '+' : ''}${data.current.values.yearly.toFixed(1)}%`
+    : ''
+  
+  const monthValue = data.current?.values?.monthly
+    ? `${data.current.values.monthly > 0 ? '+' : ''}${data.current.values.monthly.toFixed(1)}%`
+    : ''
+  
+  const lastUpdate = data.current?.date 
+    ? new Date(data.current.date).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+    : ''
+
+  return {
+    title: `EMAE - Estimador Mensual de Actividad Económica ${currentValue} | ArgentinaDatos`,
+    description: `Seguimiento del EMAE Argentina. Variación interanual: ${currentValue}, mensual: ${monthValue}. Análisis por sectores económicos. Datos INDEC actualizados a ${lastUpdate}.`,
+    keywords: 'EMAE, estimador mensual actividad economica, indec, pbi mensual, actividad economica argentina, sectores economicos, industria, comercio, construccion, servicios, estadisticas economicas',
+    authors: [{ name: 'ArgentinaDatos' }],
+    creator: 'ArgentinaDatos',
+    publisher: 'ArgentinaDatos',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      title: `EMAE Argentina ${currentValue} - Actividad Económica Mensual`,
+      description: `Análisis completo del Estimador Mensual de Actividad Económica. Variación interanual: ${currentValue}. Datos oficiales del INDEC por sectores.`,
+      type: 'website',
+      url: 'https://argentinadatos.com/indicadores/emae',
+      siteName: 'ArgentinaDatos',
+      locale: 'es_AR',
+      images: [
+        {
+          url: 'https://argentinadatos.com/og-emae.jpg',
+          width: 1200,
+          height: 630,
+          alt: `EMAE Argentina - Actividad Económica ${currentValue}`,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `EMAE Argentina ${currentValue}`,
+      description: `Actividad económica mensual por sectores. Var. interanual: ${currentValue}, mensual: ${monthValue}`,
+      site: '@argentinadatos',
+      creator: '@argentinadatos',
+      images: ['https://argentinadatos.com/og-emae.jpg'],
+    },
+    alternates: {
+      canonical: 'https://argentinadatos.com/indicadores/emae',
+    },
+  }
+}
+
 export default async function EmaePage() {
   const data = await getEmaeData()
 
   return (
     <>
       <Header />
+      
+      {/* Structured Data */}
+      <StructuredData 
+        data={generateEmaeSchema(data as any)} 
+        id="emae-dataset-schema" 
+      />
+      <StructuredData 
+        data={generateEmaeAnalysisSchema(data as any)} 
+        id="emae-analysis-schema" 
+      />
+      <StructuredData 
+        data={generateEmaeFAQSchema()} 
+        id="emae-faq-schema" 
+      />
+      <StructuredData 
+        data={BreadcrumbSchema([
+          { name: "Inicio", url: "https://argentinadatos.com" },
+          { name: "Indicadores", url: "https://argentinadatos.com/indicadores" },
+          { name: "EMAE", url: "https://argentinadatos.com/indicadores/emae" }
+        ])} 
+        id="breadcrumb-schema"
+      />
+      <StructuredData 
+        data={OrganizationSchema} 
+        id="organization-schema" 
+      />
+      
       <EmaeClient initialData={data} />
     </>
   )
