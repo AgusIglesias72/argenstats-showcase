@@ -214,7 +214,7 @@ export function Header() {
                       Herramientas
                     </NavigationMenuTrigger>
                     <NavigationMenuContent className="bg-white dark:bg-gray-800">
-                      <ul className="grid w-[400px] p-2">
+                      <ul className="grid w-[500px] p-2 grid-cols-2">
                         {herramientasSubmenu.map((item) => {
                           const Icon = item.icon
                           return (

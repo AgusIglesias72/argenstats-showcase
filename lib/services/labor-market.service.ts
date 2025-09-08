@@ -58,7 +58,7 @@ class LaborMarketService {
     try {
       const current = await prisma.laborMarket.findFirst({
         where: {
-          dataType: 'regional',
+          dataType: 'national',
           region: 'Total 31 aglomerados',
           gender: 'Total',
           ageGroup: 'Total'
@@ -98,7 +98,7 @@ class LaborMarketService {
         'Región Cuyo',
         'Región NEA',
         'Región Pampeana',
-        'Gran Buenos Aires',
+        'GBA',
         'Partidos del Gran Buenos Aires'
       ]
 

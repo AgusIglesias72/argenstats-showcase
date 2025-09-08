@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { ArrowUpDown, Calculator, TrendingUp, ChevronDown, Check, RefreshCw, CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Flag from 'react-world-flags';
+import { dollarConverterService, type DollarType, type DollarRateData } from '@/lib/services/dollar-converter.service';
 import {
     Select,
     SelectContent,
@@ -23,24 +24,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export type DollarType = 'BLUE' | 'CCL' | 'CRYPTO' | 'MEP' | 'MAYORISTA' | 'OFICIAL' | 'TARJETA';
-
-export interface DollarRateData {
-    updated_at?: any;
-    date: string;
-    dollar_type?: DollarType;
-    dollarType?: string;
-    dollar_name?: string;
-    buy_price?: number;
-    buyPrice?: number;
-    sell_price?: number;
-    sellPrice?: number;
-    spread?: number;
-    buy_variation?: number;
-    sell_variation?: number;
-    last_updated?: string;
-    minutes_ago?: number;
-}
+// Types are now imported from the service
 
 type ConversionDirection = 'USD_TO_ARS' | 'ARS_TO_USD';
 type PriceType = 'buy' | 'sell' | 'average';
@@ -81,69 +65,13 @@ const DollarConverter = memo(function DollarConverter() {
     // Estados de UI
     const [dollarTypeOpen, setDollarTypeOpen] = useState(false);
 
-    // Función para obtener todos los rates actuales
+    // Función para obtener todos los rates actuales usando el servicio interno
     const fetchAllRates = useCallback(async () => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch('/api/v1/dollar');
-
-            if (!response.ok) throw new Error('Error al obtener cotizaciones');
-
-            const data = await response.json();
-
-            const ratesMap: Record<DollarType, DollarRateData | null> = {
-                OFICIAL: null,
-                BLUE: null,
-                MEP: null,
-                CCL: null,
-                CRYPTO: null,
-                MAYORISTA: null,
-                TARJETA: null,
-            };
-
-            // Mapear los datos recibidos
-            if (Array.isArray(data)) {
-                data.forEach((rate: DollarRateData) => {
-                    const type = (rate.dollarType || rate.dollar_type || '').toUpperCase() as DollarType;
-                    if (type in ratesMap) {
-                        ratesMap[type] = {
-                            ...rate,
-                            buy_price: rate.buyPrice || rate.buy_price,
-                            sell_price: rate.sellPrice || rate.sell_price,
-                        };
-                    }
-                });
-            }
-
-            // Si no hay datos, intentar con llamadas individuales
-            const hasData = Object.values(ratesMap).some(rate => rate !== null);
-            if (!hasData) {
-                const types: DollarType[] = ['OFICIAL', 'BLUE', 'MEP', 'CCL', 'CRYPTO', 'MAYORISTA', 'TARJETA'];
-                const promises = types.map(type =>
-                    fetch(`/api/v1/dollar?type=${type}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            const rateData = Array.isArray(data) ? data[0] : data;
-                            return {
-                                type,
-                                data: rateData ? {
-                                    ...rateData,
-                                    buy_price: rateData.buyPrice || rateData.buy_price,
-                                    sell_price: rateData.sellPrice || rateData.sell_price,
-                                } : null
-                            };
-                        })
-                        .catch(() => ({ type, data: null }))
-                );
-
-                const results = await Promise.all(promises);
-                results.forEach(({ type, data }) => {
-                    ratesMap[type] = data;
-                });
-            }
-
+            const ratesMap = await dollarConverterService.getAllCurrentRates();
             setDollarRates(ratesMap);
             setError(null);
         } catch (err) {
@@ -173,52 +101,15 @@ const DollarConverter = memo(function DollarConverter() {
         return parts.length === 2 ? `${parts[0]},${parts[1]}` : parts[0];
     }, [amount]);
 
-    // Dollar type options
-    const dollarTypeOptions = useMemo(() => [
-        { value: 'OFICIAL' as DollarType, label: 'Oficial', description: 'Cotización oficial del BCRA', color: 'blue' },
-        { value: 'BLUE' as DollarType, label: 'Blue', description: 'Mercado paralelo', color: 'indigo' },
-        { value: 'MEP' as DollarType, label: 'MEP', description: 'Mercado Electrónico de Pagos', color: 'green' },
-        { value: 'CCL' as DollarType, label: 'CCL', description: 'Contado con Liquidación', color: 'purple' },
-        { value: 'CRYPTO' as DollarType, label: 'Cripto', description: 'Criptomonedas stables', color: 'orange' },
-        { value: 'MAYORISTA' as DollarType, label: 'Mayorista', description: 'Mercado mayorista', color: 'gray' },
-        { value: 'TARJETA' as DollarType, label: 'Tarjeta', description: 'Compras en el exterior', color: 'red' }
-    ], []);
+    // Dollar type options from service
+    const dollarTypeOptions = useMemo(() => dollarConverterService.getDollarTypeInfo(), []);
 
-    // Fetch historical data when date is selected
+    // Fetch historical data when date is selected using internal service
     const fetchHistoricalRate = useCallback(async (date: Date) => {
-        const dateString = date.toISOString().split('T')[0];
-
         setLoadingHistorical(true);
         try {
-            // Primero intentar con el endpoint específico para datos históricos
-            let response = await fetch(`/api/v1/dollar?type=${selectedDollarType}&date=${dateString}`);
-
-            // Si no funciona, intentar con otro formato de endpoint
-            if (!response.ok) {
-                response = await fetch(`/api/dollar?type=daily&dollar_type=${selectedDollarType}&start_date=${dateString}&end_date=${dateString}&limit=1`);
-            }
-
-            const result = await response.json();
-
-            // Manejar diferentes formatos de respuesta
-            let data = null;
-            if (result.success && result.data && result.data.length > 0) {
-                data = result.data[0];
-            } else if (Array.isArray(result) && result.length > 0) {
-                data = result[0];
-            } else if (result && !Array.isArray(result) && !result.success) {
-                data = result;
-            }
-
-            if (data) {
-                setHistoricalRate({
-                    ...data,
-                    buy_price: data.buyPrice || data.buy_price,
-                    sell_price: data.sellPrice || data.sell_price,
-                });
-            } else {
-                setHistoricalRate(null);
-            }
+            const historicalData = await dollarConverterService.getHistoricalRate(selectedDollarType, date);
+            setHistoricalRate(historicalData);
         } catch (error) {
             console.error('Error fetching historical rate:', error);
             setHistoricalRate(null);
@@ -249,8 +140,8 @@ const DollarConverter = memo(function DollarConverter() {
     const exchangeRate = useMemo(() => {
         if (!currentRate) return 0;
 
-        const buyPrice = currentRate.buy_price || currentRate.buyPrice || 0;
-        const sellPrice = currentRate.sell_price || currentRate.sellPrice || 0;
+        const buyPrice = currentRate.buyPrice || 0;
+        const sellPrice = currentRate.sellPrice || 0;
 
         switch (priceType) {
             case 'buy':
@@ -295,7 +186,7 @@ const DollarConverter = memo(function DollarConverter() {
         if (!currentRate || !amount || isNaN(parseFloat(amount))) return '';
 
         const numAmount = parseFloat(amount);
-        const dollarTypeName = dollarTypeOptions.find(opt => opt.value === selectedDollarType)?.label || selectedDollarType;
+        const dollarTypeName = dollarTypeOptions.find(opt => opt.type === selectedDollarType)?.label || selectedDollarType;
         const priceTypeName = priceType === 'buy' ? 'compra' :
             priceType === 'sell' ? 'venta' :
                 'promedio';
@@ -362,10 +253,12 @@ const DollarConverter = memo(function DollarConverter() {
             className="group relative"
         >
             {/* Gradient background effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 to-green-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-green-600/20 to-green-400/20 rounded-2xl 
+            blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
             {/* Main converter card */}
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg border border-green-100 dark:border-green-800">
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg border 
+            border-green-100 dark:border-green-800">
                 {/* Header with date selector */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
@@ -438,7 +331,6 @@ const DollarConverter = memo(function DollarConverter() {
                 </div>
 
 
-
                 {/* Configuration Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
@@ -453,7 +345,7 @@ const DollarConverter = memo(function DollarConverter() {
                                     disabled={loadingHistorical}
                                 >
                                     <span>
-                                        Dólar {dollarTypeOptions.find(opt => opt.value === selectedDollarType)?.label || 'Blue'}
+                                        Dólar {dollarTypeOptions.find(opt => opt.type === selectedDollarType)?.label || 'Blue'}
                                     </span>
                                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -462,14 +354,14 @@ const DollarConverter = memo(function DollarConverter() {
                                 <div className="max-h-[300px] overflow-auto">
                                     {dollarTypeOptions.map((option) => (
                                         <button
-                                            key={option.value}
+                                            key={option.type}
                                             onClick={() => {
-                                                setSelectedDollarType(option.value);
+                                                setSelectedDollarType(option.type);
                                                 setDollarTypeOpen(false);
                                             }}
                                             className={cn(
                                                 "relative flex w-full cursor-pointer select-none items-center rounded-sm py-3 px-3 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
-                                                selectedDollarType === option.value && "bg-accent"
+                                                selectedDollarType === option.type && "bg-accent"
                                             )}
                                         >
                                             <div className="flex items-start justify-between w-full gap-4">
@@ -484,7 +376,7 @@ const DollarConverter = memo(function DollarConverter() {
                                                     {option.label.toUpperCase()}
                                                 </Badge>
                                             </div>
-                                            {selectedDollarType === option.value && (
+                                            {selectedDollarType === option.type && (
                                                 <Check className="ml-2 h-4 w-4 shrink-0" />
                                             )}
                                         </button>

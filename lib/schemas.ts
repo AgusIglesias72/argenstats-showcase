@@ -1081,3 +1081,177 @@ export function generateRiesgoPaisFAQSchema() {
     ]
   }
 }
+
+// Schema para datos del dólar
+export function generateDollarSchema(data: any) {
+  const blueDollar = data.current?.BLUE
+  const officialDollar = data.current?.OFICIAL
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Cotizaciones del Dólar en Argentina",
+    "description": "Dataset con cotizaciones actualizadas de todos los tipos de dólar en Argentina: Blue, Oficial, MEP, CCL, Crypto, Mayorista y Tarjeta",
+    "url": "https://argentinadatos.com/indicadores/dolar",
+    "keywords": "dolar argentina, cotizacion dolar, tipos cambio, dolar blue, dolar oficial, dolar mep, dolar ccl",
+    "license": "https://argentinadatos.com/terms",
+    "creator": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos",
+      "url": "https://argentinadatos.com"
+    },
+    "publisher": {
+      "@type": "Organization", 
+      "name": "ArgentinaDatos",
+      "url": "https://argentinadatos.com"
+    },
+    "datePublished": "2024-01-01",
+    "dateModified": new Date().toISOString(),
+    "temporalCoverage": "2024-01-01/..",
+    "spatialCoverage": {
+      "@type": "Country",
+      "name": "Argentina",
+      "sameAs": "https://en.wikipedia.org/wiki/Argentina"
+    },
+    "distribution": {
+      "@type": "DataDownload",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://argentinadatos.com/api/v1/dollar?view=current"
+    },
+    "variableMeasured": [
+      {
+        "@type": "PropertyValue",
+        "name": "Dólar Blue",
+        "value": blueDollar?.averagePrice || 0,
+        "unitCode": "ARS"
+      },
+      {
+        "@type": "PropertyValue", 
+        "name": "Dólar Oficial",
+        "value": officialDollar?.averagePrice || 0,
+        "unitCode": "ARS"
+      }
+    ]
+  }
+}
+
+// Schema de análisis para el dólar
+export function generateDollarAnalysisSchema(data: any) {
+  const blueDollar = data.current?.BLUE
+  const historical = data.historical?.summary
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "AnalysisNewsArticle",
+    "headline": "Análisis de Cotizaciones del Dólar en Argentina",
+    "description": "Análisis detallado de las cotizaciones del dólar en Argentina, incluyendo tendencias históricas y comparación entre diferentes tipos de cambio",
+    "url": "https://argentinadatos.com/indicadores/dolar",
+    "datePublished": new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://argentinadatos.com/indicadores/dolar"
+    },
+    "about": [
+      {
+        "@type": "Thing",
+        "name": "Dólar Blue",
+        "description": "Cotización del dólar en el mercado paralelo"
+      },
+      {
+        "@type": "Thing", 
+        "name": "Dólar Oficial",
+        "description": "Cotización oficial del Banco Central"
+      }
+    ],
+    "mentions": [
+      {
+        "@type": "Organization",
+        "name": "Banco Central de la República Argentina",
+        "sameAs": "https://www.bcra.gob.ar"
+      }
+    ]
+  }
+}
+
+// Schema FAQ para el dólar
+export function generateDollarFAQSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es el dólar Blue?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar Blue es la cotización que surge del mercado paralelo o informal, no regulado oficialmente pero ampliamente utilizado como referencia. Se obtiene a través de casas de cambio no oficiales y representa el precio real de mercado del dólar en Argentina."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la diferencia entre el dólar oficial y el Blue?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar oficial es la cotización regulada por el Banco Central para operaciones en bancos oficiales, con restricciones y límites. El dólar Blue es la cotización del mercado paralelo, sin restricciones pero sin respaldo oficial. La diferencia entre ambos se conoce como 'brecha cambiaria'."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el dólar MEP?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar MEP (Mercado Electrónico de Pagos) se obtiene mediante la compra-venta de bonos o acciones que cotizan tanto en pesos como en dólares, permitiendo adquirir dólares de forma legal a través del mercado bursátil. Requiere un parking de 5 días para bonos."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el dólar CCL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar CCL (Contado con Liquidación) es similar al MEP pero permite transferir dólares al exterior. Se obtiene mediante la compra de activos en pesos que también cotizan en mercados internacionales, sin parking para bonos con liquidación externa."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el dólar Crypto?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar Crypto es una cotización implícita que surge de la compra-venta de criptomonedas estables (stablecoins) como USDT o DAI a través de exchanges o plataformas P2P. Ofrece disponibilidad 24/7 pero con límites según el exchange utilizado."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es el dólar Tarjeta?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El dólar Tarjeta es la cotización aplicada a las compras realizadas en el exterior con tarjetas de crédito o débito. Incluye impuestos adicionales como el PAIS (30%) y percepciones a cuenta de Ganancias (30%), resultando en un tipo de cambio significativamente más alto que el oficial."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Con qué frecuencia se actualizan las cotizaciones?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Las cotizaciones se actualizan con diferentes frecuencias: Dólar Oficial y Mayorista se actualizan diariamente en días hábiles, el Dólar Blue varias veces al día, MEP y CCL durante el horario bursátil, y el Dólar Crypto 24/7. Nuestra plataforma actualiza los datos cada minuto."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuáles son las restricciones para cada tipo de dólar?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Dólar Oficial: límite mensual de USD 200 (cepo cambiario). Dólar Blue: sin restricciones. MEP: parking de 5 días para bonos. CCL: sin parking para bonos con liquidación externa. Crypto: límites según exchange. Mayorista: solo para operaciones comerciales. Tarjeta: aplica a consumos en el exterior."
+        }
+      }
+    ]
+  }
+}
