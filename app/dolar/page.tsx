@@ -9,39 +9,59 @@ import {
   generateDollarAnalysisSchema,
   generateDollarFAQSchema
 } from '@/lib/schemas'
-import * as dollarService from '@/lib/api/services/dollar'
+// IMPORTAR DESDE TU SERVICIO
+import { dollarService } from '@/lib/services/dollar.service'
 
-// Función para obtener los datos del dólar
+// Función para obtener los datos del dólar usando tu servicio
 async function getDollarData() {
   try {
-    // Obtener cotizaciones actuales
-    const current = await dollarService.getCurrentDollarRates()
+    // Obtener cotizaciones actuales desde tu servicio
+    const current = await dollarService.getCurrentRates()
     
-    // Obtener datos históricos para el gráfico (último año)
+    // Obtener datos históricos para el gráfico (últimos 3 meses por defecto)
     const endDate = new Date()
     const startDate = new Date()
-    startDate.setFullYear(startDate.getFullYear() - 1)
+    startDate.setMonth(startDate.getMonth() - 3)
     
-    const historical = await dollarService.getHistoricalDollarRates({
+    const historical = await dollarService.getHistoricalRates({
       from: startDate.toISOString().split('T')[0],
       to: endDate.toISOString().split('T')[0],
       interval: 'daily'
     })
 
     // Obtener comparación de tipos
-    const comparison = await dollarService.compareDollarTypes({})
+    const comparison = await dollarService.compareTypes({})
 
     return {
-      current,
-      historical,
-      comparison
+      current: current || {},
+      historical: historical || { series: [], summary: {} },
+      comparison: comparison || { 
+        date: new Date().toISOString(),
+        types: [], 
+        analysis: {
+          cheapest: '',
+          mostExpensive: '',
+          averageSpread: 0,
+          maxDifference: 0
+        }
+      }
     }
   } catch (error) {
     console.error('Error fetching dollar data:', error)
+    // Retornar estructura vacía en caso de error
     return {
       current: {},
       historical: { series: [], summary: {} },
-      comparison: { types: [], analysis: {} }
+      comparison: { 
+        date: new Date().toISOString(),
+        types: [], 
+        analysis: {
+          cheapest: '',
+          mostExpensive: '',
+          averageSpread: 0,
+          maxDifference: 0
+        }
+      }
     }
   }
 }
@@ -110,7 +130,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// Componente de la página - SE EJECUTA EN EL SERVIDOR
 export default async function DollarPage() {
+  // Obtener datos usando tu servicio
   const data = await getDollarData()
 
   return (
@@ -143,6 +165,7 @@ export default async function DollarPage() {
         id="organization-schema" 
       />
       
+      {/* DollarClient es un Client Component que recibe los datos ya procesados */}
       <DollarClient initialData={data} />
     </>
   )

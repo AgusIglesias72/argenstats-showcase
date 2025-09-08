@@ -1,19 +1,22 @@
 'use client'
 
-import { useState, useMemo, useEffect, useTransition } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, RefreshCw, Clock, Info } from 'lucide-react'
+import { useState, useEffect, useTransition } from 'react'
+import { TrendingUp, TrendingDown, DollarSign, RefreshCw, Clock, ArrowUp, ArrowDown } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DollarChart } from './DollarChart'
 import { DollarInfo } from './DollarInfo'
-import { DOLLAR_TYPES, DOLLAR_TYPE_LABELS, DOLLAR_TYPE_COLORS } from '@/lib/api/constants/dollar'
+import { DOLLAR_TYPE_LABELS, DOLLAR_TYPE_COLORS } from '@/lib/api/constants/dollar'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+// Importar Server Actions
+import { 
+  fetchCurrentDollarRates, 
+  fetchHistoricalDollarRates 
+} from '@/app/actions/dollar.actions'
 
-// Tipos para los datos del dólar
+// Tipos importados del servicio
 interface DollarRate {
   dollarType: string
   buyPrice: number
@@ -66,94 +69,13 @@ interface DollarClientProps {
   initialData: DollarData
 }
 
-// Función para generar datos mock cuando no hay datos reales
-const generateMockDollarData = () => {
-  const basePrice = 1200
-  const variation = Math.random() * 100 - 50 // Variación de -50 a +50
-  
-  return {
-    BLUE: {
-      dollarType: 'BLUE',
-      buyPrice: basePrice + variation,
-      sellPrice: basePrice + variation + 20,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice + variation + 10,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    OFICIAL: {
-      dollarType: 'OFICIAL',
-      buyPrice: basePrice - 200,
-      sellPrice: basePrice - 180,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice - 190,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    MEP: {
-      dollarType: 'MEP',
-      buyPrice: basePrice + variation - 50,
-      sellPrice: basePrice + variation - 30,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice + variation - 40,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    CCL: {
-      dollarType: 'CCL',
-      buyPrice: basePrice + variation - 30,
-      sellPrice: basePrice + variation - 10,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice + variation - 20,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    CRYPTO: {
-      dollarType: 'CRYPTO',
-      buyPrice: basePrice + variation - 20,
-      sellPrice: basePrice + variation,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice + variation - 10,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    MAYORISTA: {
-      dollarType: 'MAYORISTA',
-      buyPrice: basePrice - 150,
-      sellPrice: basePrice - 130,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice - 140,
-      spread: 20,
-      spreadPercentage: '1.67'
-    },
-    TARJETA: {
-      dollarType: 'TARJETA',
-      buyPrice: basePrice + 400,
-      sellPrice: basePrice + 420,
-      date: new Date().toISOString().split('T')[0],
-      averagePrice: basePrice + 410,
-      spread: 20,
-      spreadPercentage: '1.67'
-    }
-  }
-}
-
 export function DollarClient({ initialData }: DollarClientProps) {
-  const [data, setData] = useState<DollarData>(() => {
-    // Si no hay datos iniciales, usar datos mock
-    if (!initialData || Object.keys(initialData.current || {}).length === 0) {
-      return {
-        current: generateMockDollarData(),
-        historical: { series: [], summary: {} },
-        comparison: { types: [], analysis: {} }
-      }
-    }
-    return initialData
-  })
+  const [data, setData] = useState<DollarData>(initialData)
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['BLUE', 'OFICIAL'])
   const [timeRange, setTimeRange] = useState('3months')
   const [isPending, startTransition] = useTransition()
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [isLoadingHistorical, setIsLoadingHistorical] = useState(false)
 
   // Agrupar tipos de dólar por categoría
   const financialDollars = ['MEP', 'CCL', 'CRYPTO']
@@ -164,15 +86,19 @@ export function DollarClient({ initialData }: DollarClientProps) {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price)
   }
 
-  // Función para calcular variación (simulada por ahora)
-  const calculateVariation = (current: number, previous: number) => {
-    if (!previous || previous === 0) return 0
-    return ((current - previous) / previous) * 100
+  // Función para formatear precio compacto (para móvil)
+  const formatCompactPrice = (price: number) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price)
   }
 
   // Función para obtener el tiempo transcurrido
@@ -191,12 +117,13 @@ export function DollarClient({ initialData }: DollarClientProps) {
     }
   }
 
-  // Función para obtener datos históricos
+  // Función para obtener datos históricos usando Server Actions
   const fetchHistoricalData = async (timeRange: string) => {
+    setIsLoadingHistorical(true)
     try {
       const now = new Date()
       let fromDate: Date
-      let interval = 'daily'
+      let interval: 'daily' | 'weekly' | 'monthly' = 'daily'
       
       switch (timeRange) {
         case '3months':
@@ -213,7 +140,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
           break
         case '5years':
           fromDate = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000)
-          interval = 'daily'
+          interval = 'weekly'
           break
         case '10years':
           fromDate = new Date(now.getTime() - 10 * 365 * 24 * 60 * 60 * 1000)
@@ -230,41 +157,41 @@ export function DollarClient({ initialData }: DollarClientProps) {
       const from = fromDate.toISOString().split('T')[0]
       const to = now.toISOString().split('T')[0]
       
-      const response = await fetch(`/api/conversor/dollar?from=${from}&to=${to}&interval=${interval}`)
-      
-      if (!response.ok) {
-        throw new Error('Error fetching historical data')
-      }
-      
-      const result = await response.json()
-      
-      console.log(`📊 Fetching ${timeRange}:`, {
+      console.log(`📊 Solicitando datos históricos:`, {
+        timeRange,
         from,
         to,
-        interval,
-        dataCount: result.data?.length || 0,
-        metadata: result.metadata
+        interval
+      })
+      
+      // Usar Server Action para obtener datos históricos
+      const result = await fetchHistoricalDollarRates({
+        from,
+        to,
+        interval
       })
       
       if (result.success && result.data) {
         setData(prevData => ({
           ...prevData,
-          series: result.data
+          historical: result.data
         }))
       }
     } catch (error) {
       console.error('Error fetching historical data:', error)
+    } finally {
+      setIsLoadingHistorical(false)
     }
   }
 
-  // Función para actualizar datos
+  // Función para actualizar datos usando Server Actions
   const refreshData = async () => {
     startTransition(async () => {
       try {
-        const response = await fetch('/api/conversor/dollar')
-        const result = await response.json()
+        // Usar Server Action para obtener datos actuales
+        const result = await fetchCurrentDollarRates()
         
-        if (result.success) {
+        if (result.success && result.data) {
           setData(prev => ({
             ...prev,
             current: result.data
@@ -276,93 +203,144 @@ export function DollarClient({ initialData }: DollarClientProps) {
         await fetchHistoricalData(timeRange)
       } catch (error) {
         console.error('Error refreshing data:', error)
-        // En caso de error, usar datos de ejemplo
-        setData(prev => ({
-          ...prev,
-          current: generateMockDollarData()
-        }))
-        setLastUpdate(new Date())
       }
     })
   }
 
   // Efecto para cargar datos históricos cuando cambie el período
   useEffect(() => {
-    fetchHistoricalData(timeRange)
+    if (timeRange) {
+      fetchHistoricalData(timeRange)
+    }
   }, [timeRange])
 
-  // Componente para mostrar una tarjeta de cotización
+  // Componente para mostrar una tarjeta de cotización - VERSION DESKTOP
   const DollarCard = ({ type, rate }: { type: string; rate: DollarRate }) => {
-    const variation = 0 // Simulado por ahora
+    const variation = 0 // Por ahora simulado
     const isPositive = variation >= 0
     
     return (
-      <Card className="relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-500/10 to-transparent rounded-bl-full" />
-        <CardHeader className="relative pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <div>
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {DOLLAR_TYPE_LABELS[type] || type}
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  {type}
-                </CardDescription>
+      <>
+        {/* Versión Desktop - Se oculta en móvil */}
+        <Card className="relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow 
+        duration-300 hidden md:block">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-500/10 
+          to-transparent rounded-bl-full" />
+          <CardHeader className="relative pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <div>
+                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {DOLLAR_TYPE_LABELS[type] || type}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    {type}
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge 
+                variant={isPositive ? "default" : "destructive"}
+                className="text-xs"
+              >
+                {isPositive ? '+' : ''}{variation.toFixed(2)}%
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
+                <p className="text-sm text-muted-foreground mb-1">Compra</p>
+                <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                  {formatPrice(rate.buyPrice)}
+                </p>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
+                <p className="text-sm text-muted-foreground mb-1">Venta</p>
+                <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                  {formatPrice(rate.sellPrice)}
+                </p>
               </div>
             </div>
-            <Badge 
-              variant={isPositive ? "default" : "destructive"}
-              className="text-xs"
-            >
-              {isPositive ? '+' : ''}{variation.toFixed(2)}%
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
-              <p className="text-sm text-muted-foreground mb-1">Compra</p>
-              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                {formatPrice(rate.buyPrice)}
-              </p>
+            
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Actualizado</span>
+              <div className="flex items-center space-x-1">
+                <Clock className="h-3 w-3" />
+                <span>{getTimeAgo(new Date(rate.date))}</span>
+              </div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
-              <p className="text-sm text-muted-foreground mb-1">Venta</p>
-              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                {formatPrice(rate.sellPrice)}
-              </p>
+          </CardContent>
+        </Card>
+
+        {/* Versión Móvil - Más compacta */}
+        <Card className="md:hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardContent className="">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-8 rounded-full"
+                  style={{ backgroundColor: DOLLAR_TYPE_COLORS[type] || '#10b981' }}
+                />
+                <div>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                    {DOLLAR_TYPE_LABELS[type] || type}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {type}
+                  </p>
+                </div>
+              </div>
+              <Badge 
+                variant={isPositive ? "default" : "destructive"}
+                className="text-xs h-5"
+              >
+                {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                {Math.abs(variation).toFixed(1)}%
+              </Badge>
             </div>
-          </div>
-          
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Actualizado</span>
-            <div className="flex items-center space-x-1">
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-2">
+                <p className="text-xs text-muted-foreground">Compra</p>
+                <p className="font-bold text-sm">
+                  {formatCompactPrice(rate.buyPrice)}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-2">
+                <p className="text-xs text-muted-foreground">Venta</p>
+                <p className="font-bold text-sm">
+                  {formatCompactPrice(rate.sellPrice)}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               <span>{getTimeAgo(new Date(rate.date))}</span>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </>
     )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl mb-4">
-            <DollarSign className="w-8 h-8 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        {/* Header - Más compacto en móvil */}
+        <div className="mb-6 md:mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl md:rounded-2xl mb-3 md:mb-4">
+            <DollarSign className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
             Cotizaciones de Dólar
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
-            Seguimiento en tiempo real de los principales tipos de cambio en Argentina
+          <p className="text-sm md:text-lg text-gray-600 dark:text-gray-400">
+            <span className="hidden md:inline">Seguimiento en tiempo real de los principales tipos de cambio en Argentina</span>
+            <span className="md:hidden">Tipos de cambio en Argentina</span>
           </p>
-          <div className="flex items-center justify-center space-x-4 mt-4">
+          <div className="flex items-center justify-center space-x-4 mt-3 md:mt-4">
             <Button
               onClick={refreshData}
               disabled={isPending}
@@ -373,28 +351,31 @@ export function DollarClient({ initialData }: DollarClientProps) {
               <RefreshCw className={`h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
               <span>Actualizar</span>
             </Button>
-            <div className="text-sm text-muted-foreground">
-              Última actualización: {getTimeAgo(lastUpdate)}
+            <div className="text-xs md:text-sm text-muted-foreground">
+              {getTimeAgo(lastUpdate)}
             </div>
           </div>
         </div>
 
         {/* Cotizaciones actuales */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Cotizaciones actuales
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden md:inline">Cotizaciones actuales</span>
+              <span className="md:hidden">Cotizaciones</span>
             </h2>
           </div>
 
           {/* Dólares Financieros */}
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Dólares Financieros</h3>
+          <div className="mb-4 md:mb-6">
+            <div className="flex items-center space-x-2 mb-3 md:mb-4">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+              <h3 className="text-base md:text-xl font-semibold text-gray-900 dark:text-white">
+                Dólares Financieros
+              </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6">
               {financialDollars.map(type => {
                 const rate = data.current[type]
                 return rate ? (
@@ -406,11 +387,13 @@ export function DollarClient({ initialData }: DollarClientProps) {
 
           {/* Dólares de Referencia */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Dólares de Referencia</h3>
+            <div className="flex items-center space-x-2 mb-3 md:mb-4">
+              <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+              <h3 className="text-base md:text-xl font-semibold text-gray-900 dark:text-white">
+                Dólares de Referencia
+              </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
               {referenceDollars.map(type => {
                 const rate = data.current[type]
                 return rate ? (
@@ -428,6 +411,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
           timeRange={timeRange}
           onTypesChange={setSelectedTypes}
           onTimeRangeChange={setTimeRange}
+          isLoading={isLoadingHistorical}
         />
 
         {/* Información */}
