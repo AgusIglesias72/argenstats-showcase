@@ -10,6 +10,8 @@ import {
   CERCalculatorResponse
 } from '@/lib/api/constants/cer'
 
+export { CERError } from '@/lib/api/constants/cer'
+
 export async function getCurrentCER(): Promise<CERViewResponse> {
   // Obtener el valor más reciente
   const currentData = await prisma.bcraData.findFirst({

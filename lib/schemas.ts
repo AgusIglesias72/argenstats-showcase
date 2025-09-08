@@ -868,3 +868,216 @@ export function generateIPCFAQSchema() {
     ]
   }
 }
+
+
+// Interfaces para Riesgo País
+interface RiesgoPaisPageData {
+  current: {
+    value: number
+    date: string
+    dailyChange: number
+    dailyChangePercent: number
+    officialValue?: number
+    estimatorDiff?: number
+  } | null
+  jpMorganData: {
+    official: number
+    estimated: number
+    difference: number
+    lastUpdate: string
+  } | null
+  historical: Array<{
+    date: string
+    value: number
+    officialValue?: number
+  }>
+  variations: {
+    daily: { value: number, percent: number }
+    weekly: { value: number, percent: number }
+    monthly: { value: number, percent: number }
+    quarterly: { value: number, percent: number }
+    yearly: { value: number, percent: number }
+    ytd: { value: number, percent: number }
+  } | null
+}
+
+// Schema para el Dataset del Riesgo País
+export function generateRiesgoPaisSchema(data: RiesgoPaisPageData) {
+  const lastUpdate = data.current?.date || new Date().toISOString()
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Riesgo País Argentina - EMBI+",
+    "description": "Indicador de riesgo soberano argentino que mide el diferencial de tasas de los bonos argentinos respecto a los bonos del Tesoro de Estados Unidos. Datos del JP Morgan EMBI+ y estimaciones en tiempo real.",
+    "url": "https://argentinadatos.com/indicadores/riesgo-pais",
+    "keywords": "riesgo país, argentina, embi, jp morgan, bonos soberanos, spread, default, mercados emergentes",
+    "creator": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos",
+      "url": "https://argentinadatos.com"
+    },
+    "distribution": [
+      {
+        "@type": "DataDownload",
+        "encodingFormat": "application/json",
+        "contentUrl": "https://argentinadatos.com/api/riesgo-pais"
+      }
+    ],
+    "temporalCoverage": "2020-01-01/..",
+    "spatialCoverage": {
+      "@type": "Place",
+      "name": "Argentina"
+    },
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "isBasedOn": {
+      "@type": "Dataset",
+      "name": "JP Morgan EMBI+",
+      "publisher": {
+        "@type": "Organization",
+        "name": "JP Morgan"
+      }
+    },
+    "datePublished": "2024-01-01",
+    "dateModified": lastUpdate,
+    "measurementTechnique": "Cálculo del diferencial (spread) entre el rendimiento de los bonos soberanos argentinos y los bonos del Tesoro de EE.UU.",
+    "variableMeasured": [
+      {
+        "@type": "PropertyValue",
+        "name": "Riesgo País",
+        "value": data.current?.value || 0,
+        "unitText": "puntos básicos",
+        "measurementMethod": "EMBI+ Index"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación Diaria",
+        "value": data.current?.dailyChangePercent?.toFixed(2) || 0,
+        "unitText": "porcentaje"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "JP Morgan Oficial",
+        "value": data.jpMorganData?.official || 0,
+        "unitText": "puntos básicos"
+      }
+    ]
+  }
+}
+
+// Schema para el Análisis del Riesgo País
+export function generateRiesgoPaisAnalysisSchema(data: RiesgoPaisPageData) {
+  const currentValue = data.current?.value || 0
+  const dailyChange = data.current?.dailyChangePercent?.toFixed(2) || 0
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "FinancialProduct",
+    "name": "Riesgo País Argentina",
+    "description": `Indicador de riesgo soberano: ${currentValue} puntos básicos`,
+    "url": "https://argentinadatos.com/indicadores/riesgo-pais",
+    "provider": {
+      "@type": "Organization",
+      "name": "ArgentinaDatos"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": currentValue,
+      "priceCurrency": "BASIS_POINTS"
+    },
+    "annualPercentageRate": data.variations?.yearly?.percent || 0,
+    "interestRate": {
+      "@type": "QuantitativeValue",
+      "value": currentValue,
+      "unitText": "puntos básicos"
+    },
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Nivel de Riesgo",
+        "value": currentValue < 500 ? "Bajo" : currentValue < 1000 ? "Moderado" : currentValue < 1500 ? "Alto" : "Muy Alto"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación Diaria",
+        "value": `${dailyChange}%`
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación Mensual",
+        "value": `${data.variations?.monthly?.percent?.toFixed(2) || 0}%`
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Variación Anual",
+        "value": `${data.variations?.yearly?.percent?.toFixed(2) || 0}%`
+      }
+    ]
+  }
+}
+
+// Schema FAQ para Riesgo País
+export function generateRiesgoPaisFAQSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es el Riesgo País?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El riesgo país es un indicador que mide la probabilidad de que un país no pueda cumplir con sus obligaciones de deuda externa. Se expresa en puntos básicos (pb) sobre los bonos del Tesoro de Estados Unidos. Por ejemplo, un riesgo país de 1000 pb significa que los bonos argentinos pagan 10% más de interés que los bonos estadounidenses de similar plazo."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo se calcula el Riesgo País?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Se calcula como el diferencial (spread) entre el rendimiento de los bonos soberanos argentinos y los bonos del Tesoro de EE.UU. de similar vencimiento. El índice más utilizado es el EMBI+ (Emerging Markets Bond Index Plus) calculado por JP Morgan."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué significa que el Riesgo País suba?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cuando el riesgo país aumenta, indica que los inversores perciben mayor riesgo de impago por parte del país. Esto encarece el acceso al crédito internacional, ya que los prestamistas exigen mayores tasas de interés para compensar el riesgo adicional."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuáles son los niveles de Riesgo País?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Generalmente se considera: Riesgo Bajo (0-500 pb): acceso normal a mercados internacionales. Riesgo Moderado (500-1000 pb): cierta preocupación pero manejable. Riesgo Alto (1000-1500 pb): acceso muy costoso al financiamiento. Riesgo Muy Alto (+1500 pb): prácticamente sin acceso a mercados, riesgo de default."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Por qué es importante el Riesgo País?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El riesgo país afecta directamente la economía: determina el costo del financiamiento externo para el gobierno y empresas, influye en las decisiones de inversión extranjera, impacta en el tipo de cambio y puede afectar las tasas de interés domésticas. Un riesgo país alto puede limitar el crecimiento económico."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué factores afectan el Riesgo País?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Los principales factores incluyen: la situación fiscal del país, las reservas internacionales del Banco Central, la estabilidad política e institucional, el crecimiento económico, la inflación, el déficit de cuenta corriente, la historia de pagos del país y las condiciones globales de los mercados financieros."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la diferencia entre el índice oficial y el estimador?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El índice oficial de JP Morgan EMBI+ se actualiza una vez al día al cierre de los mercados. Nuestro estimador busca reflejar cambios en tiempo real basándose en las cotizaciones de los bonos argentinos durante el día, permitiendo un seguimiento más inmediato de las variaciones del riesgo."
+        }
+      }
+    ]
+  }
+}

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     let historicalLoaded = 0
     
     if (recordCount < 100) { // Si hay menos de 100 registros, cargar histórico
-      console.info('📊 Cargando datos históricos desde Argentina Datos')
+      console.info('📊 Cargando datos históricos desde ArgenStats')
       historicalLoaded = await loadHistoricalData()
     }
     

@@ -4,6 +4,7 @@ import { withApiMiddleware, apiResponse, apiError } from '@/lib/api/middleware'
 import * as cerService from '@/lib/api/services/cer'
 import { getCacheKey, getCached, setCached } from '@/lib/api/cache'
 import { convertToCSV } from '@/lib/api/formatters/csv'
+export { CERError } from '@/lib/api/constants/cer'
 
 // Definir constantes y tipos al principio
 const ALLOWED_VIEWS = ['current', 'historical', 'calculator', 'comparison'] as const
