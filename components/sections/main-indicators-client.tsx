@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { DollarSign, TrendingUp, Activity, Target } from 'lucide-react'
+import { DollarSign, TrendingUp, Activity, Target, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface IndicatorData {
   label: string
@@ -56,6 +57,26 @@ const styleMap = {
 }
 
 export function MainIndicatorsClient({ indicators }: MainIndicatorsClientProps) {
+  const router = useRouter()
+
+  // Mapeo de indicadores a sus rutas
+  const getIndicatorRoute = (indicatorId: string) => {
+    const routeMap: Record<string, string> = {
+      'dolar': '/dolar',
+      'inflacion': '/indicadores/inflacion',
+      'actividad': '/indicadores/emae',
+      'riesgo': '/indicadores/riesgo-pais'
+    }
+    return routeMap[indicatorId] || '#'
+  }
+
+  const handleCardClick = (indicatorId: string) => {
+    const route = getIndicatorRoute(indicatorId)
+    if (route !== '#') {
+      router.push(route)
+    }
+  }
+
   return (
     <section  id="main-indicators" className="py-8 lg:py-16 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -78,7 +99,10 @@ export function MainIndicatorsClient({ indicators }: MainIndicatorsClientProps) 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`${styles.bgColor} rounded-xl p-4 lg:p-6 relative overflow-hidden border border-gray-200/50 dark:border-gray-700/50`}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleCardClick(indicator.id)}
+                className={`${styles.bgColor} rounded-xl p-4 lg:p-6 relative overflow-hidden border border-gray-200/50 dark:border-gray-700/50 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-800/50 group`}
               >
                 {/* Mobile version - más compacto */}
                 <div className="lg:hidden">
@@ -101,6 +125,9 @@ export function MainIndicatorsClient({ indicators }: MainIndicatorsClientProps) 
                         <span className="font-medium text-gray-700 dark:text-gray-300">{item.value}</span>
                       </div>
                     ))}
+                  </div>
+                  <div className="flex items-center justify-end mt-2">
+                    <ArrowRight className={`w-3 h-3 ${styles.iconColor} opacity-0 group-hover:opacity-100 transition-opacity duration-200`} />
                   </div>
                 </div>
 
@@ -138,9 +165,12 @@ export function MainIndicatorsClient({ indicators }: MainIndicatorsClientProps) 
                     ))}
                   </div>
                   {/* Footer */}
-                  <div className={`text-xs flex items-center space-x-1 ${styles.footerColor}`}>
-                    <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
-                    <span>{indicator.footer}</span>
+                  <div className={`text-xs flex items-center justify-between ${styles.footerColor}`}>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
+                      <span>{indicator.footer}</span>
+                    </div>
+                    <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   </div>
                 </div>
               </motion.div>
