@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders,
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
+    console.log('Newsletter POST request received:', {
+      method: request.method,
+      url: request.url,
+      headers: Object.fromEntries(request.headers.entries())
+    })
+    
     const { email } = await request.json()
     
     // Validación básica de email
@@ -10,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!email || !emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Por favor ingresá un email válido' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -23,7 +44,7 @@ export async function POST(request: NextRequest) {
       if (existingSubscription.isActive) {
         return NextResponse.json(
           { message: 'Ya estás suscripto a nuestro newsletter 🎉' },
-          { status: 200 }
+          { status: 200, headers: corsHeaders }
         )
       } else {
         // Reactivar suscripción
@@ -38,7 +59,7 @@ export async function POST(request: NextRequest) {
         
         return NextResponse.json(
           { message: '¡Bienvenido de vuelta! Tu suscripción ha sido reactivada 🚀' },
-          { status: 200 }
+          { status: 200, headers: corsHeaders }
         )
       }
     }
@@ -57,14 +78,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: '¡Gracias por suscribirte! 🎊 Te mantendremos al tanto de las novedades económicas.' },
-      { status: 201 }
+      { status: 201, headers: corsHeaders }
     )
 
   } catch (error) {
     console.error('Error en suscripción:', error)
     return NextResponse.json(
       { error: 'Hubo un error al procesar tu suscripción. Por favor intentá de nuevo.' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }
@@ -77,7 +98,7 @@ export async function DELETE(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { error: 'Email requerido' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -88,7 +109,7 @@ export async function DELETE(request: NextRequest) {
     if (!subscription) {
       return NextResponse.json(
         { error: 'No encontramos tu suscripción' },
-        { status: 404 }
+        { status: 404, headers: corsHeaders }
       )
     }
 
@@ -102,14 +123,14 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(
       { message: 'Te has desuscripto exitosamente' },
-      { status: 200 }
+      { status: 200, headers: corsHeaders }
     )
 
   } catch (error) {
     console.error('Error al desuscribir:', error)
     return NextResponse.json(
       { error: 'Error al procesar la desuscripción' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }

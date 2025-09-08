@@ -6,13 +6,19 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/v1/(.*)',
-  '/api/webhooks/(.*)',
-  '/indicadores(.*)',
+  '/sso-calback(.*)',
+  '/documentacion(.*)',
+  '/contacto(.*)',
   '/dolar(.*)',
-  '/eventos(.*)',
-  '/herramientas(.*)',
-  '/contacto(.*)'
+  '/calculadora-inflacion(.*)',
+  '/conversor-dolar-peso-argentino(.*)',
+  '/indicadores(.*)',
+  '/api/v1/(.*)',
+  '/api/newsletter/(.*)',
+  '/api/conversor/(.*)',
+  '/api/webhooks/(.*)',
+  '/api/debug',
+  '/api/test-redis'
 ])
 
 const isInternalApiRoute = createRouteMatcher([
@@ -31,6 +37,22 @@ export default clerkMiddleware(async (auth, req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
     return
+  }
+
+  // Manejo especial para /api/contact - POST es público, GET requiere admin
+  if (req.nextUrl.pathname === '/api/contact') {
+    if (req.method === 'POST') {
+      return // Permitir POST sin autenticación
+    }
+    if (req.method === 'GET') {
+      // GET requiere autenticación de admin
+      const { userId } = await auth()
+      if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      // Verificar si es admin (esto se maneja en el endpoint mismo)
+      return
+    }
   }
 
   // Proteger rutas admin
@@ -72,6 +94,6 @@ export const config = {
     // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
-    '/(api|trpc)(.*)',
-  ],
+    '/(api|trpc)(.*)'
+  ]
 }
