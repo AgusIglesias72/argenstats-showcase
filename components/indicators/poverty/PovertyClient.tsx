@@ -98,7 +98,7 @@ interface PovertyClientProps {
 export function PovertyClient({ initialData }: PovertyClientProps) {
   const [populationType, setPopulationType] = useState<'persons' | 'households'>('persons')
   const [metricType, setMetricType] = useState<'poverty' | 'indigence' | 'both'>('poverty')
-  const [selectedRegion, setSelectedRegion] = useState<string>('all')
+  const [selectedRegion, setSelectedRegion] = useState<string>('Total')
 
   // Formatear datos para el gráfico histórico
   const chartData = initialData.historical.map(point => ({
@@ -209,7 +209,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
 
   if (!initialData.current) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
@@ -226,7 +226,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -243,7 +243,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
         </div>
 
         {/* Info del período */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-4 mb-6 shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-gray-500" />
@@ -319,6 +319,20 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
                 </div>
               </div>
               <div className="flex gap-2">
+                <Select value={selectedRegion} onValueChange={(v: any) => setSelectedRegion(v)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Seleccionar región" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Total">Total País</SelectItem>
+                    <SelectItem value="Noreste">Noreste</SelectItem>
+                    <SelectItem value="Noroeste">Noroeste</SelectItem>
+                    <SelectItem value="Cuyo">Cuyo</SelectItem>
+                    <SelectItem value="Gran Buenos Aires">Gran Buenos Aires</SelectItem>
+                    <SelectItem value="Pampeana">Pampeana</SelectItem>
+                    <SelectItem value="Patagonia">Patagonia</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={populationType} onValueChange={(v: any) => setPopulationType(v)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />

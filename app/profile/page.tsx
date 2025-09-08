@@ -1,7 +1,7 @@
 // app/profile/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
@@ -31,7 +31,7 @@ const tabs = [
 
 type TabId = typeof tabs[number]['id']
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { user, isLoaded } = useUser()
   const { isAdmin } = useIsAdmin()
   const router = useRouter()
@@ -154,5 +154,17 @@ export default function ProfilePage() {
         {activeTab === 'favorites' && <FavoritesTab />}
       </div>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   )
 }

@@ -376,7 +376,7 @@ export function LaborMarketClient({ initialData }: LaborMarketClientProps) {
                   Evolución del Mercado Laboral
                 </CardTitle>
                 <CardDescription>
-                  Selecciona el indicador, región y presiona "Agregar" para visualizar en el gráfico
+                  Selecciona el indicador, región y presiona &quot;Agregar&quot; para visualizar en el gráfico
                 </CardDescription>
               </div>
             </div>

@@ -503,8 +503,8 @@ const ApiDocumentationClient = () => {
                           1. Ingresá a tu Perfil
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Iniciá sesión en tu cuenta y dirigite a la sección "API Keys" en tu perfil.
-                        </p>
+  Iniciá sesión en tu cuenta y dirigite a la sección &quot;API Keys&quot; en tu perfil.
+</p>
                       </div>
                     </div>
 
@@ -519,7 +519,7 @@ const ApiDocumentationClient = () => {
                           2. Creá una nueva API Key
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Hacé click en "Generar Nueva Key" y asignale un nombre descriptivo.
+                          Hacé click en &quot;Generar Nueva Key&quot; y asignale un nombre descriptivo.
                         </p>
                       </div>
                     </div>

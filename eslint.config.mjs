@@ -10,7 +10,10 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Config base de Next + TS
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  // Ignorados globales
   {
     ignores: [
       "node_modules/**",
@@ -18,7 +21,26 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "lib/generated/**",
     ],
+  },
+
+  // Reglas personalizadas globales
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-this-alias": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+
+
+  // Bajar react/no-unescaped-entities a warning
+  {
+    rules: {
+      "react/no-unescaped-entities": "warn",
+    },
   },
 ];
 

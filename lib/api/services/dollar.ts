@@ -84,7 +84,7 @@ export async function getCurrentDollarRates(type?: string): Promise<DollarCurren
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  let whereClause: any = {}
+  const whereClause: any = {}
 
   // Si se especifica tipo, buscarlo
   if (type) {
@@ -149,15 +149,12 @@ export async function getHistoricalDollarRates(params: {
   const fromDate = new Date(params.from)
   const toDate = new Date(params.to)
 
-  let whereClause: any = {
+  const whereClause: any = {
     date: {
       gte: fromDate,
       lte: toDate
-    }
-  }
-
-  if (params.type) {
-    whereClause.dollarType = params.type
+    },
+    ...(params.type && { dollarType: params.type })
   }
 
   const historicalData = await prisma.dollarRates.findMany({
@@ -230,12 +227,9 @@ export async function compareDollarTypes(params: {
   const targetDate = params.date ? new Date(params.date) : new Date()
   targetDate.setHours(0, 0, 0, 0)
 
-  let whereClause: any = {
-    date: targetDate
-  }
-
-  if (params.types && params.types.length > 0) {
-    whereClause.dollarType = { in: params.types }
+  const whereClause: any = {
+    date: targetDate,
+    ...(params.types && params.types.length > 0 && { dollarType: { in: params.types } })
   }
 
   let rates = await prisma.dollarRates.findMany({

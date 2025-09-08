@@ -449,7 +449,7 @@ export function parseArrayParam(param: string | null, separator: string = ','): 
  * Middleware para validar métodos HTTP
  */
 export function allowedMethods(...methods: string[]) {
-  return (handler: Function) => {
+  return (handler: (request: NextRequest, ...args: any[]) => Promise<Response>) => {
     return async (request: NextRequest, ...args: any[]) => {
       if (!methods.includes(request.method)) {
         return NextResponse.json(

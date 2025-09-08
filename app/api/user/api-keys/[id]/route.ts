@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db/prisma'
 // DELETE - Eliminar una API key específica
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { userId } = await auth()
   
@@ -15,10 +15,12 @@ export async function DELETE(
   }
 
   try {
+    const { id } = await params
+    
     // Verificar que la key pertenece al usuario
     const apiKey = await prisma.apiKey.findFirst({
       where: {
-        id: params.id,
+        id,
         userId
       }
     })
@@ -29,7 +31,7 @@ export async function DELETE(
 
     // Eliminar la key y sus registros de uso (cascade)
     await prisma.apiKey.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ success: true })
