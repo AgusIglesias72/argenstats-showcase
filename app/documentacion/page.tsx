@@ -670,9 +670,10 @@ const ApiDocumentationClient = () => {
             
             {/* Hero Section */}
             <div className="mb-12 text-center">
-              <Badge variant="secondary" className="mb-4">
+              <Badge variant="secondary" className="mb-4 text-xs sm:text-sm">
                 <Zap className="w-3 h-3 mr-1" />
-                ArgenStats API v1.0 - Documentación Oficial
+                <span className="hidden sm:inline">ArgenStats API v1.0 - Documentación Oficial</span>
+                <span className="sm:hidden">API v1.0</span>
               </Badge>
               <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
                 API de Datos Económicos Argentina
@@ -1056,8 +1057,8 @@ $data = json_decode($response, true);`}
                                     </h4>
                                     <div className="space-y-3">
                                       {view.parameters.map((param: any, idx: number) => (
-                                        <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                          <div className="flex gap-2 flex-shrink-0">
+                                        <div key={idx} className="flex flex-col sm:flex-row sm:items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                          <div className="flex gap-2 flex-shrink-0 flex-wrap">
                                             <Badge variant={param.required ? "destructive" : "secondary"} className="text-xs">
                                               {param.required ? 'Requerido' : 'Opcional'}
                                             </Badge>
@@ -1189,37 +1190,37 @@ $data = json_decode($response, true);`}
                         Códigos de Estado HTTP
                       </h4>
                       <div className="space-y-2">
-                        <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <Badge className="bg-green-600">200</Badge>
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <Badge className="bg-green-600 w-fit">200</Badge>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">OK</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Solicitud exitosa</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                          <Badge className="bg-yellow-600">400</Badge>
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                          <Badge className="bg-yellow-600 w-fit">400</Badge>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">Solicitud Incorrecta</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Parámetros inválidos o faltantes</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                          <Badge className="bg-red-600">401</Badge>
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                          <Badge className="bg-red-600 w-fit">401</Badge>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">No Autorizado</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">API key inválida o faltante</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                          <Badge className="bg-orange-600">429</Badge>
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                          <Badge className="bg-orange-600 w-fit">429</Badge>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">Demasiadas Solicitudes</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Límite de velocidad excedido</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                          <Badge className="bg-purple-600">500</Badge>
-                          <div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <Badge className="bg-purple-600 w-fit">500</Badge>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">Error del Servidor</p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Error interno del servidor</p>
                           </div>

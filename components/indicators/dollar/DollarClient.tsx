@@ -316,7 +316,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
                   </CardDescription>
                 </div>
               </div>
-              {variation !== 0 && (
+              {(
                 <Badge 
                   variant={isPositive ? "destructive" : isNegative ? "default" : "secondary"}
                   className="text-xs"
@@ -371,7 +371,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
                   </p>
                 </div>
               </div>
-              {variation !== 0 && (
+              {(
                 <Badge 
                   variant={isPositive ? "destructive" : isNegative ? "default" : "secondary"}
                   className="text-xs h-5"

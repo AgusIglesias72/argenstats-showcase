@@ -219,7 +219,7 @@ export function AdditionalToolsSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              onClick={() => setSelectedTool(tool.id)}
+              onClick={() => setSelectedTool(selectedTool === tool.id ? null : tool.id)}
               className={`relative cursor-pointer transition-all duration-200 ${
                 selectedTool === tool.id ? 'scale-105' : ''
               }`}
@@ -326,10 +326,17 @@ export function AdditionalToolsSection() {
               </div>
 
               {selectedTool && (
-                <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg px-3 py-2">
+                <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
                   <p className="text-xs text-blue-800 dark:text-blue-300">
                     Herramienta seleccionada: <span className="font-medium">{upcomingTools.find(t => t.id === selectedTool)?.title}</span>
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTool(null)}
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-xs font-medium ml-2"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 

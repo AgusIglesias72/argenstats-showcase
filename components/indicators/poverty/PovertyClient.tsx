@@ -348,7 +348,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
         {/* Análisis histórico */}
         <Card className="mb-8">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-col md:flex-row space-y-4 md:space-y-0">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-600" />
                 <div>
@@ -423,7 +423,9 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
               <TabsContent value="chart" className="space-y-4">
                 <div className="h-96 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
+                    <AreaChart data={chartData}
+                              margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
+>
                       <defs>
                         <linearGradient id="povertyGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
@@ -518,7 +520,9 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
               {/* Gráfico de barras */}
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regionalChartData}>
+                  <BarChart data={regionalChartData}
+                                                margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
+>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis 
                       dataKey="region" 

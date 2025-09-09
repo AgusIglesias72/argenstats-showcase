@@ -285,10 +285,39 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Illustration Side - mismo que sign-in */}
-      <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 relative overflow-hidden">
-        {/* Mismo contenido que sign-in */}
-      </div>
+    {/* Illustration Side - Desktop Only */}
+    <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 relative overflow-hidden">
+                <div className="absolute inset-0">
+                    <div className="absolute top-0 -right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+                    <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+                </div>
+
+                <div className="relative z-10 text-white text-center px-12">
+                    <h2 className="text-4xl font-bold mb-6">
+                        Análisis económico
+                        <br />
+                        en tiempo real
+                    </h2>
+                    <p className="text-xl text-blue-100 mb-8">
+                        Datos oficiales del INDEC actualizados constantemente
+                    </p>
+
+                    <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 space-y-4">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-sm">Más de 50 indicadores económicos</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-sm">API RESTful completa</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-sm">Visualizaciones interactivas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </div>
   )
 }

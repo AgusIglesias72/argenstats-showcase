@@ -110,7 +110,7 @@ export function EmaeChart({ data, viewType, dataType }: EmaeChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={processedData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
           >
             <CartesianGrid 
               strokeDasharray="3 3" 
@@ -119,19 +119,21 @@ export function EmaeChart({ data, viewType, dataType }: EmaeChartProps) {
             />
             <XAxis
               dataKey="date"
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 10 }}
               tickLine={false}
               axisLine={{ stroke: '#e5e7eb' }}
               className="dark:stroke-gray-700"
               interval="preserveStartEnd"
+              height={30}
             />
             <YAxis
               domain={yDomain}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 10 }}
               tickLine={false}
               axisLine={{ stroke: '#e5e7eb' }}
               className="dark:stroke-gray-700"
               tickFormatter={(value) => `${value}%`}
+              width={40}
             />
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
@@ -162,8 +164,8 @@ export function EmaeChart({ data, viewType, dataType }: EmaeChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={processedData}
-          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-        >
+          margin={{ top: 10, right: 5, left: -20, bottom: 0 }}
+          >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -177,18 +179,20 @@ export function EmaeChart({ data, viewType, dataType }: EmaeChartProps) {
           />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={{ stroke: '#e5e7eb' }}
             className="dark:stroke-gray-700"
             interval="preserveStartEnd"
+            height={30}
           />
           <YAxis
             domain={yDomain}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={{ stroke: '#e5e7eb' }}
             className="dark:stroke-gray-700"
+            width={40}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area

@@ -390,7 +390,7 @@ export default function EventDetailClient({
             Necesitas una cuenta para participar en los eventos de predicción
           </p>
           <Link
-            href="/sign-in"
+            href={`/sign-in?redirect_url=/eventos/${event.slug}`}
             className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
           >
             Iniciar Sesión

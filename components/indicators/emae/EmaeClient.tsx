@@ -233,8 +233,9 @@ export function EmaeClient({ initialData }: EmaeClientProps) {
 
         {/* KPI Cards */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          <div className="flex items-center flex-col md:flex-row space-y-4 md:space-y-0 justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 
+            flex items-center gap-2">
               <Activity className="w-5 h-5" />
               Valores actuales
               {selectedSector !== 'GENERAL' && (
@@ -397,17 +398,35 @@ export function EmaeClient({ initialData }: EmaeClientProps) {
                 <Tabs value={chartView} onValueChange={(v) => setChartView(v as 'index' | 'monthly' | 'yearly')}>
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="index">Índice</TabsTrigger>
-                    <TabsTrigger value="monthly">Var. Mensual</TabsTrigger>
-                    <TabsTrigger value="yearly">Var. Interanual</TabsTrigger>
+                    <TabsTrigger value="monthly">
+                      <span className="sm:hidden">Var. m/m</span>
+                      <span className="hidden sm:inline">Var. Mensual</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="yearly">
+                      <span className="sm:hidden">Var. i/a</span>
+                      <span className="hidden sm:inline">Var. Interanual</span>
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
 
                 <Tabs value={chartPeriod} onValueChange={(v) => setChartPeriod(v as '12' | '60' | '120' | '240')}>
                   <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="12">1 año</TabsTrigger>
-                    <TabsTrigger value="60">5 años</TabsTrigger>
-                    <TabsTrigger value="120">10 años</TabsTrigger>
-                    <TabsTrigger value="240">20 años</TabsTrigger>
+                    <TabsTrigger value="12">
+                      <span className="sm:hidden">1A</span>
+                      <span className="hidden sm:inline">1 año</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="60">
+                      <span className="sm:hidden">5A</span>
+                      <span className="hidden sm:inline">5 años</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="120">
+                      <span className="sm:hidden">10A</span>
+                      <span className="hidden sm:inline">10 años</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="240">
+                      <span className="sm:hidden">20A</span>
+                      <span className="hidden sm:inline">20 años</span>
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>

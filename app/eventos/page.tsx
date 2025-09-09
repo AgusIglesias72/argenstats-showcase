@@ -52,7 +52,7 @@ function getEventStatusBadge(status: string) {
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('es-AR', {
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
   }).format(new Date(date));
 }
@@ -249,7 +249,7 @@ export default async function EventosPage() {
                                 Mediana de Predicciones ({event.statistics.totalParticipants} participantes)
                               </h4>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                               {Object.entries(categoryConfig).map(([key, config]) => {
                                 const Icon = config.icon;
                                 const value = event.statistics.medianPredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`];

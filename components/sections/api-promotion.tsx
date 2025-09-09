@@ -281,11 +281,12 @@ export function APIPromotionSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 1.5 }}
                 viewport={{ once: true }}
-                className="absolute -top-6 -right-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white 
-                         px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg"
+                className="absolute -top-2 -right-2 lg:-top-6 lg:-right-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white 
+                         px-2 py-1 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm font-medium flex items-center gap-1 lg:gap-2 shadow-lg"
               >
-                <Zap className="h-4 w-4" />
-                Ultra rápida
+                <Zap className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Ultra rápida</span>
+                <span className="sm:hidden">Rápida</span>
               </motion.div>
               
               <motion.div 
@@ -293,11 +294,12 @@ export function APIPromotionSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 1.7 }}
                 viewport={{ once: true }}
-                className="absolute -bottom-4 -left-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white 
-                         px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg"
+                className="absolute -bottom-2 -left-2 lg:-bottom-4 lg:-left-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white 
+                         px-2 py-1 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm font-medium flex items-center gap-1 lg:gap-2 shadow-lg"
               >
-                <Database className="h-4 w-4" />
-                Datos actualizados
+                <Database className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden sm:inline">Datos actualizados</span>
+                <span className="sm:hidden">Actualizado</span>
               </motion.div>
             </motion.div>
           </div>
@@ -312,17 +314,15 @@ export function APIPromotionSection() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <div className="inline-flex items-center gap-6 text-gray-600 dark:text-gray-400">
+          <div className="items-center gap-6 text-gray-600 dark:text-gray-400 px-2 flex flex-row justify-between ">
             <div className="flex items-center gap-2">
               <FileJson className="h-5 w-5" />
               <span>JSON & CSV</span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5" />
               <span>Latencia {'<'} 100ms</span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
             <div className="flex items-center gap-2">
               <Database className="h-5 w-5" />
               <span>99.9% Uptime</span>

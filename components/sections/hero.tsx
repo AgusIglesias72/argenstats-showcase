@@ -143,10 +143,13 @@ export function HeroSection() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Suscribiendo...
+                        <span className="hidden sm:inline">Suscribiendo...</span>
                       </span>
                     ) : (
-                      'Suscribirme'
+                      <>
+                        <Mail className="w-4 h-4 sm:hidden" />
+                        <span className="hidden sm:inline">Suscribirme</span>
+                      </>
                     )}
                   </button>
                 </div>
@@ -294,10 +297,10 @@ export function HeroSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.8 }}
               viewport={{ once: true }}
-              className="absolute -top-4 -right-4 text-white p-3 rounded-full shadow-lg"
+              className="absolute -top-2 -right-2 lg:-top-4 lg:-right-4 text-white p-2 lg:p-3 rounded-full shadow-lg"
               style={{ backgroundColor: ARGENSTATS_BLUE }}
             >
-              <TrendingUp className="h-6 w-6" />
+              <TrendingUp className="h-4 w-4 lg:h-6 lg:w-6" />
             </motion.div>
 
             <motion.div
@@ -305,10 +308,10 @@ export function HeroSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 1 }}
               viewport={{ once: true }}
-              className="absolute -bottom-4 -left-4 bg-white p-3 rounded-full shadow-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+              className="absolute -bottom-2 -left-2 lg:-bottom-4 lg:-left-4 bg-white p-2 lg:p-3 rounded-full shadow-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
               style={{ color: ARGENSTATS_BLUE }}
             >
-              <Activity className="h-6 w-6" />
+              <Activity className="h-4 w-4 lg:h-6 lg:w-6" />
             </motion.div>
           </motion.div>
         </div>
