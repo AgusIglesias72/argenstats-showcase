@@ -19,7 +19,6 @@ import ApiKeysTab from '@/components/profile/tabs/ApiKeysTab'
 import EventsTab from '@/components/profile/tabs/EventsTab'
 import ContactTab from '@/components/profile/tabs/ContactTab'
 import FavoritesTab from '@/components/profile/tabs/FavoritesTab'
-import { Header } from '@/components/layout/header'
 import { useIsAdmin } from '@/lib/hooks/useIsAdmin' // Agregar este import
 
 const tabs = [
@@ -64,9 +63,6 @@ function ProfileContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header principal del sitio */}
-      <Header />
-      
       {/* Header con info del usuario */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

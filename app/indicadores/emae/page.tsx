@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { EmaeClient } from '@/components/indicators/emae/EmaeClient'
 import { emaeService } from '@/lib/services/emae.service'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -116,8 +115,6 @@ export default async function EmaePage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generateEmaeSchema(data as any)} 

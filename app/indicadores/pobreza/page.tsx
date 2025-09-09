@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { PovertyClient } from '@/components/indicators/poverty/PovertyClient'
 import { povertyService } from '@/lib/services/poverty.service'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -109,8 +108,6 @@ export default async function PovertyPage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generatePovertySchema(data as any) || {}} 

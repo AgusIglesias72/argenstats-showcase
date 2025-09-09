@@ -45,7 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Header } from '@/components/layout/header';
+;
 
 const ApiDocumentationClient = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -61,7 +61,7 @@ const ApiDocumentationClient = () => {
     if (isAuthenticated) {
       window.location.href = destination;
     } else {
-      window.location.href = '/auth/login';
+      window.location.href = '/profile?tab=api-keys';
     }
   };
 
@@ -587,7 +587,6 @@ const ApiDocumentationClient = () => {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
         {/* Mobile Sidebar Toggle */}
         <Button

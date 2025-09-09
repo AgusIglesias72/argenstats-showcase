@@ -2,7 +2,6 @@
 import { Metadata } from 'next'
 import { LaborMarketClient } from '@/components/indicators/labor-market/LaborMarketClient'
 import { laborMarketService } from '@/lib/services/labor-market.service'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -122,8 +121,6 @@ export default async function LaborMarketPage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generateLaborMarketSchema(data as any)} 

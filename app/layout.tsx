@@ -4,6 +4,11 @@ import { Righteous } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Providers } from './providers'
 import './globals.css'
+import { LoginModal } from '@/components/auth/login-modal'
+import { Header } from '@/components/layout/header'
+import ClarityScript from "@/components/ClarityScript"
+import { GoogleAnalytics } from '@next/third-parties/google'
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -33,8 +38,13 @@ export default function RootLayout({
       <html lang="es" className={`${inter.variable} ${righteous.variable}`} suppressHydrationWarning>
         <body className="font-sans antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
           <Providers>
+          <Header />
+          <LoginModal />
             {children}
           </Providers>
+          <ClarityScript />
+          <GoogleAnalytics gaId="G-WFK681BVSD" />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

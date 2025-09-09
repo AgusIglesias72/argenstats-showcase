@@ -1,7 +1,6 @@
 // app/indicadores/costo-construccion/page.tsx
 
 import { Metadata } from 'next'
-import { Header } from '@/components/layout/header'
 import { ConstructionCostClient } from '@/components/indicators/construction-cost/ConstructionCostClient'
 
 export const metadata: Metadata = {
@@ -28,7 +27,6 @@ export const metadata: Metadata = {
 export default function ConstructionCostPage() {
   return (
     <>
-      <Header />
       <ConstructionCostClient />
     </>
   )

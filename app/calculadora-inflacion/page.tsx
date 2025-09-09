@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Header } from '@/components/layout/header';
 import { LoginModal } from '@/components/auth/login-modal';
 import InflationCalculator from '@/components/herramientas/inflationCalculator';
 import StructuredData from '@/components/StructuredData';
@@ -111,7 +110,6 @@ export default async function CalculadoraInflacionPage() {
 
   return (
     <>
-      <Header />
       <LoginModal />
       
       {/* Structured Data */}

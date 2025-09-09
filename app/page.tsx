@@ -1,5 +1,3 @@
-import { Header } from '@/components/layout/header'
-import { LoginModal } from '@/components/auth/login-modal'
 import { HeroSection } from '@/components/sections/hero'
 import { MainIndicators } from '@/components/sections/main-indicators'
 import { ConversorPromoSection } from '@/components/sections/conversor-promo'
@@ -10,8 +8,7 @@ import { APIPromotionSection } from '@/components/sections/api-promotion'
 export default function HomePage() {
   return (
     <>
-      <Header />
-      <LoginModal />
+
       
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <HeroSection />

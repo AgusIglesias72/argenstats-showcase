@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { EventsService } from '@/lib/services/events.service';
 import { type EventWithCount } from '@/lib/types/events';
-import { Header } from '@/components/layout/header';
+;
 import { 
   Trophy, TrendingUp, Target, DollarSign, Calendar, Users, Clock, 
   CheckCircle, Sparkles, ArrowRight, Award, ChevronRight, BarChart3,
@@ -109,8 +109,6 @@ export default async function EventosPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      
       {/* Hero Section - Estilo ArgenStats */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
         {/* Background decorative elements */}

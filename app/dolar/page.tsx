@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 import { DollarClient } from '@/components/indicators/dollar/DollarClient'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -137,8 +136,6 @@ export default async function DollarPage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generateDollarSchema(data as any)} 

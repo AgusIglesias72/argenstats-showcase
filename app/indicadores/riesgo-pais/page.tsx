@@ -2,7 +2,6 @@
 import { Metadata } from 'next'
 import { RiesgoPaisClient } from '@/components/indicators/riesgo-pais/RiesgoPaisClient'
 import { riesgoPaisService } from '@/lib/services/riesgo-pais.service'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -122,8 +121,6 @@ export default async function RiesgoPaisPage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generateRiesgoPaisSchema(data as any)} 

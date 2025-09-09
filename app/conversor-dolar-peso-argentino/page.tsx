@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { Header } from '@/components/layout/header'
 import { LoginModal } from '@/components/auth/login-modal'
 import DollarConverter from '@/components/herramientas/conversor'
 import StructuredData from '@/components/StructuredData'
@@ -81,7 +80,6 @@ export const metadata: Metadata = {
 export default function ConversorPage() {
   return (
     <>
-      <Header />
       <LoginModal />
       
       {/* Structured Data - CRÍTICO */}

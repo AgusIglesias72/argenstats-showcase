@@ -1,7 +1,6 @@
 // app/admin/page.tsx
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { Header } from '@/components/layout/header'
 import { Shield } from 'lucide-react'
 import UsersTabServer from '@/components/admin/tabs/UsersTabServer'
 import ApiUsageTabServer from '@/components/admin/tabs/ApiUsageTabServer'
@@ -34,9 +33,6 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header principal del sitio */}
-      <Header />
-      
       {/* Header con info del admin */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

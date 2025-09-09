@@ -3,7 +3,7 @@
 import { notFound } from 'next/navigation';
 import { EventsService } from '@/lib/services/events.service';
 import { currentUser } from '@clerk/nextjs/server';
-import { Header } from '@/components/layout/header';
+;
 import EventDetailClient from './EventDetailClient';
 import { Metadata } from 'next';
 import { Trophy, Calendar, Clock, Users, TrendingUp, Package, Utensils, Wrench, Info, BarChart3 } from 'lucide-react';
@@ -61,8 +61,6 @@ export default async function EventPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
         {/* Background decorative elements */}

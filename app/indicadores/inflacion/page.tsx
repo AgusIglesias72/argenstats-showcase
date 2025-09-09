@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import { IPCClient } from '@/components/indicators/ipc/IPCClient'
 import { ipcService } from '@/lib/services/ipc.service'
-import { Header } from '@/components/layout/header'
 import StructuredData from '@/components/StructuredData'
 import { 
   BreadcrumbSchema,
@@ -117,8 +116,6 @@ export default async function IPCPage() {
 
   return (
     <>
-      <Header />
-      
       {/* Structured Data */}
       <StructuredData 
         data={generateIPCSchema(data as any)} 

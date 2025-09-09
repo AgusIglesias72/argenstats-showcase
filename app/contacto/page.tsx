@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import { XIcon } from '@/components/ui/social-icons'
 import { toast } from 'sonner'
-import { Header } from '@/components/layout/header'
 
 const contactTypes = [
   {
@@ -162,8 +161,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900">
         <div className="container mx-auto px-4 text-center">
