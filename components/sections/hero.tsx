@@ -70,7 +70,7 @@ export function HeroSection() {
               transition={{ duration: 0.5 }}
             >
               <Link 
-                href="/eventos/prediccion-ipc" 
+                href="/eventos/ipc-agosto-2025" 
                 className="inline-flex items-center justify-between px-1 py-1 pr-4 mb-6 text-sm text-gray-700 bg-gray-200/50 rounded-full dark:bg-gray-800 dark:text-white hover:bg-gray-300/50 dark:hover:bg-gray-700 cursor-pointer"
               >
                 <span className="flex items-center px-3 py-1 mr-3 text-xs text-white rounded-full bg-gray-600">
