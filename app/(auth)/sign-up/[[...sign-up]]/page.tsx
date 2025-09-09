@@ -1,10 +1,10 @@
 'use client'
 
 import { useSignUp } from '@clerk/nextjs'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useHydrationFix } from '@/lib/hooks/useHydrationFix'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { GoogleIcon, XIcon } from '@/components/ui/social-icons'
 
 export default function SignUpPage() {
@@ -17,10 +17,27 @@ export default function SignUpPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fromSignIn, setFromSignIn] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Handle hydration mismatch caused by browser extensions
   useHydrationFix()
+
+  // Prellenar email si viene desde sign-in o OAuth
+  useEffect(() => {
+    const email = searchParams.get('email')
+    const fromSignInParam = searchParams.get('fromSignIn')
+    const fromOAuth = searchParams.get('fromOAuth')
+    
+    if (email) {
+      setEmailAddress(email)
+    }
+    
+    if (fromSignInParam === 'true' || fromOAuth === 'true') {
+      setFromSignIn(true)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -137,11 +154,22 @@ export default function SignUpPage() {
               </h1>
             </Link>
             <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
-              Crea tu cuenta gratis
+              {fromSignIn ? 'Crea tu cuenta para continuar' : 'Crea tu cuenta gratis'}
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Sin tarjeta de crédito, para siempre
+              {fromSignIn 
+                ? 'Parece que no tienes una cuenta aún. ¡Regístrate gratis!'
+                : 'Sin tarjeta de crédito, para siempre'
+              }
             </p>
+            
+            {fromSignIn && (
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  💡 <strong>Tip:</strong> Tu email ya está prellenado. Solo completa los demás campos.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Social Login */}
@@ -249,9 +277,9 @@ export default function SignUpPage() {
           </form>
 
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-            ¿Ya tienes cuenta?{' '}
+            {fromSignIn ? '¿Recordaste tu contraseña?' : '¿Ya tienes cuenta?'}{' '}
             <Link href="/sign-in" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-              Inicia sesión
+              {fromSignIn ? 'Intenta de nuevo' : 'Inicia sesión'}
             </Link>
           </p>
         </div>

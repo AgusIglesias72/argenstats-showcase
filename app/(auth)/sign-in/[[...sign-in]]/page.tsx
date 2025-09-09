@@ -37,6 +37,23 @@ export default function SignInPage() {
             }
         } catch (err: any) {
             console.error(err)
+            
+            // Si el error es que el usuario no existe, redirigir a sign-up
+            const errorMessage = err.errors?.[0]?.message || ''
+            if (errorMessage.includes('not found') || 
+                errorMessage.includes('invalid') || 
+                errorMessage.includes('incorrect') ||
+                errorMessage.includes('does not exist')) {
+                
+                // Redirigir a sign-up con el email prellenado
+                const params = new URLSearchParams({
+                    email: emailAddress,
+                    fromSignIn: 'true'
+                })
+                router.push(`/sign-up?${params.toString()}`)
+                return
+            }
+            
             setError('Email o contraseña incorrectos')
         } finally {
             setLoading(false)
