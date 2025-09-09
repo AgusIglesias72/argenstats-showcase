@@ -69,6 +69,7 @@ export function MultiSelect({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls="multi-select-options"
           className={cn(
             "inline-flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
             className
@@ -80,7 +81,7 @@ export function MultiSelect({
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent id="multi-select-options" className="w-full p-0" align="start">
         <Command>
           <CommandInput placeholder="Buscar..." />
           <CommandEmpty>No se encontraron opciones.</CommandEmpty>

@@ -6,11 +6,12 @@ import { EventsService } from '@/lib/services/events.service';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
-    const statistics = await EventsService.getEventStatistics(params.eventId);
-    const distribution = await EventsService.getPredictionDistribution(params.eventId);
+    const { eventId } = await params;
+    const statistics = await EventsService.getEventStatistics(eventId);
+    const distribution = await EventsService.getPredictionDistribution(eventId);
 
     return NextResponse.json({
       statistics,

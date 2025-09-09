@@ -1,7 +1,7 @@
 // components/profile/tabs/ProfileTab.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { 
   Save, 
@@ -45,11 +45,7 @@ export default function ProfileTab() {
     websiteUrl: ''
   })
 
-  useEffect(() => {
-    fetchProfile()
-  }, [])
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch('/api/user/profile')
       if (response.ok) {
@@ -71,7 +67,11 @@ export default function ProfileTab() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/nextjs'
 import { CustomUserDropdown } from '@/components/auth/custom-user-dropdown'
@@ -348,9 +349,11 @@ export function Header() {
                         className="flex w-full items-center justify-between rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                       >
                         <div className="flex items-center space-x-3">
-                          <img
-                            src={user?.imageUrl}
+                          <Image
+                            src={user?.imageUrl || '/default-avatar.png'}
                             alt={user?.fullName || 'Usuario'}
+                            width={40}
+                            height={40}
                             className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
                           />
                           <div className="text-left">

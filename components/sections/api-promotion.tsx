@@ -195,48 +195,48 @@ export function APIPromotionSection() {
                   >
                     <div className="text-yellow-400">{"{"}</div>
                     <div className="pl-4">
-                      <span className="text-blue-400">"success"</span>: <span className="text-green-400">true</span>,
+                      <span className="text-blue-400">&quot;success&quot;</span>: <span className="text-green-400">true</span>,
                     </div>
                     <div className="pl-4">
-                      <span className="text-blue-400">"data"</span>: {"{"}
+                      <span className="text-blue-400">&quot;data&quot;</span>: {"{"}
                     </div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"date"</span>: <span className="text-green-400">"2025-07-31T00:00:00.000Z"</span>,
+                      <span className="text-blue-400">&quot;date&quot;</span>: <span className="text-green-400">&quot;2025-07-31T00:00:00.000Z&quot;</span>,
                     </div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"component"</span>: {"{"}
+                      <span className="text-blue-400">&quot;component&quot;</span>: {"{"}
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"code"</span>: <span className="text-green-400">"GENERAL"</span>,
+                      <span className="text-blue-400">&quot;code&quot;</span>: <span className="text-green-400">&quot;GENERAL&quot;</span>,
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"name"</span>: <span className="text-green-400">"Nivel general"</span>,
+                      <span className="text-blue-400">&quot;name&quot;</span>: <span className="text-green-400">&quot;Nivel general&quot;</span>,
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"type"</span>: <span className="text-green-400">"GENERAL"</span>
+                      <span className="text-blue-400">&quot;type&quot;</span>: <span className="text-green-400">&quot;GENERAL&quot;</span>
                     </div>
                     <div className="pl-8">{"},"}</div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"region"</span>: <span className="text-green-400">"Nacional"</span>,
+                      <span className="text-blue-400">&quot;region&quot;</span>: <span className="text-green-400">&quot;Nacional&quot;</span>,
                     </div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"values"</span>: {"{"}
+                      <span className="text-blue-400">&quot;values&quot;</span>: {"{"}
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"monthly"</span>: <span className="text-orange-400">1.9</span>,
+                      <span className="text-blue-400">&quot;monthly&quot;</span>: <span className="text-orange-400">1.9</span>,
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"yearly"</span>: <span className="text-orange-400">36.6</span>,
+                      <span className="text-blue-400">&quot;yearly&quot;</span>: <span className="text-orange-400">36.6</span>,
                     </div>
                     <div className="pl-12">
-                      <span className="text-blue-400">"accumulated"</span>: <span className="text-orange-400">17.3</span>
+                      <span className="text-blue-400">&quot;accumulated&quot;</span>: <span className="text-orange-400">17.3</span>
                     </div>
                     <div className="pl-8">{"},"}</div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"index"</span>: <span className="text-orange-400">9023.973</span>,
+                      <span className="text-blue-400">&quot;index&quot;</span>: <span className="text-orange-400">9023.973</span>,
                     </div>
                     <div className="pl-8">
-                      <span className="text-blue-400">"lastUpdate"</span>: <span className="text-green-400">"2025-09-09T01:33:14.424Z"</span>
+                      <span className="text-blue-400">&quot;lastUpdate&quot;</span>: <span className="text-green-400">&quot;2025-09-09T01:33:14.424Z&quot;</span>
                     </div>
                     <div className="pl-4">{"}"}</div>
                     <div className="text-yellow-400">{"}"}</div>

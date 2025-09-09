@@ -16,9 +16,10 @@ const ResultsSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const { eventId } = await params;
     const user = await currentUser();
     const userId = user?.id || null;
     
@@ -46,7 +47,7 @@ export async function POST(
 
     // Calcular rankings y actualizar evento
     const rankings = await EventsService.calculateRankings(
-      params.eventId,
+      eventId,
       validatedData
     );
 
