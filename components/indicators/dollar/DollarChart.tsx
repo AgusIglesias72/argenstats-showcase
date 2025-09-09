@@ -136,7 +136,7 @@ export function DollarChart({
       const mockData = generateMockData(timeRange, selectedTypes)
       setChartData(mockData)
     }
-  }, [data.series, selectedTypes, timeRange, generateMockData])
+  }, [data.series, selectedTypes, timeRange])
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {

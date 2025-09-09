@@ -1,7 +1,7 @@
 // components/indicators/dollar/DollarClient.tsx
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useCallback } from 'react'
 import { TrendingUp, TrendingDown, DollarSign, RefreshCw, Clock, ArrowUp, ArrowDown } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -207,7 +207,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
   }
 
   // Función para obtener datos históricos
-  const fetchHistoricalData = async (timeRange: string) => {
+  const fetchHistoricalData = useCallback(async (timeRange: string) => {
     if (!isClient) return
     
     setIsLoadingHistorical(true)
@@ -257,7 +257,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
     } finally {
       setIsLoadingHistorical(false)
     }
-  }
+  }, [isClient])
 
   // Función para actualizar datos
   const refreshData = async () => {
@@ -284,10 +284,10 @@ export function DollarClient({ initialData }: DollarClientProps) {
 
   // Efecto para cargar datos históricos cuando cambie el período
   useEffect(() => {
-    if (timeRange) {
+    if (timeRange && isClient) {
       fetchHistoricalData(timeRange)
     }
-  }, [timeRange])
+  }, [timeRange, isClient, fetchHistoricalData])
 
   // Componente para mostrar una tarjeta de cotización
   const DollarCard = ({ type, rate }: { type: string; rate: DollarRate }) => {
