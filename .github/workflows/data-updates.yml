@@ -2,10 +2,18 @@ name: Data Updates
 
 on:
   schedule:
-    # Actualización diaria a las 6:00 AM UTC (3:00 AM Argentina)
-    - cron: '0 6 * * *'
-    # Actualización cada 6 horas para datos críticos (dólar, inflación)
-    - cron: '0 */6 * * *'
+    # Dollar y Riesgo País - cada 20 minutos
+    - cron: '*/20 * * * *'
+    
+    # BCRA - una vez al día a las 10:00 AM Buenos Aires (13:00 UTC)
+    - cron: '0 13 * * *'
+    
+    # EMAE e IPC - todos los días a las 16:02 Buenos Aires (19:02 UTC)
+    - cron: '2 19 * * *'
+    
+    # Labor Market y Poverty - todos los días a las 05:00 Buenos Aires (08:00 UTC)
+    - cron: '0 8 * * *'
+    
   workflow_dispatch:
     inputs:
       update_type:
@@ -16,101 +24,165 @@ on:
         options:
           - all
           - critical
-          - daily
-      force_update:
-        description: 'Forzar actualización completa'
+          - indicators
+          - specific
+      specific_endpoint:
+        description: 'Endpoint específico (solo si update_type es specific)'
         required: false
-        default: false
-        type: boolean
+        type: choice
+        options:
+          - update-dollar
+          - update-country-risk
+          - update-ipc
+          - update-bcra
+          - update-emae
+          - update-labor-market
+          - update-poverty
 
 env:
   ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
   VERCEL_URL: ${{ secrets.VERCEL_URL }}
 
 jobs:
-  update-critical:
-    if: github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *'
+  # Dollar y Riesgo País - cada 20 minutos
+  update-high-frequency:
+    if: github.event_name == 'schedule' && contains(github.event.schedule, '*/20')
     runs-on: ubuntu-latest
-    name: Update Critical Data (Every 6 hours)
+    name: Update High Frequency Data (Every 20 min)
+    timeout-minutes: 5
     steps:
       - name: Update Dollar Rates
+        continue-on-error: true
         run: |
+          echo "💵 Updating dollar rates..."
           curl -X GET \
             -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
             -H "Content-Type: application/json" \
+            --max-time 120 \
             "${{ env.VERCEL_URL }}/api/internal/update-dollar"
       
       - name: Update Country Risk
+        continue-on-error: true
         run: |
+          echo "📊 Updating country risk..."
           curl -X GET \
             -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
             -H "Content-Type: application/json" \
+            --max-time 120 \
             "${{ env.VERCEL_URL }}/api/internal/update-country-risk"
 
-  update-daily:
-    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'
+  # BCRA - una vez al día
+  update-bcra:
+    if: github.event_name == 'schedule' && contains(github.event.schedule, '0 13')
     runs-on: ubuntu-latest
-    name: Update All Data (Daily)
+    name: Update BCRA Data (Daily)
+    timeout-minutes: 10
     steps:
-      - name: Update All Indicators
+      - name: Update BCRA Data
         run: |
+          echo "🏦 Updating BCRA data..."
           curl -X GET \
             -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
             -H "Content-Type: application/json" \
-            "${{ env.VERCEL_URL }}/api/internal/update-all"
+            --max-time 300 \
+            "${{ env.VERCEL_URL }}/api/internal/update-bcra"
 
+  # EMAE e IPC - 16:02 Buenos Aires
+  update-economic-indicators:
+    if: github.event_name == 'schedule' && contains(github.event.schedule, '2 19')
+    runs-on: ubuntu-latest
+    name: Update Economic Indicators (EMAE & IPC)
+    timeout-minutes: 15
+    steps:
+      - name: Update IPC (Inflation)
+        run: |
+          echo "📈 Updating IPC data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 300 \
+            "${{ env.VERCEL_URL }}/api/internal/update-ipc"
+      
+      - name: Update EMAE
+        run: |
+          echo "📊 Updating EMAE data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 300 \
+            "${{ env.VERCEL_URL }}/api/internal/update-emae"
+
+  # Labor Market y Poverty - 05:00 Buenos Aires
+  update-social-indicators:
+    if: github.event_name == 'schedule' && contains(github.event.schedule, '0 8')
+    runs-on: ubuntu-latest
+    name: Update Social Indicators (Labor & Poverty)
+    timeout-minutes: 15
+    steps:
+      - name: Update Labor Market
+        run: |
+          echo "👷 Updating labor market data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 300 \
+            "${{ env.VERCEL_URL }}/api/internal/update-labor-market"
+      
+      - name: Update Poverty Data
+        run: |
+          echo "📉 Updating poverty data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 300 \
+            "${{ env.VERCEL_URL }}/api/internal/update-poverty"
+
+  # Manual updates
   update-manual:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     name: Manual Update
     steps:
-      - name: Update Critical Data Only
-        if: github.event.inputs.update_type == 'critical'
-        run: |
-          echo "🔄 Updating critical data only..."
-          curl -X GET \
-            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            "${{ env.VERCEL_URL }}/api/internal/update-dollar"
-          
-          curl -X GET \
-            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            "${{ env.VERCEL_URL }}/api/internal/update-country-risk"
-          
-          curl -X GET \
-            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            "${{ env.VERCEL_URL }}/api/internal/update-ipc"
-
-      - name: Update Daily Data
-        if: github.event.inputs.update_type == 'daily'
-        run: |
-          echo "📊 Updating daily data..."
-          curl -X GET \
-            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            "${{ env.VERCEL_URL }}/api/internal/update-all"
-
-      - name: Update All Data
+      - name: Update All
         if: github.event.inputs.update_type == 'all'
         run: |
           echo "🚀 Updating all data..."
           curl -X GET \
             -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
-            -H "Content-Type: application/json" \
+            --max-time 600 \
             "${{ env.VERCEL_URL }}/api/internal/update-all"
 
-  notify-on-failure:
-    if: failure()
-    runs-on: ubuntu-latest
-    name: Notify on Failure
-    steps:
-      - name: Send Failure Notification
+      - name: Update Critical (Dollar & Risk)
+        if: github.event.inputs.update_type == 'critical'
         run: |
-          echo "❌ Data update failed!"
-          # Aquí podrías agregar notificaciones a Slack, Discord, email, etc.
-          # Por ejemplo:
-          # curl -X POST -H 'Content-type: application/json' \
-          #   --data '{"text":"❌ ArgenStats data update failed!"}' \
-          #   ${{ secrets.SLACK_WEBHOOK_URL }}
+          echo "🔄 Updating critical data..."
+          
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            "${{ env.VERCEL_URL }}/api/internal/update-dollar"
+          
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            "${{ env.VERCEL_URL }}/api/internal/update-country-risk"
+
+      - name: Update Indicators
+        if: github.event.inputs.update_type == 'indicators'
+        run: |
+          echo "📊 Updating all indicators..."
+          
+          endpoints=("update-ipc" "update-emae" "update-bcra" "update-labor-market" "update-poverty")
+          
+          for endpoint in "${endpoints[@]}"; do
+            echo "Calling $endpoint..."
+            curl -X GET \
+              -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+              "${{ env.VERCEL_URL }}/api/internal/$endpoint"
+          done
+
+      - name: Update Specific Endpoint
+        if: github.event.inputs.update_type == 'specific' && github.event.inputs.specific_endpoint != ''
+        run: |
+          echo "🎯 Updating: ${{ github.event.inputs.specific_endpoint }}..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            "${{ env.VERCEL_URL }}/api/internal/${{ github.event.inputs.specific_endpoint }}"
