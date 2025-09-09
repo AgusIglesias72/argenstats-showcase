@@ -3,6 +3,9 @@ import { LoginModal } from '@/components/auth/login-modal'
 import { HeroSection } from '@/components/sections/hero'
 import { MainIndicators } from '@/components/sections/main-indicators'
 import { ConversorPromoSection } from '@/components/sections/conversor-promo'
+import { EconomicIndicatorsSection } from '@/components/sections/economic-indicators'
+import { AdditionalToolsSection } from '@/components/sections/additional-tools'
+import { APIPromotionSection } from '@/components/sections/api-promotion'
 
 export default function HomePage() {
   return (
@@ -14,6 +17,9 @@ export default function HomePage() {
         <HeroSection />
         <MainIndicators />
         <ConversorPromoSection  />
+        <EconomicIndicatorsSection />
+        <AdditionalToolsSection />
+        <APIPromotionSection />
       </main>
 
       {/* Footer simple */}
