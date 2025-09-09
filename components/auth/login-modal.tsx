@@ -21,7 +21,7 @@ export function LoginModal() {
     signIn?.authenticateWithRedirect({
       strategy: 'oauth_google',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/',
+      redirectUrlComplete: '/profile',
     })
   }
 
@@ -29,7 +29,7 @@ export function LoginModal() {
     signIn?.authenticateWithRedirect({
       strategy: 'oauth_x',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/',
+      redirectUrlComplete: '/profile',
     })
   }
 

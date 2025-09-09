@@ -204,7 +204,8 @@ export async function POST(req: Request) {
   if (!WEBHOOK_SECRET) {
     throw new Error('Please add CLERK_WEBHOOK_SECRET to .env.local');
   }
-  
+  console.log('WEBHOOK_SECRET', WEBHOOK_SECRET);
+  console.log('req', req);
   // Obtener headers
   const headerPayload = await headers();
   const svix_id = headerPayload.get('svix-id');
