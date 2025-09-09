@@ -284,8 +284,8 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
 
         {/* KPI Cards */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+        <div className="flex items-center flex-col md:flex-row space-y-4 md:space-y-0 justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Activity className="w-5 h-5" />
               Valores actuales
             </h2>
