@@ -14,7 +14,7 @@ interface LaborMarketData {
     "@type": "Dataset",
     "name": "Indicadores del Mercado Laboral Argentina",
     "description": "Datos del mercado laboral argentino incluyendo tasas de empleo, desempleo y actividad por regiones y segmentos demográficos",
-    "url": "https://argentinadatos.com/indicadores/empleo",
+    "url": "https://argenstats.com/indicadores/empleo",
     "dateModified": data.current?.date || new Date().toISOString(),
     "datePublished": "2024-01-01",
     "updateFrequency": "P3M", // Trimestral
@@ -25,8 +25,8 @@ interface LaborMarketData {
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "license": "https://creativecommons.org/licenses/by/4.0/",
     "spatialCoverage": {
@@ -42,7 +42,7 @@ interface LaborMarketData {
     "distribution": {
       "@type": "DataDownload",
       "encodingFormat": "application/json",
-      "contentUrl": "https://api.argentinadatos.com/v1/empleo"
+      "contentUrl": "https://api.argenstats.com/v1/empleo"
     },
     "variableMeasured": [
       {
@@ -76,14 +76,14 @@ interface LaborMarketData {
     "dateModified": data.current?.date || new Date().toISOString(),
     "author": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
+      "name": "ArgenStats",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://argentinadatos.com/logo.png"
+        "url": "https://argenstats.com/logo.png"
       }
     },
     "about": {
@@ -93,7 +93,7 @@ interface LaborMarketData {
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://argentinadatos.com/indicadores/empleo"
+      "@id": "https://argenstats.com/indicadores/empleo"
     },
     "keywords": "empleo, desempleo, mercado laboral, tasa de actividad, EPH, INDEC",
     "articleSection": "Indicadores Económicos",

@@ -12,7 +12,7 @@ import {
 } from '@/lib/schemas'
 
 // Función para obtener los datos del EMAE
-async function getEmaeData() {
+async function getEmaeData() {  // eslint-disable-line @typescript-eslint/no-unused-vars
   try {
     const current = await emaeService.getCurrentEmae('GENERAL')
     const sectors = await emaeService.getEmaeSectors()
@@ -64,12 +64,12 @@ export async function generateMetadata(): Promise<Metadata> {
     : ''
 
   return {
-    title: `EMAE - Estimador Mensual de Actividad Económica ${currentValue} | ArgentinaDatos`,
+    title: `EMAE - Estimador Mensual de Actividad Económica ${currentValue} | ArgenStats`,
     description: `Seguimiento del EMAE Argentina. Variación interanual: ${currentValue}, mensual: ${monthValue}. Análisis por sectores económicos. Datos INDEC actualizados a ${lastUpdate}.`,
     keywords: 'EMAE, estimador mensual actividad economica, indec, pbi mensual, actividad economica argentina, sectores economicos, industria, comercio, construccion, servicios, estadisticas economicas',
-    authors: [{ name: 'ArgentinaDatos' }],
-    creator: 'ArgentinaDatos',
-    publisher: 'ArgentinaDatos',
+    authors: [{ name: 'ArgenStats' }],
+    creator: 'ArgenStats',
+    publisher: 'ArgenStats',
     robots: {
       index: true,
       follow: true,
@@ -85,12 +85,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `EMAE Argentina ${currentValue} - Actividad Económica Mensual`,
       description: `Análisis completo del Estimador Mensual de Actividad Económica. Variación interanual: ${currentValue}. Datos oficiales del INDEC por sectores.`,
       type: 'website',
-      url: 'https://argentinadatos.com/indicadores/emae',
-      siteName: 'ArgentinaDatos',
+      url: 'https://argenstats.com/indicadores/emae',
+      siteName: 'ArgenStats',
       locale: 'es_AR',
       images: [
         {
-          url: 'https://argentinadatos.com/og-emae.jpg',
+          url: 'https://argenstats.com/og-emae.jpg',
           width: 1200,
           height: 630,
           alt: `EMAE Argentina - Actividad Económica ${currentValue}`,
@@ -101,12 +101,12 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: `EMAE Argentina ${currentValue}`,
       description: `Actividad económica mensual por sectores. Var. interanual: ${currentValue}, mensual: ${monthValue}`,
-      site: '@argentinadatos',
-      creator: '@argentinadatos',
-      images: ['https://argentinadatos.com/og-emae.jpg'],
+      site: '@argenstatsAR',
+      creator: '@argenstatsAR',
+      images: ['https://argenstats.com/og-emae.jpg'],
     },
     alternates: {
-      canonical: 'https://argentinadatos.com/indicadores/emae',
+      canonical: 'https://argenstats.com/indicadores/emae',
     },
   }
 }
@@ -130,12 +130,12 @@ export default async function EmaePage() {
       <StructuredData 
         data={generateEmaeFAQSchema()} 
         id="emae-faq-schema" 
-      />
+      />  
       <StructuredData 
         data={BreadcrumbSchema([
-          { name: "Inicio", url: "https://argentinadatos.com" },
-          { name: "Indicadores", url: "https://argentinadatos.com/indicadores" },
-          { name: "EMAE", url: "https://argentinadatos.com/indicadores/emae" }
+          { name: "Inicio", url: "https://argenstats.com" },
+          { name: "Indicadores", url: "https://argenstats.com/indicadores" },
+          { name: "EMAE", url: "https://argenstats.com/indicadores/emae" }
         ])} 
         id="breadcrumb-schema"
       />

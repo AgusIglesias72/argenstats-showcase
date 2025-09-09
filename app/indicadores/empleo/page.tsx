@@ -70,12 +70,12 @@ export async function generateMetadata(): Promise<Metadata> {
     : ''
 
   return {
-    title: `Indicadores de Empleo Argentina - Desempleo ${unemploymentRate} | ArgentinaDatos`,
+    title: `Indicadores de Empleo Argentina - Desempleo ${unemploymentRate} | ArgenStats`,
     description: `Mercado laboral argentino: Tasa de desempleo ${unemploymentRate}, empleo ${employmentRate}. Análisis por regiones y segmentos demográficos. Datos oficiales del INDEC actualizados a ${lastUpdate}.`,
     keywords: 'empleo argentina, desempleo, mercado laboral, tasa de empleo, tasa de actividad, EPH, INDEC, trabajo argentina, estadisticas laborales, desempleo juvenil',
-    authors: [{ name: 'ArgentinaDatos' }],
-    creator: 'ArgentinaDatos',
-    publisher: 'ArgentinaDatos',
+    authors: [{ name: 'ArgenStats' }],
+    creator: 'ArgenStats',
+    publisher: 'ArgenStats',
     robots: {
       index: true,
       follow: true,
@@ -91,12 +91,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `Empleo Argentina: Desempleo ${unemploymentRate} - Mercado Laboral`,
       description: `Indicadores del mercado laboral argentino. Tasa de desempleo: ${unemploymentRate}, empleo: ${employmentRate}. Análisis regional y demográfico.`,
       type: 'website',
-      url: 'https://argentinadatos.com/indicadores/empleo',
-      siteName: 'ArgentinaDatos',
+      url: 'https://argenstats.com/indicadores/empleo',
+      siteName: 'ArgenStats',
       locale: 'es_AR',
       images: [
         {
-          url: 'https://argentinadatos.com/og-empleo.jpg',
+          url: 'https://argenstats.com/og-empleo.jpg',
           width: 1200,
           height: 630,
           alt: `Mercado Laboral Argentina - Desempleo ${unemploymentRate}`,
@@ -107,12 +107,12 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: `Empleo Argentina: Desempleo ${unemploymentRate}`,
       description: `Tasa de desempleo: ${unemploymentRate}, empleo: ${employmentRate}. Datos oficiales del INDEC.`,
-      site: '@argentinadatos',
-      creator: '@argentinadatos',
-      images: ['https://argentinadatos.com/og-empleo.jpg'],
+        site: '@argenstatsAR',
+      creator: '@argenstatsAR',
+      images: ['https://argenstats.com/og-empleo.jpg'],
     },
     alternates: {
-      canonical: 'https://argentinadatos.com/indicadores/empleo',
+      canonical: 'https://argenstats.com/indicadores/empleo',
     },
   }
 }
@@ -139,9 +139,9 @@ export default async function LaborMarketPage() {
       />
       <StructuredData 
         data={BreadcrumbSchema([
-          { name: "Inicio", url: "https://argentinadatos.com" },
-          { name: "Indicadores", url: "https://argentinadatos.com/indicadores" },
-          { name: "Empleo", url: "https://argentinadatos.com/indicadores/empleo" }
+          { name: "Inicio", url: "https://argenstats.com" },
+          { name: "Indicadores", url: "https://argenstats.com/indicadores" },
+          { name: "Empleo", url: "https://argenstats.com/indicadores/empleo" }
         ])} 
         id="breadcrumb-schema"
       />

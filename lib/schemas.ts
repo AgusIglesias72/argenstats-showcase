@@ -530,7 +530,7 @@ export function generateEmaeSchema(data: EmaeData) {
     "@type": "Dataset",
     "name": "EMAE - Estimador Mensual de Actividad Económica Argentina",
     "description": "Indicador mensual de la evolución de la actividad económica del conjunto de los sectores productivos a nivel nacional. Base 2004=100.",
-    "url": "https://argentinadatos.com/indicadores/emae",
+    "url": "https://argenstats.com/indicadores/emae",
     "dateModified": lastUpdate,
     "datePublished": "2004-01-01",
     "updateFrequency": "P1M",
@@ -541,8 +541,8 @@ export function generateEmaeSchema(data: EmaeData) {
     },
     "publisher": {
       "@type": "Organization", 
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "license": "https://creativecommons.org/licenses/by/4.0/",
     "spatialCoverage": {
@@ -578,11 +578,11 @@ export function generateEmaeSchema(data: EmaeData) {
     "distribution": {
       "@type": "DataDownload",
       "encodingFormat": "application/json",
-      "contentUrl": "https://api.argentinadatos.com/v1/emae"
+      "contentUrl": "https://api.argenstats.com/v1/emae"
     },
     "includedInDataCatalog": {
       "@type": "DataCatalog",
-      "name": "ArgentinaDatos - Catálogo de Indicadores Económicos"
+      "name": "ArgenStats - Catálogo de Indicadores Económicos"
     }
   }
 }
@@ -601,19 +601,19 @@ export function generateEmaeAnalysisSchema(data: EmaeData) {
     "dateModified": new Date().toISOString(),
     "author": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
+      "name": "ArgenStats",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://argentinadatos.com/logo.png"
+        "url": "https://argenstats.com/logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://argentinadatos.com/indicadores/emae"
+      "@id": "https://argenstats.com/indicadores/emae"
     },
     "about": {
       "@type": "Thing",
@@ -718,7 +718,7 @@ export function generateIPCSchema(data: IPCPageData) {
     "@type": "Dataset",
     "name": "IPC - Índice de Precios al Consumidor Argentina",
     "description": "Índice que mide la evolución de los precios de un conjunto de bienes y servicios representativos del consumo de los hogares residentes en áreas urbanas de Argentina.",
-    "url": "https://argentinadatos.com/indicadores/inflacion",
+    "url": "https://argenstats.com/indicadores/inflacion",
     "dateModified": lastUpdate,
     "datePublished": "2016-01-01",
     "updateFrequency": "P1M",
@@ -729,8 +729,8 @@ export function generateIPCSchema(data: IPCPageData) {
     },
     "publisher": {
       "@type": "Organization", 
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "license": "https://creativecommons.org/licenses/by/4.0/",
     "spatialCoverage": {
@@ -766,11 +766,11 @@ export function generateIPCSchema(data: IPCPageData) {
     "distribution": {
       "@type": "DataDownload",
       "encodingFormat": "application/json",
-      "contentUrl": "https://api.argentinadatos.com/v1/ipc"
+      "contentUrl": "https://api.argenstats.com/v1/ipc"
     },
     "includedInDataCatalog": {
       "@type": "DataCatalog",
-      "name": "ArgentinaDatos - Catálogo de Indicadores Económicos"
+      "name": "ArgenStats - Catálogo de Indicadores Económicos"
     }
   }
 }
@@ -789,19 +789,19 @@ export function generateIPCAnalysisSchema(data: IPCPageData) {
     "dateModified": new Date().toISOString(),
     "author": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
+      "name": "ArgenStats",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://argentinadatos.com/logo.png"
+        "url": "https://argenstats.com/logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://argentinadatos.com/indicadores/inflacion"
+      "@id": "https://argenstats.com/indicadores/inflacion"
     },
     "about": {
       "@type": "Thing",
@@ -910,18 +910,18 @@ export function generateRiesgoPaisSchema(data: RiesgoPaisPageData) {
     "@type": "Dataset",
     "name": "Riesgo País Argentina - EMBI+",
     "description": "Indicador de riesgo soberano argentino que mide el diferencial de tasas de los bonos argentinos respecto a los bonos del Tesoro de Estados Unidos. Datos del JP Morgan EMBI+ y estimaciones en tiempo real.",
-    "url": "https://argentinadatos.com/indicadores/riesgo-pais",
+    "url": "https://argenstats.com/indicadores/riesgo-pais",
     "keywords": "riesgo país, argentina, embi, jp morgan, bonos soberanos, spread, default, mercados emergentes",
     "creator": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "distribution": [
       {
         "@type": "DataDownload",
         "encodingFormat": "application/json",
-        "contentUrl": "https://argentinadatos.com/api/riesgo-pais"
+        "contentUrl": "https://argenstats.com/api/riesgo-pais"
       }
     ],
     "temporalCoverage": "2020-01-01/..",
@@ -975,10 +975,10 @@ export function generateRiesgoPaisAnalysisSchema(data: RiesgoPaisPageData) {
     "@type": "FinancialProduct",
     "name": "Riesgo País Argentina",
     "description": `Indicador de riesgo soberano: ${currentValue} puntos básicos`,
-    "url": "https://argentinadatos.com/indicadores/riesgo-pais",
+    "url": "https://argenstats.com/indicadores/riesgo-pais",
     "provider": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "offers": {
       "@type": "Offer",
@@ -1092,18 +1092,18 @@ export function generateDollarSchema(data: any) {
     "@type": "Dataset",
     "name": "Cotizaciones del Dólar en Argentina",
     "description": "Dataset con cotizaciones actualizadas de todos los tipos de dólar en Argentina: Blue, Oficial, MEP, CCL, Crypto, Mayorista y Tarjeta",
-    "url": "https://argentinadatos.com/indicadores/dolar",
+    "url": "https://argenstats.com/indicadores/dolar",
     "keywords": "dolar argentina, cotizacion dolar, tipos cambio, dolar blue, dolar oficial, dolar mep, dolar ccl",
-    "license": "https://argentinadatos.com/terms",
+    "license": "https://argenstats.com/terms",
     "creator": {
       "@type": "Organization",
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "publisher": {
       "@type": "Organization", 
-      "name": "ArgentinaDatos",
-      "url": "https://argentinadatos.com"
+      "name": "ArgenStats",
+      "url": "https://argenstats.com"
     },
     "datePublished": "2024-01-01",
     "dateModified": new Date().toISOString(),
@@ -1116,7 +1116,7 @@ export function generateDollarSchema(data: any) {
     "distribution": {
       "@type": "DataDownload",
       "encodingFormat": "application/json",
-      "contentUrl": "https://argentinadatos.com/api/v1/dollar?view=current"
+      "contentUrl": "https://argenstats.com/api/v1/dollar?view=current"
     },
     "variableMeasured": [
       {
@@ -1145,20 +1145,20 @@ export function generateDollarAnalysisSchema(data: any) {
     "@type": "AnalysisNewsArticle",
     "headline": "Análisis de Cotizaciones del Dólar en Argentina",
     "description": "Análisis detallado de las cotizaciones del dólar en Argentina, incluyendo tendencias históricas y comparación entre diferentes tipos de cambio",
-    "url": "https://argentinadatos.com/indicadores/dolar",
+    "url": "https://argenstats.com/indicadores/dolar",
     "datePublished": new Date().toISOString(),
     "dateModified": new Date().toISOString(),
     "author": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "ArgentinaDatos"
+      "name": "ArgenStats"
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://argentinadatos.com/indicadores/dolar"
+      "@id": "https://argenstats.com/indicadores/dolar"
     },
     "about": [
       {

@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/calculadora-inflacion(.*)',
   '/conversor-dolar-peso-argentino(.*)',
   '/indicadores(.*)',
+  '/eventos(.*)',  // <- AGREGAR ESTA LÍNEA para hacer públicos los eventos
   '/api/v1/(.*)',
   '/api/newsletter/(.*)',
   '/api/conversor/(.*)',

@@ -36,6 +36,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "googleapis": "^159.0.0",
@@ -49,7 +50,9 @@
     "react-dom": "19.1.0",
     "react-world-flags": "^1.6.0",
     "recharts": "^3.1.2",
+    "resend": "^6.0.3",
     "sonner": "^2.0.7",
+    "svix": "^1.76.1",
     "tailwind-merge": "^3.3.1",
     "xlsx": "^0.18.5",
     "zod": "^4.1.5"

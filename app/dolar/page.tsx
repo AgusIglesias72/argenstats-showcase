@@ -86,9 +86,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `Cotizaciones del Dólar - ${bluePrice ? `$${bluePrice.toLocaleString('es-AR')}` : 'Argentina'} | Tipos de Cambio`,
     description: `Cotizaciones actualizadas del dólar en Argentina: Blue, Oficial, MEP, CCL, Crypto, Mayorista y Tarjeta. Seguimiento en tiempo real de todos los tipos de cambio.`,
     keywords: 'dolar argentina, cotizacion dolar, dolar blue, dolar oficial, dolar mep, dolar ccl, dolar crypto, tipos cambio argentina, cotizaciones tiempo real, dolar mayorista, dolar tarjeta',
-    authors: [{ name: 'ArgentinaDatos' }],
-    creator: 'ArgentinaDatos',
-    publisher: 'ArgentinaDatos',
+    authors: [{ name: 'ArgenStats' }],
+    creator: 'ArgenStats',
+    publisher: 'ArgenStats',
     robots: {
       index: true,
       follow: true,
@@ -104,12 +104,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `Cotizaciones del Dólar Argentina - ${lastUpdate}`,
       description: `Seguimiento en tiempo real de las cotizaciones del dólar: Blue, Oficial, MEP, CCL y más. Datos actualizados diariamente.`,
       type: 'website',
-      url: 'https://argentinadatos.com/indicadores/dolar',
-      siteName: 'ArgentinaDatos',
+      url: 'https://argenstats.com/indicadores/dolar',
+      siteName: 'ArgenStats',
       locale: 'es_AR',
       images: [
         {
-          url: 'https://argentinadatos.com/og-dolar.jpg',
+          url: 'https://argenstats.com/og-dolar.jpg',
           width: 1200,
           height: 630,
           alt: `Cotizaciones del Dólar Argentina - ${lastUpdate}`,
@@ -120,12 +120,12 @@ export async function generateMetadata(): Promise<Metadata> {
       card: 'summary_large_image',
       title: `Cotizaciones del Dólar Argentina`,
       description: `Seguimiento en tiempo real de todos los tipos de cambio del dólar. Blue, Oficial, MEP, CCL y más.`,
-      site: '@argentinadatos',
-      creator: '@argentinadatos',
-      images: ['https://argentinadatos.com/og-dolar.jpg'],
+      site: '@argenstatsAR',
+      creator: '@argenstatsAR',
+      images: ['https://argenstats.com/og-dolar.jpg'],
     },
     alternates: {
-      canonical: 'https://argentinadatos.com/indicadores/dolar',
+      canonical: 'https://argenstats.com/indicadores/dolar',
     },
   }
 }
@@ -154,9 +154,9 @@ export default async function DollarPage() {
       />
       <StructuredData 
         data={BreadcrumbSchema([
-          { name: "Inicio", url: "https://argentinadatos.com" },
-          { name: "Indicadores", url: "https://argentinadatos.com/indicadores" },
-          { name: "Dólar", url: "https://argentinadatos.com/indicadores/dolar" }
+          { name: "Inicio", url: "https://argenstats.com" },
+          { name: "Indicadores", url: "https://argenstats.com/indicadores" },
+          { name: "Dólar", url: "https://argenstats.com/indicadores/dolar" }
         ])} 
         id="breadcrumb-schema"
       />

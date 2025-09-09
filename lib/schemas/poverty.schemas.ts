@@ -64,7 +64,7 @@ interface PovertyData {
       "@type": "Dataset",
       "name": "Índices de Pobreza e Indigencia en Argentina",
       "description": `Datos oficiales del INDEC sobre pobreza e indigencia en Argentina. Período ${current.period}: Pobreza ${current.poverty.persons.toFixed(1)}% de personas y ${current.poverty.households.toFixed(1)}% de hogares. Indigencia ${current.indigence.persons.toFixed(1)}% de personas y ${current.indigence.households.toFixed(1)}% de hogares.`,
-      "url": "https://argentinadatos.com/indicadores/pobreza",
+      "url": "https://argenstats.com/indicadores/pobreza",
       "identifier": "argentina-poverty-indigence-dataset",
       "keywords": [
         "pobreza argentina",
@@ -82,8 +82,8 @@ interface PovertyData {
       },
       "publisher": {
         "@type": "Organization",
-        "name": "ArgentinaDatos",
-        "url": "https://argentinadatos.com"
+        "name": "ArgenStats",
+        "url": "https://argenstats.com"
       },
       "datePublished": current.date,
       "dateModified": new Date().toISOString(),
@@ -101,12 +101,12 @@ interface PovertyData {
         {
           "@type": "DataDownload",
           "encodingFormat": "application/json",
-          "contentUrl": "https://argentinadatos.com/api/poverty/current"
+          "contentUrl": "https://argenstats.com/api/poverty/current"
         },
         {
           "@type": "DataDownload",
           "encodingFormat": "text/csv",
-          "contentUrl": "https://argentinadatos.com/api/poverty/export/csv"
+          "contentUrl": "https://argenstats.com/api/poverty/export/csv"
         }
       ],
       "variableMeasured": [
@@ -153,26 +153,26 @@ interface PovertyData {
       "@type": "Article",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://argentinadatos.com/indicadores/pobreza"
+        "@id": "https://argenstats.com/indicadores/pobreza"
       },
       "headline": `Pobreza ${current.poverty.persons.toFixed(1)}% e Indigencia ${current.indigence.persons.toFixed(1)}% en Argentina - ${current.period}`,
       "description": `Análisis completo de los índices de pobreza e indigencia en Argentina. Datos del INDEC para el ${current.period} con comparación regional y evolución histórica.`,
       "image": [
-        "https://argentinadatos.com/og-poverty.jpg",
-        "https://argentinadatos.com/poverty-chart.jpg",
-        "https://argentinadatos.com/poverty-regions.jpg"
+        "https://argenstats.com/og-poverty.jpg",
+        "https://argenstats.com/poverty-chart.jpg",
+        "https://argenstats.com/poverty-regions.jpg"
       ],
       "author": {
         "@type": "Organization",
-        "name": "ArgentinaDatos",
-        "url": "https://argentinadatos.com"
+        "name": "ArgenStats",
+        "url": "https://argenstats.com"
       },
       "publisher": {
         "@type": "Organization",
-        "name": "ArgentinaDatos",
+        "name": "ArgenStats",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://argentinadatos.com/logo.png"
+          "url": "https://argenstats.com/logo.png"
         }
       },
       "datePublished": current.date,
@@ -276,7 +276,7 @@ interface PovertyData {
           "name": "¿Dónde puedo encontrar los datos oficiales de pobreza?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Los datos oficiales de pobreza e indigencia se publican en el sitio web del INDEC (www.indec.gob.ar) en la sección de Condiciones de vida. ArgentinaDatos procesa y visualiza estos datos oficiales para facilitar su análisis y comprensión."
+            "text": "Los datos oficiales de pobreza e indigencia se publican en el sitio web del INDEC (www.indec.gob.ar) en la sección de Condiciones de vida. ArgenStats procesa y visualiza estos datos oficiales para facilitar su análisis y comprensión."
           }
         },
         {

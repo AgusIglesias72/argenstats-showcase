@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+"scripts/sync-clerk-users-prod.ts" 
+"scripts/sync-clerk-users-prod.ts" 
