@@ -29,6 +29,65 @@ interface UserProfileData {
   websiteUrl: string
 }
 
+// Función helper para normalizar URLs
+const normalizeUrl = (url: string, platform?: 'linkedin' | 'github'): string => {
+  if (!url) return '';
+  
+  // Limpiar espacios en blanco
+  url = url.trim();
+  
+  // Si ya tiene protocolo válido, retornar como está
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Si es solo el username para plataformas específicas
+  if (platform === 'linkedin') {
+    // Si es solo el username o el path
+    if (!url.includes('linkedin.com')) {
+      // Limpiar el /in/ si lo incluye
+      url = url.replace(/^\/in\//, '');
+      return `https://www.linkedin.com/in/${url}`;
+    }
+  }
+  
+  if (platform === 'github') {
+    // Si es solo el username
+    if (!url.includes('github.com')) {
+      // Limpiar el / inicial si lo tiene
+      url = url.replace(/^\//, '');
+      return `https://github.com/${url}`;
+    }
+  }
+  
+  // Si tiene www pero no protocolo
+  if (url.startsWith('www.')) {
+    return `https://${url}`;
+  }
+  
+  // Para URLs que parecen ser de linkedin pero sin protocolo
+  if (url.includes('linkedin.com')) {
+    // Asegurar que tenga www si es linkedin
+    if (!url.includes('www.')) {
+      url = url.replace('linkedin.com', 'www.linkedin.com');
+    }
+    return `https://${url}`;
+  }
+  
+  // Para URLs de github sin protocolo
+  if (url.includes('github.com')) {
+    return `https://${url}`;
+  }
+  
+  // Para otras URLs, agregar https:// si parece ser un dominio válido
+  if (url.includes('.')) {
+    return `https://${url}`;
+  }
+  
+  // Si no parece ser una URL, retornar como está (el usuario puede querer guardar un username o texto)
+  return url;
+};
+
 export default function ProfileTab() {
   const { user } = useUser()
   const [loading, setLoading] = useState(true)
@@ -67,7 +126,7 @@ export default function ProfileTab() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user?.fullName])
 
   useEffect(() => {
     fetchProfile()
@@ -78,19 +137,32 @@ export default function ProfileTab() {
     setSaving(true)
 
     try {
+      // Normalizar URLs antes de enviar
+      const normalizedProfile = {
+        ...profile,
+        linkedinUrl: normalizeUrl(profile.linkedinUrl, 'linkedin'),
+        githubUrl: normalizeUrl(profile.githubUrl, 'github'),
+        websiteUrl: normalizeUrl(profile.websiteUrl),
+        // Limpiar el @ del username de X/Twitter si lo tiene
+        xUsername: profile.xUsername.replace('@', '')
+      };
+
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile)
+        body: JSON.stringify(normalizedProfile)
       })
 
       if (response.ok) {
+        // Actualizar el estado local con las URLs normalizadas
+        setProfile(normalizedProfile);
         toast.success('Perfil actualizado correctamente')
       } else {
         throw new Error('Error al actualizar el perfil')
       }
     } catch (error) {
       toast.error('Error al guardar los cambios')
+      console.error('Error:', error)
     } finally {
       setSaving(false)
     }
@@ -209,7 +281,7 @@ export default function ProfileTab() {
               LinkedIn
             </label>
             <input
-              type="url"
+              type="text"
               value={profile.linkedinUrl}
               onChange={(e) => handleChange('linkedinUrl', e.target.value)}
               placeholder="https://linkedin.com/in/tu-perfil"
@@ -220,7 +292,7 @@ export default function ProfileTab() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <XIcon className="inline w-4 h-4 mr-1" />
-              (Twitter)
+              X (Twitter)
             </label>
             <div className="mt-1 relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
@@ -242,7 +314,7 @@ export default function ProfileTab() {
               GitHub
             </label>
             <input
-              type="url"
+              type="text"
               value={profile.githubUrl}
               onChange={(e) => handleChange('githubUrl', e.target.value)}
               placeholder="https://github.com/usuario"
@@ -256,7 +328,7 @@ export default function ProfileTab() {
               Sitio Web
             </label>
             <input
-              type="url"
+              type="text"
               value={profile.websiteUrl}
               onChange={(e) => handleChange('websiteUrl', e.target.value)}
               placeholder="https://tu-sitio.com"

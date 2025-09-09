@@ -317,6 +317,9 @@ async function sendAdminNotification(
 }
 
 export async function POST(req: Request) {
+  console.log('Webhook recibido')
+  console.log(req)
+
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
   
   if (!WEBHOOK_SECRET) {
