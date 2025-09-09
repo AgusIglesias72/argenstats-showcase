@@ -43,6 +43,12 @@ export function DollarChart({
   isLoading = false 
 }: DollarChartProps) {
   const [chartData, setChartData] = useState<DollarHistoricalPoint[]>([])
+  const [isClient, setIsClient] = useState(false)
+
+  // Manejar hidratación
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Opciones de rango de tiempo
   const timeRangeOptions = [
@@ -138,7 +144,7 @@ export function DollarChart({
       return (
         <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-            {format(new Date(label), "d 'de' MMMM 'de' yyyy", { locale: es })}
+            {isClient ? format(new Date(label), "d 'de' MMMM 'de' yyyy", { locale: es }) : label}
           </p>
           <div className="space-y-2">
             {payload.map((entry: any, index: number) => (
@@ -202,6 +208,22 @@ export function DollarChart({
     } else {
       onTypesChange([...selectedTypes, type])
     }
+  }
+
+  // Mostrar loading durante la hidratación
+  if (!isClient) {
+    return (
+      <div className="w-full space-y-6">
+        <Card className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-500">Cargando gráfico...</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
   return (

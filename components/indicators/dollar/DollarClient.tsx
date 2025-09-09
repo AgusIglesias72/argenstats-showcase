@@ -56,8 +56,15 @@ export function DollarClient({ initialData }: DollarClientProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['BLUE', 'OFICIAL'])
   const [timeRange, setTimeRange] = useState('3months')
   const [isPending, startTransition] = useTransition()
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Manejar hidratación
+  useEffect(() => {
+    setIsClient(true)
+    setLastUpdate(new Date())
+  }, [])
 
   // Agrupar tipos de dólar por categoría
   const financialDollars = ['MEP', 'CCL', 'CRYPTO']
@@ -85,6 +92,11 @@ export function DollarClient({ initialData }: DollarClientProps) {
 
   // Función corregida para obtener el tiempo transcurrido
   const getTimeAgo = (dateString: string | Date | undefined) => {
+    // Evitar problemas de hidratación
+    if (!isClient) {
+      return 'Actualizando...'
+    }
+
     try {
       let date: Date
       
@@ -196,6 +208,8 @@ export function DollarClient({ initialData }: DollarClientProps) {
 
   // Función para obtener datos históricos
   const fetchHistoricalData = async (timeRange: string) => {
+    if (!isClient) return
+    
     setIsLoadingHistorical(true)
     try {
       const now = new Date()
@@ -256,7 +270,9 @@ export function DollarClient({ initialData }: DollarClientProps) {
             ...prev,
             current: result.data
           }))
-          setLastUpdate(new Date())
+          if (isClient) {
+            setLastUpdate(new Date())
+          }
         }
         
         await fetchHistoricalData(timeRange)
@@ -391,6 +407,18 @@ export function DollarClient({ initialData }: DollarClientProps) {
     )
   }
 
+  // Mostrar loading durante la hidratación
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-500">Cargando cotizaciones...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
@@ -418,7 +446,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
               <span>Actualizar</span>
             </Button>
             <div className="text-xs md:text-sm text-muted-foreground">
-              Última actualización: {format(lastUpdate, 'HH:mm', { locale: es })}
+              Última actualización: {isClient && lastUpdate ? format(lastUpdate, 'HH:mm', { locale: es }) : '--:--'}
             </div>
           </div>
         </div>

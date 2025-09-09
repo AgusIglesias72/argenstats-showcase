@@ -127,6 +127,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileIndicadoresOpen, setMobileIndicadoresOpen] = useState(false)
   const [mobileHerramientasOpen, setMobileHerramientasOpen] = useState(false)
+  const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false)
   const pathname = usePathname()
   const { user } = useUser()
   const { signOut } = useClerk()
@@ -136,6 +137,7 @@ export function Header() {
     setMobileMenuOpen(false)
     setMobileIndicadoresOpen(false)
     setMobileHerramientasOpen(false)
+    setMobileUserMenuOpen(false)
   }, [pathname])
 
   useEffect(() => {
@@ -338,107 +340,116 @@ export function Header() {
 
                 {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto p-4">
-                  {/* User section if signed in */}
+                  {/* User section if signed in - Now as a collapsible button */}
                   <SignedIn>
-                    <div className="mb-6 pb-4 border-b dark:border-gray-800">
-                      {/* User Profile Info */}
-                      <div className="flex items-center space-x-3 mb-4">
-                        <img
-                          src={user?.imageUrl}
-                          alt={user?.fullName || 'Usuario'}
-                          className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {user?.fullName || 'Usuario'}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {user?.primaryEmailAddress?.emailAddress}
-                          </p>
+                    <div className="mb-4">
+                      <button
+                        onClick={() => setMobileUserMenuOpen(!mobileUserMenuOpen)}
+                        className="flex w-full items-center justify-between rounded-md px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={user?.imageUrl}
+                            alt={user?.fullName || 'Usuario'}
+                            className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+                          />
+                          <div className="text-left">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {user?.fullName || 'Usuario'}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Ver perfil
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${mobileUserMenuOpen ? 'rotate-180' : ''}`} />
+                      </button>
 
-                      {/* User Menu Items */}
-                      <div className="space-y-1">
-                        <Link
-                          href="/profile"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                        >
-                          <User className="h-4 w-4 flex-shrink-0" />
-                          <div>
-                            <span className="block">Mi Perfil</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Gestionar información personal</span>
-                          </div>
-                        </Link>
+                      {/* User Menu Dropdown */}
+                      <AnimatePresence>
+                        {mobileUserMenuOpen && (
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: 'auto' }}
+                            exit={{ height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="mt-2 ml-3 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                              <Link
+                                href="/profile"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                <User className="h-4 w-4 flex-shrink-0" />
+                                <span>Mi Perfil</span>
+                              </Link>
 
-                        <Link
-                          href="/profile?tab=api-keys"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                        >
-                          <KeyRound className="h-4 w-4 flex-shrink-0" />
-                          <div>
-                            <span className="block">API Keys</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Gestionar claves de API</span>
-                          </div>
-                        </Link>
+                              <Link
+                                href="/profile?tab=api-keys"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                <KeyRound className="h-4 w-4 flex-shrink-0" />
+                                <span>API Keys</span>
+                              </Link>
 
-                        <Link
-                          href="/profile?tab=favorites"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                        >
-                          <Star className="h-4 w-4 flex-shrink-0" />
-                          <div>
-                            <span className="block">Favoritos</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Indicadores guardados</span>
-                          </div>
-                        </Link>
+                              <Link
+                                href="/profile?tab=favorites"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                <Star className="h-4 w-4 flex-shrink-0" />
+                                <span>Favoritos</span>
+                              </Link>
 
-                        <Link
-                          href="/profile?tab=events"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                        >
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
-                          <div>
-                            <span className="block">Eventos</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Historial de actividad</span>
-                          </div>
-                        </Link>
+                              <Link
+                                href="/profile?tab=events"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                <Calendar className="h-4 w-4 flex-shrink-0" />
+                                <span>Eventos</span>
+                              </Link>
 
-                        <Link
-                          href="/profile?tab=contact"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                        >
-                          <Mail className="h-4 w-4 flex-shrink-0" />
-                          <div>
-                            <span className="block">Contacto</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Enviar mensaje</span>
-                          </div>
-                        </Link>
+                              <Link
+                                href="/profile?tab=contact"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                <Mail className="h-4 w-4 flex-shrink-0" />
+                                <span>Contacto</span>
+                              </Link>
 
-                        {/* Admin Dashboard if admin */}
-                        {isAdmin && (
-                          <>
-                            <div className="border-t dark:border-gray-700 my-2"></div>
-                            <Link
-                              href="/admin"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-300 cursor-pointer"
-                            >
-                              <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                              <div>
-                                <span className="block text-purple-600 dark:text-purple-400">Dashboard Admin</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Panel de administración</span>
-                              </div>
-                            </Link>
-                          </>
+                              {/* Admin Dashboard if admin */}
+                              {isAdmin && (
+                                <Link
+                                  href="/admin"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer"
+                                >
+                                  <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                                  <span className="text-purple-600 dark:text-purple-400">Dashboard Admin</span>
+                                </Link>
+                              )}
+
+                              {/* Sign Out */}
+                              <button
+                                onClick={() => {
+                                  signOut()
+                                  setMobileMenuOpen(false)
+                                }}
+                                className="flex w-full items-center space-x-3 rounded-md px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                              >
+                                <LogOut className="h-4 w-4" />
+                                <span>Cerrar sesión</span>
+                              </button>
+                            </div>
+                          </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
                     </div>
+
+                    <div className="border-b dark:border-gray-800 mb-4"></div>
                   </SignedIn>
 
                   {/* Main menu items */}
@@ -546,41 +557,14 @@ export function Header() {
                     </div>
 
                     <Link
-                      href="/api-docs"
+                      href="/documentacion"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
                       <FileText className="h-4 w-4" />
                       <span>API Docs</span>
                     </Link>
-
-                    <SignedIn>
-                      <Link
-                        href="/"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
-                      >
-                        <User className="h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </SignedIn>
                   </div>
-
-                  {/* Sign Out Button for signed in users */}
-                  <SignedIn>
-                    <div className="mt-6 pt-6 border-t dark:border-gray-800">
-                      <button
-                        onClick={() => {
-                          signOut()
-                          setMobileMenuOpen(false)
-                        }}
-                        className="flex w-full items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>Cerrar sesión</span>
-                      </button>
-                    </div>
-                  </SignedIn>
 
                   {/* Sign In Button for signed out users */}
                   <SignedOut>
