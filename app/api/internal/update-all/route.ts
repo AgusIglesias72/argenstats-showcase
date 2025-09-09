@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
     ]
 
     const results: UpdateResult[] = []
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    'http://localhost:3000'
 
     // Ejecutar actualizaciones en paralelo por prioridad
     const highPriority = updateServices.filter(s => s.priority === 'high')
