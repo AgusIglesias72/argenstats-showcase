@@ -4,14 +4,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Trophy, Users, Calendar, Clock, TrendingUp, Package, Utensils, 
+import {
+  Trophy, Users, Calendar, Clock, TrendingUp, Package, Utensils,
   Wrench, BarChart3, Info, CheckCircle, Share2, Eye, EyeOff,
   ChevronLeft, ChevronRight, Copy, Twitter, Linkedin, AlertCircle,
   Activity, Table2
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { toast } from 'sonner'; // <-- Agregar esta importación
 
 interface EventDetailClientProps {
   event: any;
@@ -44,7 +45,7 @@ export default function EventDetailClient({
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const predictionsPerPage = 20;
-  
+
   const [formData, setFormData] = useState({
     ipcGeneral: '',
     ipcBienes: '',
@@ -83,10 +84,11 @@ export default function EventDetailClient({
   const hasUserPredicted = !!userPrediction;
   const canParticipate = isEventActive && !hasUserPredicted && isSignedIn;
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isSignedIn) {
+
+    if (!isSignedIn || !user) {
       router.push('/sign-in');
       return;
     }
@@ -96,27 +98,66 @@ export default function EventDetailClient({
       return;
     }
 
+    // Validar que todos los campos estén completos
+    if (!formData.ipcGeneral || !formData.ipcBienes || !formData.ipcServicios || !formData.ipcAlimentos) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Obtener el email del usuario de Clerk
+      const userEmail = user.emailAddresses?.[0]?.emailAddress;
+
+      if (!userEmail) {
+        toast.error('No se pudo obtener tu email. Por favor, verifica tu cuenta.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Mostrar toast de cargando
+      const loadingToast = toast.loading('Enviando tu predicción...');
+
       const response = await fetch('/api/events/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: event.id,
+          userId: user.id,
+          userEmail: userEmail,  // <-- Aquí se envía el email
           ...formData,
         }),
       });
 
+      const data = await response.json();
+      // Descartar el toast de cargando
+      toast.dismiss(loadingToast);
+
       if (response.ok) {
-        router.refresh();
+        // Toast de éxito
+        toast.success('¡Predicción enviada exitosamente! 🎉', {
+          description: 'Tu predicción ha sido registrada correctamente.',
+          duration: 4000,
+        });
+
+        // Pequeño delay para que el usuario vea el mensaje de éxito
+        setTimeout(() => {
+          router.refresh();
+        }, 1000);
       } else {
-        const error = await response.json();
-        alert(error.message || 'Error al enviar la predicción');
+        // Toast de error con el mensaje específico del servidor
+        toast.error(data.error || 'Error al enviar la predicción', {
+          description: data.details ? 'Revisa los datos ingresados' : undefined,
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error('Error submitting prediction:', error);
-      alert('Error al enviar la predicción. Por favor, intenta nuevamente.');
+      toast.error('Error de conexión', {
+        description: 'No se pudo conectar con el servidor. Por favor, intenta nuevamente.',
+        duration: 5000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -125,8 +166,8 @@ export default function EventDetailClient({
   const shareEvent = (platform: string) => {
     const url = window.location.href;
     const text = `Participa en ${event.name} y gana ${event.prizeCurrency} ${event.prizeAmount}! 🏆`;
-    
-    switch(platform) {
+
+    switch (platform) {
       case 'twitter':
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
         break;
@@ -157,12 +198,12 @@ export default function EventDetailClient({
   const sortedPredictions = [...(event.predictions || [])].sort((a: any, b: any) => {
     let aValue = a[sortBy];
     let bValue = b[sortBy];
-    
+
     if (sortBy === 'createdAt') {
       aValue = new Date(aValue).getTime();
       bValue = new Date(bValue).getTime();
     }
-    
+
     if (sortOrder === 'asc') {
       return aValue > bValue ? 1 : -1;
     } else {
@@ -178,23 +219,23 @@ export default function EventDetailClient({
   );
 
   const categoryConfig = {
-    general: { 
-      icon: <TrendingUp className="w-5 h-5" />, 
+    general: {
+      icon: <TrendingUp className="w-5 h-5" />,
       color: 'purple',
       label: 'IPC General'
     },
-    bienes: { 
-      icon: <Package className="w-5 h-5" />, 
+    bienes: {
+      icon: <Package className="w-5 h-5" />,
       color: 'orange',
       label: 'Bienes'
     },
-    servicios: { 
-      icon: <Wrench className="w-5 h-5" />, 
+    servicios: {
+      icon: <Wrench className="w-5 h-5" />,
       color: 'green',
       label: 'Servicios'
     },
-    alimentos: { 
-      icon: <Utensils className="w-5 h-5" />, 
+    alimentos: {
+      icon: <Utensils className="w-5 h-5" />,
       color: 'pink',
       label: 'Alimentos y Bebidas'
     },
@@ -227,7 +268,7 @@ export default function EventDetailClient({
             <Share2 className="w-4 h-4" />
             Compartir
           </button>
-          
+
           {showShareMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
               <button
@@ -274,7 +315,7 @@ export default function EventDetailClient({
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(categoryConfig).map(([key, config]) => (
-              <div 
+              <div
                 key={key}
                 className={`p-4 rounded-lg border bg-${config.color}-50 dark:bg-${config.color}-900/20 border-${config.color}-200 dark:border-${config.color}-800`}
               >
@@ -298,7 +339,7 @@ export default function EventDetailClient({
       ) : canParticipate ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Realizar Predicción</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Object.entries(categoryConfig).map(([key, config]) => (
@@ -332,7 +373,10 @@ export default function EventDetailClient({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+              className={`w-full bg-gradient-to-r from-blue-600
+                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}  
+              to-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 
+              hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50`}
             >
               {isSubmitting ? 'Enviando...' : 'Enviar Predicción'}
             </button>
@@ -385,11 +429,10 @@ export default function EventDetailClient({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
+                  className={`flex-1 px-6 py-4 text-sm font-medium cursor-pointer transition-colors ${activeTab === tab.id
                       ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <tab.icon className="w-4 h-4" />
@@ -455,7 +498,7 @@ export default function EventDetailClient({
                   <h3 className="font-semibold text-gray-900 dark:text-white">
                     Todas las Predicciones ({sortedPredictions.length})
                   </h3>
-            
+
                 </div>
 
                 {/* Table */}
@@ -464,7 +507,7 @@ export default function EventDetailClient({
                     <thead>
                       <tr className="border-b-2 border-gray-200 dark:border-gray-700">
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">#</th>
-                        <th 
+                        <th
                           className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                           onClick={() => handleSort('ipcGeneral')}
                         >
@@ -477,7 +520,7 @@ export default function EventDetailClient({
                             )}
                           </div>
                         </th>
-                        <th 
+                        <th
                           className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                           onClick={() => handleSort('ipcBienes')}
                         >
@@ -490,7 +533,7 @@ export default function EventDetailClient({
                             )}
                           </div>
                         </th>
-                        <th 
+                        <th
                           className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                           onClick={() => handleSort('ipcServicios')}
                         >
@@ -503,7 +546,7 @@ export default function EventDetailClient({
                             )}
                           </div>
                         </th>
-                        <th 
+                        <th
                           className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                           onClick={() => handleSort('ipcAlimentos')}
                         >
@@ -516,7 +559,7 @@ export default function EventDetailClient({
                             )}
                           </div>
                         </th>
-                        <th 
+                        <th
                           className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                           onClick={() => handleSort('createdAt')}
                         >
@@ -568,11 +611,11 @@ export default function EventDetailClient({
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    
+
                     <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
                       Página {currentPage} de {totalPages}
                     </span>
-                    
+
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}

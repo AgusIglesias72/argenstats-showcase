@@ -161,7 +161,7 @@ export async function getLatestCountryRiskData() {
     }
 
     // Usar el valor oficial si está disponible, sino el estimado
-    const currentValue = latestRisk.embiOfficial ?? latestRisk.embiEstimated ?? null
+    const currentValue = latestRisk.embiEstimated ?? latestRisk.embiOfficial ?? null
 
     if (!currentValue) {
       return {

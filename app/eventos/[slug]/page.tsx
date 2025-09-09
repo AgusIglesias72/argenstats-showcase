@@ -6,7 +6,7 @@ import { currentUser } from '@clerk/nextjs/server';
 ;
 import EventDetailClient from './EventDetailClient';
 import { Metadata } from 'next';
-import { Trophy, Calendar, Clock, Users, TrendingUp, Package, Utensils, Wrench, Info, BarChart3 } from 'lucide-react';
+import { Trophy, Calendar, Clock, Users, TrendingUp, Package, Utensils, Wrench, Info, BarChart3, ChartBar, Target } from 'lucide-react';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('es-AR', {
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
   }).format(new Date(date));
 }
@@ -58,6 +58,8 @@ export default async function EventPage({ params }: Props) {
   
   // Obtener distribución para histogramas
   const distribution = await EventsService.getPredictionDistribution(event.id);
+
+  console.log(statistics)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -116,7 +118,7 @@ export default async function EventPage({ params }: Props) {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium text-blue-700 dark:text-blue-400">FECHA</span>
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-400">PUBLICACION</span>
                     </div>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       {formatDate(event.eventDate)}
@@ -132,14 +134,14 @@ export default async function EventPage({ params }: Props) {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-medium text-red-700 dark:text-red-400">CIERRE</span>
+                      <span className="text-xs font-medium text-red-700 dark:text-red-400">IPC PROM.</span>
                     </div>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {formatDate(event.submissionDeadline)}
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {statistics?.averagePredictions.ipcGeneral.toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                    <Clock className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    <Target className="w-6 h-6 text-red-600 dark:text-red-400" />
                   </div>
                 </div>
               </div>

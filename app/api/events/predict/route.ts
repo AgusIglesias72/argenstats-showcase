@@ -1,5 +1,4 @@
 // app/api/events/predict/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { EventsService } from '@/lib/services/events.service';
@@ -7,6 +6,8 @@ import { z } from 'zod';
 
 const PredictionSchema = z.object({
   eventId: z.string(),
+  userId: z.string(),
+  userEmail: z.string().email(),
   ipcGeneral: z.string().transform(Number),
   ipcBienes: z.string().transform(Number),
   ipcServicios: z.string().transform(Number),
@@ -15,7 +16,7 @@ const PredictionSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // Obtener el usuario actual de Clerk
+    // Verificar autenticación básica
     const user = await currentUser();
     
     if (!user) {
@@ -27,39 +28,24 @@ export async function POST(req: NextRequest) {
 
     // Validar los datos del body
     const body = await req.json();
-    console.log('Body recibido:', body); // Debug
+    console.log('Body recibido:', body);
     
     const validatedData = PredictionSchema.parse(body);
-    console.log('Datos validados:', validatedData); // Debug
+    console.log('Datos validados:', validatedData);
 
-    // Obtener el email directamente del objeto user de Clerk
-    // currentUser() ya incluye toda la información del usuario
-    console.log(user)
-    const userEmail = user.emailAddresses?.[0]?.emailAddress || 
-                     user.primaryEmailAddress?.emailAddress || 
-                     '';
-    
-    console.log('Usuario:', {
-      id: user.id,
-      email: userEmail,
-      emailAddresses: user.emailAddresses
-    }); // Debug
-
-    // Si no hay email, usar un valor por defecto o lanzar error
-    if (!userEmail) {
-      console.warn('No se encontró email para el usuario:', user.id);
-      // Podrías decidir si esto es crítico o no
-      // return NextResponse.json(
-      //   { error: 'No se pudo obtener el email del usuario' },
-      //   { status: 400 }
-      // );
+    // Verificar que el userId del request coincida con el usuario autenticado
+    if (validatedData.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Usuario no autorizado' },
+        { status: 403 }
+      );
     }
 
     // Crear la predicción
     const prediction = await EventsService.createPrediction(
       validatedData.eventId,
-      user.id,
-      userEmail || 'email_no_disponible', // Fallback si decides continuar sin email
+      validatedData.userId,
+      validatedData.userEmail,
       {
         ipcGeneral: validatedData.ipcGeneral,
         ipcBienes: validatedData.ipcBienes,
@@ -69,7 +55,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ 
-      success: true, 
+      success: true,
       prediction,
       message: 'Predicción creada exitosamente'
     });
@@ -100,6 +86,13 @@ export async function POST(req: NextRequest) {
     if (error.message?.includes('El período de predicciones ha finalizado')) {
       return NextResponse.json(
         { error: 'El período de predicciones ha finalizado' },
+        { status: 400 }
+      );
+    }
+
+    if (error.message?.includes('Ya has realizado una predicción')) {
+      return NextResponse.json(
+        { error: 'Ya has realizado una predicción para este evento' },
         { status: 400 }
       );
     }

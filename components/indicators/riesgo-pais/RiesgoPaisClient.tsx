@@ -291,7 +291,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
             </h2>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
-                Fuente: {data.current.source === 'estimated' ? 'Estimador ArgenStats' : 'JP Morgan EMBI+'}
+                Fuente: {data.current.source === 'estimated' ? 'Estimador ArgenStats' : 'Riesgo Pais JP Morgan'}
               </Badge>
               <Button 
                 variant="outline" 
@@ -313,7 +313,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
               <CardHeader className="relative pb-2">
                 <CardDescription className="flex items-center gap-1">
                   <Globe className="w-4 h-4" />
-                  Riesgo País
+                  Riesgo Pais Argenstats
                 </CardDescription>
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-2xl font-bold">
@@ -344,13 +344,13 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
               </CardContent>
             </Card>
 
-            {/* JP Morgan EMBI+ */}
+            {/* Riesgo Pais JP Morgan */}
             <Card className="relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full" />
               <CardHeader className="relative pb-2">
                 <CardDescription className="flex items-center gap-1">
                   <BarChart3 className="w-4 h-4" />
-                  JP Morgan EMBI+
+                  Riesgo Pais JP Morgan
                 </CardDescription>
                 <CardTitle className="text-2xl font-bold">
                   {data.jpMorganData?.official || data.current?.officialValue || '-'}
