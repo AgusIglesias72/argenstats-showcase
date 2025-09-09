@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   User, 
   KeyRound, 
@@ -92,9 +93,11 @@ export function CustomUserDropdown() {
         aria-label="Abrir menú de usuario"
       >
         <div className="relative">
-          <img
+          <Image
             src={user.imageUrl}
             alt={user.fullName || 'Usuario'}
+            width={32}
+            height={32}
             className="h-8 w-8 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
           />
           <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
@@ -115,9 +118,11 @@ export function CustomUserDropdown() {
             {/* Header del usuario */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-3">
-                <img
+                <Image
                   src={user.imageUrl}
                   alt={user.fullName || 'Usuario'}
+                  width={48}
+                  height={48}
                   className="h-12 w-12 rounded-full object-cover"
                 />
                 <div className="flex-1 min-w-0">

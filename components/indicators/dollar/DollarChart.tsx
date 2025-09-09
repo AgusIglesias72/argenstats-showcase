@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { TrendingUp, Calendar, Info, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { DOLLAR_TYPES, DOLLAR_TYPE_LABELS, DOLLAR_TYPE_COLORS } from '@/lib/api/constants/dollar'
@@ -54,6 +54,49 @@ export function DollarChart({
     { value: '15years', label: '15A', days: 5475 }
   ]
 
+  // Función para generar datos mock
+  const generateMockData = useCallback((range: string, types: string[]) => {
+    const option = timeRangeOptions.find(opt => opt.value === range)
+    if (!option) return []
+    
+    const days = option.days
+    const data = []
+    const now = new Date()
+    
+    for (let i = days; i >= 0; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+      
+      const point: any = {
+        date: date.toISOString().split('T')[0],
+        timestamp: date.getTime()
+      }
+      
+      types.forEach(type => {
+        // Precios base realistas para cada tipo
+        const basePrices: Record<string, number> = {
+          'BLUE': 1200,
+          'OFICIAL': 800,
+          'MEP': 1100,
+          'CCL': 1150,
+          'MAYORISTA': 850,
+          'TARJETA': 2000,
+          'CRYPTO': 1250
+        }
+        
+        const basePrice = basePrices[type] || 1000
+        const trend = Math.sin(i / 10) * 50 // Tendencia suave
+        const volatility = (Math.random() - 0.5) * 100 // Volatilidad
+        
+        point[type] = Math.round(basePrice + trend + volatility)
+      })
+      
+      data.push(point)
+    }
+    
+    return data
+  }, [timeRangeOptions])
+
   // Procesar datos cuando cambien
   useEffect(() => {
     if (data.series && data.series.length > 0) {
@@ -87,54 +130,7 @@ export function DollarChart({
       const mockData = generateMockData(timeRange, selectedTypes)
       setChartData(mockData)
     }
-  }, [data.series, selectedTypes, timeRange])
-
-  // Función para generar datos mock
-  const generateMockData = (range: string, types: string[]) => {
-    const option = timeRangeOptions.find(opt => opt.value === range)
-    if (!option) return []
-    
-    const days = option.days
-    const data = []
-    const now = new Date()
-    
-    // Determinar intervalo
-    let interval = 1
-    if (days > 365 * 5) interval = 30
-    else if (days > 365 * 2) interval = 7
-    else if (days > 365) interval = 3
-    
-    const basePrices: Record<string, number> = {
-      BLUE: 1250,
-      OFICIAL: 980,
-      MEP: 1180,
-      CCL: 1200,
-      CRYPTO: 1230,
-      MAYORISTA: 960,
-      TARJETA: 1580
-    }
-    
-    for (let i = days; i >= 0; i -= interval) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      
-      const point: any = {
-        date: date.toISOString().split('T')[0],
-        displayDate: format(date, 'dd/MM/yyyy', { locale: es })
-      }
-      
-      types.forEach(type => {
-        const basePrice = basePrices[type] || 1000
-        const trend = (days - i) * 0.5
-        const volatility = Math.sin(i * 0.02) * 50 + Math.random() * 20 - 10
-        point[type] = Math.round(basePrice + trend + volatility)
-      })
-      
-      data.push(point)
-    }
-    
-    return data
-  }
+  }, [data.series, selectedTypes, timeRange, generateMockData])
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {

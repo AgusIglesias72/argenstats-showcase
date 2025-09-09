@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { 
   Users, 
   UserPlus, 
@@ -187,9 +188,11 @@ export default function UsersTabClient({ initialUsers, initialStats }: UsersTabC
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {user.imageUrl ? (
-                          <img
+                          <Image
                             src={user.imageUrl}
                             alt={user.name}
+                            width={32}
+                            height={32}
                             className="w-8 h-8 rounded-full mr-3"
                           />
                         ) : (

@@ -4,6 +4,7 @@
 import { useState, Suspense } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { 
   User, 
   KeyRound, 
@@ -71,9 +72,11 @@ function ProfileContent() {
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-4">
-        <img
+        <Image
           src={user.imageUrl}
           alt={user.fullName || 'Usuario'}
+          width={64}
+          height={64}
           className="w-16 h-16 rounded-full"
         />
         <div>

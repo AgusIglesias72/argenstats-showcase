@@ -26,10 +26,8 @@ export async function GET(request: NextRequest) {
       return await updateTodayOnly(fetcher, startTime)
     }
     
-    let riskData: any[]
-    
     console.info('📊 Cargando todos los datos históricos')
-    riskData = await fetcher.fetchAllData()
+    const riskData = await fetcher.fetchAllData()
     
     if (riskData.length === 0) {
       return NextResponse.json({
