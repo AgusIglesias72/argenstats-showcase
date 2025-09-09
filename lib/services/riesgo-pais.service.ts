@@ -5,7 +5,7 @@ import { unstable_cache } from 'next/cache'
 // IMPORTANTE: Ajustar estos nombres según tu schema de Prisma
 // Si tu tabla se llama diferente (ej: "CountryRisk", "riesgo_pais", etc.), 
 // cambiar aquí el nombre
-const TABLE_NAME = 'CountryRisk' // <- CAMBIAR ESTE NOMBRE POR EL CORRECTO DE TU SCHEMA
+const TABLE_NAME = 'country_risk' // <- CAMBIAR ESTE NOMBRE POR EL CORRECTO DE TU SCHEMA
 
 interface RiesgoPaisRecord {
   id: string
@@ -27,13 +27,14 @@ interface CurrentRiesgoPais {
   officialValue?: number
   estimatorDiff?: number
   source: 'official' | 'estimated'
+  lastUpdate?: string // Agregamos para el estimador
 }
 
 interface JPMorganComparison {
   official: number
   estimated: number
   difference: number
-  lastUpdate: string
+  lastUpdate: string // Ahora será la fecha cuando cambió el valor
 }
 
 interface HistoricalParams {
@@ -61,7 +62,6 @@ class RiesgoPaisService {
   // Obtener el valor actual del riesgo país (preferir estimador sobre oficial)
   async getCurrentRiesgoPais(): Promise<CurrentRiesgoPais | null> {
     try {
-      // Opción 1: Usar Prisma Client directamente (RECOMENDADO)
       const current = await prisma.countryRisk.findFirst({
         orderBy: {
           date: 'desc'
@@ -107,7 +107,9 @@ class RiesgoPaisService {
         estimatorDiff: current.embiEstimated && current.embiOfficial 
           ? current.embiEstimated - current.embiOfficial 
           : undefined,
-        source: current.embiEstimated ? 'estimated' : 'official'
+        source: current.embiEstimated ? 'estimated' : 'official',
+        // Para el estimador, usar lastUpdate que es cuando se actualizó
+        lastUpdate: current.embiEstimated ? current.lastUpdate.toISOString() : undefined
       }
     } catch (error) {
       console.error('Error fetching current riesgo país:', error)
@@ -118,7 +120,7 @@ class RiesgoPaisService {
   // Obtener comparación entre JP Morgan oficial y estimador
   async getJPMorganComparison(): Promise<JPMorganComparison | null> {
     try {
-      // Buscar el último registro que tenga valor oficial de JP Morgan
+      // Buscar el último registro con valor oficial de JP Morgan
       const latestOfficial = await prisma.countryRisk.findFirst({
         where: {
           embiOfficial: { not: null }
@@ -127,6 +129,60 @@ class RiesgoPaisService {
           date: 'desc'
         }
       })
+
+      if (!latestOfficial || !latestOfficial.embiOfficial) {
+        return null
+      }
+
+      const currentOfficialValue = latestOfficial.embiOfficial
+
+      // Buscar cuándo fue la última vez que el valor oficial fue diferente
+      // Esto nos dirá cuándo cambió al valor actual
+      const lastDifferentOfficial = await prisma.countryRisk.findFirst({
+        where: {
+          embiOfficial: {
+            not: currentOfficialValue
+          },
+          date: {
+            lt: latestOfficial.date
+          }
+        },
+        orderBy: {
+          date: 'desc'
+        }
+      })
+
+      // La fecha de actualización de JP Morgan es:
+      // - Si encontramos un valor diferente anterior: la fecha del primer registro con el valor actual
+      // - Si no hay valor diferente (siempre fue el mismo): la fecha del registro más antiguo con este valor
+      let jpMorganUpdateDate: Date
+
+      if (lastDifferentOfficial) {
+        // Buscar el primer registro después del último valor diferente que tenga el valor actual
+        const firstWithCurrentValue = await prisma.countryRisk.findFirst({
+          where: {
+            embiOfficial: currentOfficialValue,
+            date: {
+              gt: lastDifferentOfficial.date
+            }
+          },
+          orderBy: {
+            date: 'asc'
+          }
+        })
+        jpMorganUpdateDate = firstWithCurrentValue?.date || latestOfficial.date
+      } else {
+        // Si no hay valor diferente, buscar el registro más antiguo con el valor actual
+        const oldestWithCurrentValue = await prisma.countryRisk.findFirst({
+          where: {
+            embiOfficial: currentOfficialValue
+          },
+          orderBy: {
+            date: 'asc'
+          }
+        })
+        jpMorganUpdateDate = oldestWithCurrentValue?.date || latestOfficial.date
+      }
 
       // Buscar el último registro con estimador
       const latestEstimated = await prisma.countryRisk.findFirst({
@@ -138,18 +194,14 @@ class RiesgoPaisService {
         }
       })
 
-      if (!latestOfficial) {
-        return null
-      }
-
-      const official = latestOfficial.embiOfficial || 0
+      const official = currentOfficialValue
       const estimated = latestEstimated?.embiEstimated || official
 
       return {
         official,
         estimated,
         difference: estimated - official,
-        lastUpdate: latestOfficial.date.toISOString() // Fecha del último valor oficial
+        lastUpdate: jpMorganUpdateDate.toISOString() // Fecha cuando cambió al valor actual
       }
     } catch (error) {
       console.error('Error fetching JP Morgan comparison:', error)
@@ -245,25 +297,23 @@ class RiesgoPaisService {
   // Obtener variaciones por período
   async getVariations(): Promise<Variations | null> {
     try {
-      const now = new Date()
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      
-      // Definir fechas para cada período
-      const periods = {
-        daily: new Date(today.getTime() - 24 * 60 * 60 * 1000),
-        weekly: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
-        monthly: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000),
-        quarterly: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000),
-        yearly: new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000),
-        ytd: new Date(now.getFullYear(), 0, 1)
-      }
-
       // Obtener valor actual
       const currentData = await this.getCurrentRiesgoPais()
       if (!currentData) return null
-
+      
       const currentValue = currentData.value
-
+      const currentDate = new Date(currentData.date)
+      
+      // Calcular las fechas objetivo para cada período
+      const targetDates = {
+        daily: new Date(currentDate.getTime() - 24 * 60 * 60 * 1000),
+        weekly: new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000),
+        monthly: new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000),
+        quarterly: new Date(currentDate.getTime() - 90 * 24 * 60 * 60 * 1000),
+        yearly: new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000),
+        ytd: new Date(currentDate.getFullYear(), 0, 1)
+      }
+      
       const variations: Variations = {
         daily: { value: 0, percent: 0 },
         weekly: { value: 0, percent: 0 },
@@ -272,34 +322,51 @@ class RiesgoPaisService {
         yearly: { value: 0, percent: 0 },
         ytd: { value: 0, percent: 0 }
       }
-
+      
       // Calcular variaciones para cada período
-      for (const [period, date] of Object.entries(periods)) {
-        const historicalData = await prisma.countryRisk.findFirst({
+      for (const [period, targetDate] of Object.entries(targetDates)) {
+        // Buscar el registro más cercano a la fecha objetivo
+        // Primero intentar encontrar un registro exacto o posterior
+        let historicalData = await prisma.countryRisk.findFirst({
           where: {
             date: {
-              lte: date
+              gte: targetDate,
+              lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000)
             }
           },
           orderBy: {
-            date: 'desc'
+            date: 'asc'
           }
         })
-
+        
+        // Si no encontramos, buscar el más cercano anterior
+        if (!historicalData) {
+          historicalData = await prisma.countryRisk.findFirst({
+            where: {
+              date: {
+                lt: targetDate
+              }
+            },
+            orderBy: {
+              date: 'desc'
+            }
+          })
+        }
+        
         if (historicalData) {
-          const historicalValue = historicalData.embiEstimated || historicalData.embiOfficial || currentValue
-          const change = currentValue - historicalValue
-          const changePercent = historicalValue !== 0 
-            ? (change / historicalValue) * 100 
-            : 0
-
-          variations[period as keyof Variations] = {
-            value: Math.round(change),
-            percent: Math.round(changePercent * 100) / 100
+          const historicalValue = historicalData.embiEstimated || historicalData.embiOfficial || 0
+          if (historicalValue > 0) {
+            const change = currentValue - historicalValue
+            const changePercent = (change / historicalValue) * 100
+            
+            variations[period as keyof Variations] = {
+              value: Math.round(change),
+              percent: Math.round(changePercent * 100) / 100
+            }
           }
         }
       }
-
+      
       return variations
     } catch (error) {
       console.error('Error calculating variations:', error)
@@ -398,11 +465,12 @@ class RiesgoPaisService {
         const initialData = await prisma.countryRisk.findFirst({
           where: {
             date: {
-              lte: startDate
+              gte: startDate,
+              lt: new Date(startDate.getTime() + 24 * 60 * 60 * 1000)
             }
           },
           orderBy: {
-            date: 'desc'
+            date: 'asc'
           }
         })
 
@@ -415,6 +483,19 @@ class RiesgoPaisService {
             }
           }
         })
+
+        if (!initialData) {
+          const initialData = await prisma.countryRisk.findFirst({
+            where: {
+              date: {
+                lt: startDate
+              }
+            },
+            orderBy: {
+              date: 'desc'
+            }
+          })
+        }
 
         if (initialData && periodRecords.length > 0) {
           const values = periodRecords.map(r => r.embiEstimated || r.embiOfficial || 0)

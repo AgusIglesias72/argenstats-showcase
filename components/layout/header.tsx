@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { SignedIn, SignedOut } from '@clerk/nextjs'
+import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/nextjs'
 import { CustomUserDropdown } from '@/components/auth/custom-user-dropdown'
 import { useTheme } from 'next-themes'
+import { useIsAdmin } from '@/lib/hooks/useIsAdmin'
 import { 
   Menu, 
   X, 
@@ -26,7 +27,12 @@ import {
   Calculator,
   ArrowRightLeft,
   LogIn,
-  UserRound
+  UserRound,
+  KeyRound,
+  Star,
+  Mail,
+  Shield,
+  LogOut
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -122,6 +128,9 @@ export function Header() {
   const [mobileIndicadoresOpen, setMobileIndicadoresOpen] = useState(false)
   const [mobileHerramientasOpen, setMobileHerramientasOpen] = useState(false)
   const pathname = usePathname()
+  const { user } = useUser()
+  const { signOut } = useClerk()
+  const { isAdmin } = useIsAdmin()
 
   useEffect(() => {
     setMobileMenuOpen(false)
@@ -193,19 +202,19 @@ export function Header() {
                   </NavigationMenuItem>
 
                   <NavigationMenuItem>
-                    <Link href="/dolar" legacyBehavior passHref>
-                      <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
+                    <NavigationMenuLink asChild>
+                      <Link href="/dolar" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
                         Dólar
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
 
                   <NavigationMenuItem>
-                    <Link href="/eventos" legacyBehavior passHref>
-                      <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
+                    <NavigationMenuLink asChild>
+                      <Link href="/eventos" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
                         Eventos
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
 
                   <NavigationMenuItem>
@@ -245,11 +254,11 @@ export function Header() {
                   </NavigationMenuItem>
 
                   <NavigationMenuItem>
-                    <Link href="/documentacion" legacyBehavior passHref>
-                      <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
+                    <NavigationMenuLink asChild>
+                      <Link href="/documentacion" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 cursor-pointer">
                         API Docs
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
@@ -313,7 +322,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              className="lg:hidden fixed right-0 top-0 z-50 h-full w-[280px] bg-white shadow-xl dark:bg-gray-900"
+              className="lg:hidden fixed right-0 top-0 z-50 h-full w-[280px] bg-white shadow-xl dark:bg-gray-900 overflow-y-auto"
             >
               <div className="flex h-full flex-col">
                 {/* Header */}
@@ -329,16 +338,110 @@ export function Header() {
 
                 {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto p-4">
-                  {/* User info if signed in */}
+                  {/* User section if signed in */}
                   <SignedIn>
-                    <div className="mb-4 pb-4 border-b dark:border-gray-800">
-                      <div className="flex items-center space-x-3">
-                        <CustomUserDropdown />
+                    <div className="mb-6 pb-4 border-b dark:border-gray-800">
+                      {/* User Profile Info */}
+                      <div className="flex items-center space-x-3 mb-4">
+                        <img
+                          src={user?.imageUrl}
+                          alt={user?.fullName || 'Usuario'}
+                          className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {user?.fullName || 'Usuario'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {user?.primaryEmailAddress?.emailAddress}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* User Menu Items */}
+                      <div className="space-y-1">
+                        <Link
+                          href="/profile"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                        >
+                          <User className="h-4 w-4 flex-shrink-0" />
+                          <div>
+                            <span className="block">Mi Perfil</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Gestionar información personal</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/profile?tab=api-keys"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                        >
+                          <KeyRound className="h-4 w-4 flex-shrink-0" />
+                          <div>
+                            <span className="block">API Keys</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Gestionar claves de API</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/profile?tab=favorites"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                        >
+                          <Star className="h-4 w-4 flex-shrink-0" />
+                          <div>
+                            <span className="block">Favoritos</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Indicadores guardados</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/profile?tab=events"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                        >
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <div>
+                            <span className="block">Eventos</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Historial de actividad</span>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/profile?tab=contact"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
+                        >
+                          <Mail className="h-4 w-4 flex-shrink-0" />
+                          <div>
+                            <span className="block">Contacto</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Enviar mensaje</span>
+                          </div>
+                        </Link>
+
+                        {/* Admin Dashboard if admin */}
+                        {isAdmin && (
+                          <>
+                            <div className="border-t dark:border-gray-700 my-2"></div>
+                            <Link
+                              href="/admin"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-center space-x-3 rounded-md px-3 py-2 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-300 cursor-pointer"
+                            >
+                              <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                              <div>
+                                <span className="block text-purple-600 dark:text-purple-400">Dashboard Admin</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Panel de administración</span>
+                              </div>
+                            </Link>
+                          </>
+                        )}
                       </div>
                     </div>
                   </SignedIn>
 
-                  {/* Menu items */}
+                  {/* Main menu items */}
                   <div className="space-y-1">
                     {/* Indicadores con accordion */}
                     <div>
@@ -368,6 +471,7 @@ export function Header() {
                                   <Link
                                     key={item.href}
                                     href={item.href}
+                                    onClick={() => setMobileMenuOpen(false)}
                                     className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-pointer"
                                   >
                                     <Icon className="h-4 w-4 text-gray-400" />
@@ -383,6 +487,7 @@ export function Header() {
 
                     <Link
                       href="/dolar"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
                       <DollarSign className="h-4 w-4" />
@@ -391,6 +496,7 @@ export function Header() {
 
                     <Link
                       href="/eventos"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
                       <Calendar className="h-4 w-4" />
@@ -425,6 +531,7 @@ export function Header() {
                                   <Link
                                     key={item.href}
                                     href={item.href}
+                                    onClick={() => setMobileMenuOpen(false)}
                                     className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-pointer"
                                   >
                                     <Icon className="h-4 w-4 text-gray-400" />
@@ -440,6 +547,7 @@ export function Header() {
 
                     <Link
                       href="/api-docs"
+                      onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
                       <FileText className="h-4 w-4" />
@@ -449,6 +557,7 @@ export function Header() {
                     <SignedIn>
                       <Link
                         href="/"
+                        onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer"
                       >
                         <User className="h-4 w-4" />
@@ -456,6 +565,38 @@ export function Header() {
                       </Link>
                     </SignedIn>
                   </div>
+
+                  {/* Sign Out Button for signed in users */}
+                  <SignedIn>
+                    <div className="mt-6 pt-6 border-t dark:border-gray-800">
+                      <button
+                        onClick={() => {
+                          signOut()
+                          setMobileMenuOpen(false)
+                        }}
+                        className="flex w-full items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Cerrar sesión</span>
+                      </button>
+                    </div>
+                  </SignedIn>
+
+                  {/* Sign In Button for signed out users */}
+                  <SignedOut>
+                    <div className="mt-6 pt-6 border-t dark:border-gray-800">
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('openLoginModal'))
+                          setMobileMenuOpen(false)
+                        }}
+                        className="flex w-full items-center justify-center space-x-2 rounded-md px-3 py-3 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      >
+                        <LogIn className="h-4 w-4" />
+                        <span>Iniciar sesión</span>
+                      </button>
+                    </div>
+                  </SignedOut>
 
                   {/* Theme toggle in mobile */}
                   <div className="mt-6 pt-6 border-t dark:border-gray-800">

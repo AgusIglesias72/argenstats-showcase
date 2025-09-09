@@ -44,7 +44,6 @@ export function RiesgoPaisChart({
     }))
   }, [data])
 
-  console.log('🔄 Chart Data:', chartData)
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload[0]) {

@@ -3,8 +3,36 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  // Handle browser extension modifications that cause hydration issues
+  React.useEffect(() => {
+    if (inputRef.current) {
+      // Remove any attributes added by browser extensions that cause hydration mismatches
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes') {
+            const target = mutation.target as HTMLInputElement
+            // Remove common browser extension attributes that cause hydration issues
+            if (target.hasAttribute('fdprocessedid')) {
+              target.removeAttribute('fdprocessedid')
+            }
+          }
+        })
+      })
+
+      observer.observe(inputRef.current, {
+        attributes: true,
+        attributeFilter: ['fdprocessedid', 'data-lastpass-icon-root', 'data-1password-ignore']
+      })
+
+      return () => observer.disconnect()
+    }
+  }, [])
+
   return (
     <input
+      ref={inputRef}
       type={type}
       data-slot="input"
       className={cn(

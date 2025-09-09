@@ -58,6 +58,7 @@ async function getRiesgoPaisData() {
 // Generar metadata dinámica
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getRiesgoPaisData()
+  console.log("data", data)
   
   const currentValue = data.current?.value || 0
   const dailyChange = data.current?.dailyChangePercent 

@@ -213,7 +213,7 @@ export function DollarChart({
       {/* Card principal */}
       <Card className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row items-center justify-between md:mb-6 space-y-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -231,7 +231,7 @@ export function DollarChart({
           {/* Selector de período */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Período:</span>
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex-wrap md:flex-nowrap">
               {timeRangeOptions.map(option => (
                 <button
                   key={option.value}

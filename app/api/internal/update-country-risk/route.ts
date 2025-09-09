@@ -28,15 +28,8 @@ export async function GET(request: NextRequest) {
     
     let riskData: any[]
     
-    if (fullUpdate) {
-      console.info('📊 Actualización completa solicitada')
-      riskData = await fetcher.fetchAllData()
-    } else {
-      console.info('📈 Actualización incremental (últimos 7 días)')
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      riskData = await fetcher.fetchLatestData(sevenDaysAgo)
-    }
+    console.info('📊 Cargando todos los datos históricos')
+    riskData = await fetcher.fetchAllData()
     
     if (riskData.length === 0) {
       return NextResponse.json({

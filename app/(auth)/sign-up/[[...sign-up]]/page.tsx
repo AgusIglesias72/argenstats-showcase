@@ -2,6 +2,7 @@
 
 import { useSignUp } from '@clerk/nextjs'
 import { useState } from 'react'
+import { useHydrationFix } from '@/lib/hooks/useHydrationFix'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { GoogleIcon, XIcon } from '@/components/ui/social-icons'
@@ -17,6 +18,9 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Handle hydration mismatch caused by browser extensions
+  useHydrationFix()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

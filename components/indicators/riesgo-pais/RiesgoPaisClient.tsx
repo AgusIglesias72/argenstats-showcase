@@ -26,6 +26,7 @@ interface RiesgoPaisCurrentData {
   officialValue?: number
   estimatorDiff?: number
   source: 'official' | 'estimated'
+  lastUpdate?: string
 }
 
 interface JPMorganComparison {
@@ -106,8 +107,14 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
       const now = new Date()
       
       // Para el valor actual del riesgo país
-      const updateDate = data.current?.date ? new Date(data.current.date) : now
-      const diff = Math.floor((now.getTime() - updateDate.getTime()) / 1000 / 60) // minutos
+      const updateDate = data.current?.lastUpdate ? new Date(data.current.lastUpdate) : now
+      const diff = Math.floor((now.getTime() - updateDate.getTime()) / 1000 / 60) // minutos 
+
+
+      if (diff < 0) {
+        setLastUpdate('Recién actualizado')
+        return
+      }
       
       if (diff < 60) {
         setLastUpdate(`hace ${diff} ${diff === 1 ? 'minuto' : 'minutos'}`)
@@ -152,16 +159,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
           onlyHistorical: false
         })
         
-        console.log('🔄 Cliente - Datos recibidos del servicio:', {
-          current: result?.current,
-          historical: {
-            total: result?.historical?.length,
-            primeros5: result?.historical?.slice(0, 5),
-            ultimos5: result?.historical?.slice(-5)
-          },
-          periodsData: result?.periodsData,
-          jpMorganData: result?.jpMorganData
-        })
+
         
         if (result) {
           setData(result as RiesgoPaisPageData)
@@ -188,12 +186,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
           onlyHistorical: true
         })
         
-        console.log(`📅 Cliente - Datos históricos para período ${chartPeriod} días:`, {
-          total: result?.historical?.length,
-          fechaInicio: result?.historical?.[0]?.date,
-          fechaFin: result?.historical?.[result?.historical?.length - 1]?.date,
-          muestraDatos: result?.historical?.slice(0, 10)
-        })
+
         
         if (result && result.historical) {
           setData(prev => ({

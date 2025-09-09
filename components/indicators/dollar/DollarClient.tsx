@@ -1,3 +1,4 @@
+// components/indicators/dollar/DollarClient.tsx
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
@@ -10,13 +11,13 @@ import { DollarInfo } from './DollarInfo'
 import { DOLLAR_TYPE_LABELS, DOLLAR_TYPE_COLORS } from '@/lib/api/constants/dollar'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-// Importar Server Actions
+
+// Server Actions
 import { 
   fetchCurrentDollarRates, 
   fetchHistoricalDollarRates 
 } from '@/app/actions/dollar.actions'
 
-// Tipos importados del servicio
 interface DollarRate {
   dollarType: string
   buyPrice: number
@@ -26,43 +27,24 @@ interface DollarRate {
   averagePrice: number
   spread: number
   spreadPercentage: string
+  variation?: {
+    amount: number
+    percentage: number
+    previousPrice?: number
+  }
 }
 
 interface DollarCurrentData {
   [key: string]: DollarRate
 }
 
-interface DollarHistoricalPoint {
-  date: string
-  [key: string]: any
-}
-
-interface DollarComparison {
-  date: string
-  types: {
-    type: string
-    label: string
-    buyPrice: number
-    sellPrice: number
-    averagePrice: number
-    spread: number
-    spreadPercentage: string
-  }[]
-  analysis: {
-    cheapest: string
-    mostExpensive: string
-    averageSpread: number
-    maxDifference: number
-  }
-}
-
 interface DollarData {
   current: DollarCurrentData
   historical: {
-    series: DollarHistoricalPoint[]
+    series: any[]
     summary: any
   }
-  comparison: DollarComparison
+  comparison: any
 }
 
 interface DollarClientProps {
@@ -101,23 +83,118 @@ export function DollarClient({ initialData }: DollarClientProps) {
     }).format(price)
   }
 
-  // Función para obtener el tiempo transcurrido
-  const getTimeAgo = (date: Date) => {
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
-    if (diffInMinutes < 60) {
-      return `Hace ${diffInMinutes} min`
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60)
-      return `Hace ${hours}h`
-    } else {
-      const days = Math.floor(diffInMinutes / 1440)
-      return `Hace ${days} días`
+  // Función corregida para obtener el tiempo transcurrido
+  const getTimeAgo = (dateString: string | Date | undefined) => {
+    try {
+      let date: Date
+      
+      // Manejar diferentes tipos de entrada
+      if (!dateString) {
+        return 'Recién actualizado'
+      } else if (dateString instanceof Date) {
+        date = dateString
+      } else {
+        date = new Date(dateString)
+      }
+      
+      const now = new Date()
+      
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) {
+        return 'Recién actualizado'
+      }
+      
+      // Si la fecha es futura (error en datos), mostrar como recién actualizado
+      if (date > now) {
+        return 'Recién actualizado'
+      }
+      
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+      
+      if (diffInMinutes < 1) {
+        return 'Hace menos de 1 min'
+      } else if (diffInMinutes < 60) {
+        return `Hace ${diffInMinutes} min`
+      } else if (diffInMinutes < 1440) {
+        const hours = Math.floor(diffInMinutes / 60)
+        return `Hace ${hours}h`
+      } else {
+        const days = Math.floor(diffInMinutes / 1440)
+        if (days === 1) {
+          return 'Ayer'
+        } else if (days < 7) {
+          return `Hace ${days} días`
+        } else {
+          // Para fechas más antiguas, mostrar la fecha completa
+          return format(date, 'dd/MM/yyyy', { locale: es })
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing date:', dateString, error)
+      return 'Recién actualizado'
     }
   }
 
-  // Función para obtener datos históricos usando Server Actions
+  // Función para calcular variación real comparando con día anterior
+  const getVariation = (type: string, currentPrice: number) => {
+    try {
+      // Primero verificar si el rate ya tiene variación calculada desde el servidor
+      const rate = data.current[type]
+      if (rate && rate.variation) {
+        return rate.variation.percentage
+      }
+      
+      // Si no, intentar calcular desde datos históricos
+      if (data.historical && data.historical.series && data.historical.series.length > 0) {
+        // Ordenar por fecha descendente
+        const sortedData = [...data.historical.series].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+        
+        // Buscar el precio anterior para este tipo de dólar
+        for (let i = 1; i < sortedData.length; i++) {
+          const previousData = sortedData[i]
+          
+          // Buscar el campo que corresponde a este tipo de dólar
+          const sellKey = `${type}_sell`
+          const buyKey = `${type}_buy`
+          const avgKey = `${type}_avg`
+          
+          let previousPrice = null
+          
+          if (previousData[sellKey]) {
+            previousPrice = previousData[sellKey]
+          } else if (previousData[avgKey]) {
+            previousPrice = previousData[avgKey]
+          } else if (previousData[buyKey]) {
+            previousPrice = previousData[buyKey]
+          } else if (previousData[type]) {
+            // A veces viene directamente como el tipo o como objeto
+            if (typeof previousData[type] === 'object') {
+              previousPrice = previousData[type].sell || previousData[type].avg || previousData[type].buy
+            } else {
+              previousPrice = previousData[type]
+            }
+          }
+          
+          if (previousPrice && previousPrice > 0) {
+            // Calcular variación porcentual
+            const variation = ((currentPrice - previousPrice) / previousPrice) * 100
+            return variation
+          }
+        }
+      }
+      
+      // Si no hay datos históricos, retornar 0
+      return 0
+      
+    } catch (error) {
+      console.error('Error calculating variation for', type, error)
+      return 0
+    }
+  }
+
+  // Función para obtener datos históricos
   const fetchHistoricalData = async (timeRange: string) => {
     setIsLoadingHistorical(true)
     try {
@@ -142,14 +219,6 @@ export function DollarClient({ initialData }: DollarClientProps) {
           fromDate = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000)
           interval = 'weekly'
           break
-        case '10years':
-          fromDate = new Date(now.getTime() - 10 * 365 * 24 * 60 * 60 * 1000)
-          interval = 'monthly'
-          break
-        case '15years':
-          fromDate = new Date(now.getTime() - 15 * 365 * 24 * 60 * 60 * 1000)
-          interval = 'monthly'
-          break
         default:
           fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
       }
@@ -157,14 +226,6 @@ export function DollarClient({ initialData }: DollarClientProps) {
       const from = fromDate.toISOString().split('T')[0]
       const to = now.toISOString().split('T')[0]
       
-      console.log(`📊 Solicitando datos históricos:`, {
-        timeRange,
-        from,
-        to,
-        interval
-      })
-      
-      // Usar Server Action para obtener datos históricos
       const result = await fetchHistoricalDollarRates({
         from,
         to,
@@ -184,11 +245,10 @@ export function DollarClient({ initialData }: DollarClientProps) {
     }
   }
 
-  // Función para actualizar datos usando Server Actions
+  // Función para actualizar datos
   const refreshData = async () => {
     startTransition(async () => {
       try {
-        // Usar Server Action para obtener datos actuales
         const result = await fetchCurrentDollarRates()
         
         if (result.success && result.data) {
@@ -199,7 +259,6 @@ export function DollarClient({ initialData }: DollarClientProps) {
           setLastUpdate(new Date())
         }
         
-        // También actualizar datos históricos
         await fetchHistoricalData(timeRange)
       } catch (error) {
         console.error('Error refreshing data:', error)
@@ -214,14 +273,16 @@ export function DollarClient({ initialData }: DollarClientProps) {
     }
   }, [timeRange])
 
-  // Componente para mostrar una tarjeta de cotización - VERSION DESKTOP
+  // Componente para mostrar una tarjeta de cotización
   const DollarCard = ({ type, rate }: { type: string; rate: DollarRate }) => {
-    const variation = 0 // Por ahora simulado
-    const isPositive = variation >= 0
+    // Calcular variación - primero intenta usar la que viene del servidor, si no calcularla
+    const variation = rate.variation?.percentage || getVariation(type, rate.sellPrice)
+    const isPositive = variation > 0
+    const isNegative = variation < 0
     
     return (
       <>
-        {/* Versión Desktop - Se oculta en móvil */}
+        {/* Versión Desktop */}
         <Card className="relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow 
         duration-300 hidden md:block">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-500/10 
@@ -239,12 +300,15 @@ export function DollarClient({ initialData }: DollarClientProps) {
                   </CardDescription>
                 </div>
               </div>
-              <Badge 
-                variant={isPositive ? "default" : "destructive"}
-                className="text-xs"
-              >
-                {isPositive ? '+' : ''}{variation.toFixed(2)}%
-              </Badge>
+              {variation !== 0 && (
+                <Badge 
+                  variant={isPositive ? "destructive" : isNegative ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
+                  {Math.abs(variation).toFixed(2)}%
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -267,15 +331,15 @@ export function DollarClient({ initialData }: DollarClientProps) {
               <span>Actualizado</span>
               <div className="flex items-center space-x-1">
                 <Clock className="h-3 w-3" />
-                <span>{getTimeAgo(new Date(rate.date))}</span>
+                <span>{getTimeAgo(rate.lastUpdate || rate.date)}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Versión Móvil - Más compacta */}
+        {/* Versión Móvil */}
         <Card className="md:hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardContent className="">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div 
@@ -291,13 +355,15 @@ export function DollarClient({ initialData }: DollarClientProps) {
                   </p>
                 </div>
               </div>
-              <Badge 
-                variant={isPositive ? "default" : "destructive"}
-                className="text-xs h-5"
-              >
-                {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                {Math.abs(variation).toFixed(1)}%
-              </Badge>
+              {variation !== 0 && (
+                <Badge 
+                  variant={isPositive ? "destructive" : isNegative ? "default" : "secondary"}
+                  className="text-xs h-5"
+                >
+                  {isPositive ? <ArrowUp className="h-3 w-3" /> : isNegative ? <ArrowDown className="h-3 w-3" /> : null}
+                  {Math.abs(variation).toFixed(1)}%
+                </Badge>
+              )}
             </div>
             
             <div className="grid grid-cols-2 gap-2">
@@ -317,7 +383,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
             
             <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
-              <span>{getTimeAgo(new Date(rate.date))}</span>
+              <span>{getTimeAgo(rate.lastUpdate || rate.date)}</span>
             </div>
           </CardContent>
         </Card>
@@ -326,9 +392,9 @@ export function DollarClient({ initialData }: DollarClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        {/* Header - Más compacto en móvil */}
+        {/* Header */}
         <div className="mb-6 md:mb-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl md:rounded-2xl mb-3 md:mb-4">
             <DollarSign className="w-6 h-6 md:w-8 md:h-8 text-white" />
@@ -352,7 +418,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
               <span>Actualizar</span>
             </Button>
             <div className="text-xs md:text-sm text-muted-foreground">
-              {getTimeAgo(lastUpdate)}
+              Última actualización: {format(lastUpdate, 'HH:mm', { locale: es })}
             </div>
           </div>
         </div>

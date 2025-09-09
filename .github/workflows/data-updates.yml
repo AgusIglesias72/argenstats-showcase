@@ -1,0 +1,116 @@
+name: Data Updates
+
+on:
+  schedule:
+    # Actualización diaria a las 6:00 AM UTC (3:00 AM Argentina)
+    - cron: '0 6 * * *'
+    # Actualización cada 6 horas para datos críticos (dólar, inflación)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Tipo de actualización'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - critical
+          - daily
+      force_update:
+        description: 'Forzar actualización completa'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+  VERCEL_URL: ${{ secrets.VERCEL_URL }}
+
+jobs:
+  update-critical:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *'
+    runs-on: ubuntu-latest
+    name: Update Critical Data (Every 6 hours)
+    steps:
+      - name: Update Dollar Rates
+        run: |
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-dollar"
+      
+      - name: Update Country Risk
+        run: |
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-country-risk"
+
+  update-daily:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *'
+    runs-on: ubuntu-latest
+    name: Update All Data (Daily)
+    steps:
+      - name: Update All Indicators
+        run: |
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-all"
+
+  update-manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Manual Update
+    steps:
+      - name: Update Critical Data Only
+        if: github.event.inputs.update_type == 'critical'
+        run: |
+          echo "🔄 Updating critical data only..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-dollar"
+          
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-country-risk"
+          
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-ipc"
+
+      - name: Update Daily Data
+        if: github.event.inputs.update_type == 'daily'
+        run: |
+          echo "📊 Updating daily data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-all"
+
+      - name: Update All Data
+        if: github.event.inputs.update_type == 'all'
+        run: |
+          echo "🚀 Updating all data..."
+          curl -X GET \
+            -H "x-api-key: ${{ env.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ env.VERCEL_URL }}/api/internal/update-all"
+
+  notify-on-failure:
+    if: failure()
+    runs-on: ubuntu-latest
+    name: Notify on Failure
+    steps:
+      - name: Send Failure Notification
+        run: |
+          echo "❌ Data update failed!"
+          # Aquí podrías agregar notificaciones a Slack, Discord, email, etc.
+          # Por ejemplo:
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{"text":"❌ ArgenStats data update failed!"}' \
+          #   ${{ secrets.SLACK_WEBHOOK_URL }}

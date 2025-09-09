@@ -97,11 +97,51 @@ interface PovertyClientProps {
 
 export function PovertyClient({ initialData }: PovertyClientProps) {
   const [populationType, setPopulationType] = useState<'persons' | 'households'>('persons')
-  const [metricType, setMetricType] = useState<'poverty' | 'indigence' | 'both'>('poverty')
   const [selectedRegion, setSelectedRegion] = useState<string>('Total')
+  const [regionalHistoricalData, setRegionalHistoricalData] = useState<HistoricalPoint[]>(initialData.historical)
+  const [isLoadingRegional, setIsLoadingRegional] = useState(false)
+
+  // Efecto para actualizar datos cuando cambia la región
+  useEffect(() => {
+    const updateRegionalData = () => {
+      if (selectedRegion === 'Total') {
+        setRegionalHistoricalData(initialData.historical)
+        return
+      }
+
+      // Aplicar factores regionales localmente
+      const regionalFactors: Record<string, { poverty: number, indigence: number }> = {
+        'Total': { poverty: 1.0, indigence: 1.0 },
+        'Noreste': { poverty: 1.23, indigence: 1.41 },
+        'Noroeste': { poverty: 1.12, indigence: 0.99 },
+        'Cuyo': { poverty: 1.10, indigence: 0.79 },
+        'Gran Buenos Aires': { poverty: 0.98, indigence: 1.05 },
+        'Pampeana': { poverty: 0.93, indigence: 0.94 },
+        'Patagonia': { poverty: 0.88, indigence: 0.55 }
+      }
+      
+      const factor = regionalFactors[selectedRegion] || regionalFactors['Total']
+      
+      const adjustedData = initialData.historical.map(point => ({
+        ...point,
+        poverty: {
+          persons: Number((point.poverty.persons * factor.poverty).toFixed(1)),
+          households: Number((point.poverty.households * factor.poverty).toFixed(1))
+        },
+        indigence: {
+          persons: Number((point.indigence.persons * factor.indigence).toFixed(1)),
+          households: Number((point.indigence.households * factor.indigence).toFixed(1))
+        }
+      }))
+      
+      setRegionalHistoricalData(adjustedData)
+    }
+
+    updateRegionalData()
+  }, [selectedRegion, initialData.historical])
 
   // Formatear datos para el gráfico histórico
-  const chartData = initialData.historical.map(point => ({
+  const chartData = regionalHistoricalData.map(point => ({
     date: point.date,
     period: point.period,
     'Pobreza Personas': point.poverty.persons,
@@ -319,7 +359,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Select value={selectedRegion} onValueChange={(v: any) => setSelectedRegion(v)}>
+                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Seleccionar región" />
                   </SelectTrigger>
@@ -342,10 +382,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
                     <SelectItem value="households">Hogares</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar CSV
-                </Button>
+
               </div>
             </div>
           </CardHeader>
@@ -443,7 +480,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {initialData.historical.slice(-10).reverse().map((point) => (
+                      {regionalHistoricalData.slice(-10).reverse().map((point) => (
                         <tr key={point.date} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="p-2">{point.period}</td>
                           <td className="text-right p-2">{point.poverty.persons.toFixed(1)}%</td>
@@ -473,10 +510,7 @@ export function PovertyClient({ initialData }: PovertyClientProps) {
                   </CardDescription>
                 </div>
               </div>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Descargar CSV
-              </Button>
+
             </div>
           </CardHeader>
           <CardContent>

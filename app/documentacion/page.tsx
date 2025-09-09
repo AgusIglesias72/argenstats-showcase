@@ -53,6 +53,17 @@ const ApiDocumentationClient = () => {
   const [selectedApi, setSelectedApi] = useState('getting-started');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('getting-started');
+  
+  // Simulación de estado de autenticación - reemplazar con tu lógica real
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  const handleAuthRedirect = (destination: string) => {
+    if (isAuthenticated) {
+      window.location.href = destination;
+    } else {
+      window.location.href = '/auth/login';
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -99,28 +110,31 @@ const ApiDocumentationClient = () => {
   const navigationSections = {
     'getting-started': {
       name: 'Comenzar',
-      icon: <Rocket className="w-5 h-5" />,
-      subsections: ['intro', 'quickstart', 'api-key', 'first-request']
+      icon: <Rocket className="w-5 h-5" />
     },
     'authentication': {
       name: 'Autenticación',
-      icon: <Key className="w-5 h-5" />,
-      subsections: ['how-it-works', 'security', 'key-management']
+      icon: <Key className="w-5 h-5" />
     },
     'apis': {
       name: 'Referencias API',
       icon: <Code2 className="w-5 h-5" />,
-      subsections: ['dollar', 'inflation', 'cer', 'economic-activity', 'poverty', 'labor']
+      subsections: [
+        { id: 'dollar', name: 'Tipos de Cambio' },
+        { id: 'inflation', name: 'Inflación (IPC)' },
+        { id: 'cer', name: 'CER' },
+        { id: 'economicActivity', name: 'EMAE' },
+        { id: 'poverty', name: 'Pobreza e Indigencia' },
+        { id: 'labor', name: 'Mercado Laboral' }
+      ]
     },
     'guides': {
       name: 'Guías',
-      icon: <BookOpen className="w-5 h-5" />,
-      subsections: ['best-practices', 'rate-limits', 'errors', 'webhooks']
+      icon: <BookOpen className="w-5 h-5" />
     },
     'support': {
       name: 'Soporte',
-      icon: <HelpCircle className="w-5 h-5" />,
-      subsections: ['faq', 'contact', 'changelog']
+      icon: <HelpCircle className="w-5 h-5" />
     }
   };
 
@@ -226,28 +240,323 @@ const ApiDocumentationClient = () => {
       path: '/api/v1/cer',
       description: 'Coeficiente de Estabilización de Referencia para ajustes por inflación.',
       icon: <Percent className="w-5 h-5" />,
-      color: 'purple'
+      color: 'purple',
+      views: [
+        {
+          name: 'current',
+          description: 'Valor actual del CER',
+          method: 'GET',
+          example: 'GET /api/v1/cer?view=current',
+          response: `{
+  "success": true,
+  "data": {
+    "value": 1854.23,
+    "date": "2024-01-20",
+    "daily_variation": 0.145,
+    "monthly_variation": 4.32,
+    "yearly_variation": 287.45
+  },
+  "metadata": {
+    "timestamp": "2024-01-20T15:00:00Z",
+    "source": "BCRA",
+    "base_date": "2021-02-07"
+  }
+}`
+        },
+        {
+          name: 'historical',
+          description: 'Serie histórica del CER',
+          method: 'GET',
+          example: 'GET /api/v1/cer?view=historical&from=2024-01-01&to=2024-01-31',
+          parameters: [
+            { name: 'from', required: true, type: 'date', description: 'Fecha inicio (YYYY-MM-DD)' },
+            { name: 'to', required: true, type: 'date', description: 'Fecha fin (YYYY-MM-DD)' },
+            { name: 'interval', required: false, type: 'string', description: 'Intervalo (daily, weekly, monthly)' }
+          ]
+        },
+        {
+          name: 'projection',
+          description: 'Proyección del CER basada en expectativas de inflación',
+          method: 'GET',
+          example: 'GET /api/v1/cer?view=projection&months=6',
+          parameters: [
+            { name: 'months', required: true, type: 'number', description: 'Cantidad de meses a proyectar (1-12)' },
+            { name: 'inflation_rate', required: false, type: 'number', description: 'Tasa de inflación mensual esperada (default: REM BCRA)' }
+          ]
+        }
+      ]
     },
     economicActivity: {
       name: 'EMAE',
       path: '/api/v1/economic-activity',
       description: 'Estimador Mensual de Actividad Económica por sectores.',
       icon: <Activity className="w-5 h-5" />,
-      color: 'indigo'
+      color: 'indigo',
+      views: [
+        {
+          name: 'current',
+          description: 'Último dato disponible del EMAE',
+          method: 'GET',
+          example: 'GET /api/v1/economic-activity?view=current',
+          response: `{
+  "success": true,
+  "data": {
+    "general_index": 145.7,
+    "monthly_variation": 0.8,
+    "yearly_variation": 3.2,
+    "accumulated_variation": 2.9,
+    "date": "2024-01",
+    "seasonally_adjusted": {
+      "index": 144.3,
+      "monthly_variation": 0.5
+    }
+  },
+  "metadata": {
+    "timestamp": "2024-01-20T15:00:00Z",
+    "source": "INDEC",
+    "base_year": 2004
+  }
+}`
+        },
+        {
+          name: 'sectors',
+          description: 'Actividad económica desglosada por sectores',
+          method: 'GET',
+          example: 'GET /api/v1/economic-activity?view=sectors&date=2024-01',
+          parameters: [
+            { name: 'date', required: false, type: 'string', description: 'Mes específico (YYYY-MM). Default: último disponible' },
+            { name: 'sector', required: false, type: 'string', description: 'Filtrar por sector específico' }
+          ],
+          response: `{
+  "success": true,
+  "data": {
+    "sectors": [
+      {
+        "name": "Agricultura, ganadería, caza y silvicultura",
+        "index": 132.4,
+        "yearly_variation": -15.2,
+        "weight": 7.8
+      },
+      {
+        "name": "Industria manufacturera",
+        "index": 148.3,
+        "yearly_variation": 4.5,
+        "weight": 16.2
+      },
+      {
+        "name": "Construcción",
+        "index": 156.7,
+        "yearly_variation": 8.3,
+        "weight": 5.1
+      },
+      {
+        "name": "Comercio mayorista y minorista",
+        "index": 142.1,
+        "yearly_variation": 2.8,
+        "weight": 13.4
+      }
+    ]
+  }
+}`
+        },
+        {
+          name: 'historical',
+          description: 'Serie histórica del EMAE',
+          method: 'GET',
+          example: 'GET /api/v1/economic-activity?view=historical&from=2023-01&to=2024-01',
+          parameters: [
+            { name: 'from', required: true, type: 'string', description: 'Mes inicio (YYYY-MM)' },
+            { name: 'to', required: true, type: 'string', description: 'Mes fin (YYYY-MM)' },
+            { name: 'sector', required: false, type: 'string', description: 'Sector específico' },
+            { name: 'seasonally_adjusted', required: false, type: 'boolean', description: 'Incluir serie desestacionalizada' }
+          ]
+        }
+      ]
     },
     poverty: {
       name: 'Pobreza e Indigencia',
       path: '/api/v1/poverty',
       description: 'Estadísticas de pobreza e indigencia por región y período.',
       icon: <Users className="w-5 h-5" />,
-      color: 'orange'
+      color: 'orange',
+      views: [
+        {
+          name: 'current',
+          description: 'Últimos datos de pobreza e indigencia',
+          method: 'GET',
+          example: 'GET /api/v1/poverty?view=current',
+          response: `{
+  "success": true,
+  "data": {
+    "poverty": {
+      "rate": 41.7,
+      "people": 19500000,
+      "households": 29.6
+    },
+    "extreme_poverty": {
+      "rate": 11.9,
+      "people": 5500000,
+      "households": 8.1
+    },
+    "period": "2024-S1",
+    "reference_date": "2024-06-30"
+  },
+  "metadata": {
+    "timestamp": "2024-07-15T15:00:00Z",
+    "source": "INDEC",
+    "methodology": "EPH"
+  }
+}`
+        },
+        {
+          name: 'regional',
+          description: 'Pobreza e indigencia por región',
+          method: 'GET',
+          example: 'GET /api/v1/poverty?view=regional&period=2024-S1',
+          parameters: [
+            { name: 'period', required: false, type: 'string', description: 'Período (YYYY-S1 o YYYY-S2). Default: último disponible' },
+            { name: 'region', required: false, type: 'string', description: 'Región específica (GBA, Pampeana, NOA, NEA, Cuyo, Patagonia)' }
+          ],
+          response: `{
+  "success": true,
+  "data": {
+    "regions": [
+      {
+        "name": "Gran Buenos Aires",
+        "poverty_rate": 44.2,
+        "extreme_poverty_rate": 12.8,
+        "population": 15800000
+      },
+      {
+        "name": "Pampeana",
+        "poverty_rate": 40.1,
+        "extreme_poverty_rate": 10.9,
+        "population": 8200000
+      },
+      {
+        "name": "NOA",
+        "poverty_rate": 43.5,
+        "extreme_poverty_rate": 11.2,
+        "population": 2100000
+      }
+    ]
+  }
+}`
+        },
+        {
+          name: 'historical',
+          description: 'Serie histórica de pobreza e indigencia',
+          method: 'GET',
+          example: 'GET /api/v1/poverty?view=historical&from=2020-S1&to=2024-S1',
+          parameters: [
+            { name: 'from', required: true, type: 'string', description: 'Período inicio (YYYY-S1 o YYYY-S2)' },
+            { name: 'to', required: true, type: 'string', description: 'Período fin (YYYY-S1 o YYYY-S2)' },
+            { name: 'metric', required: false, type: 'string', description: 'Métrica específica (poverty, extreme_poverty, both)' }
+          ]
+        },
+        {
+          name: 'demographics',
+          description: 'Pobreza por grupos demográficos',
+          method: 'GET',
+          example: 'GET /api/v1/poverty?view=demographics&period=2024-S1',
+          parameters: [
+            { name: 'period', required: false, type: 'string', description: 'Período (YYYY-S1 o YYYY-S2)' },
+            { name: 'age_group', required: false, type: 'string', description: 'Grupo etario (0-14, 15-29, 30-64, 65+)' }
+          ]
+        }
+      ]
     },
     labor: {
       name: 'Mercado Laboral',
       path: '/api/v1/labor',
       description: 'Tasas de empleo, desempleo y actividad por demografía.',
       icon: <Briefcase className="w-5 h-5" />,
-      color: 'teal'
+      color: 'teal',
+      views: [
+        {
+          name: 'current',
+          description: 'Indicadores actuales del mercado laboral',
+          method: 'GET',
+          example: 'GET /api/v1/labor?view=current',
+          response: `{
+  "success": true,
+  "data": {
+    "activity_rate": 48.1,
+    "employment_rate": 44.7,
+    "unemployment_rate": 7.0,
+    "underemployment_rate": 11.2,
+    "quarter": "2024-Q3",
+    "population": {
+      "economically_active": 14200000,
+      "employed": 13200000,
+      "unemployed": 1000000,
+      "underemployed": 1650000
+    }
+  },
+  "metadata": {
+    "timestamp": "2024-10-15T15:00:00Z",
+    "source": "INDEC",
+    "survey": "EPH"
+  }
+}`
+        },
+        {
+          name: 'by_gender',
+          description: 'Indicadores laborales por género',
+          method: 'GET',
+          example: 'GET /api/v1/labor?view=by_gender&quarter=2024-Q3',
+          parameters: [
+            { name: 'quarter', required: false, type: 'string', description: 'Trimestre (YYYY-Q1 a YYYY-Q4). Default: último disponible' }
+          ],
+          response: `{
+  "success": true,
+  "data": {
+    "male": {
+      "activity_rate": 69.1,
+      "employment_rate": 64.8,
+      "unemployment_rate": 6.2
+    },
+    "female": {
+      "activity_rate": 51.9,
+      "employment_rate": 47.3,
+      "unemployment_rate": 8.8
+    },
+    "wage_gap": 27.3
+  }
+}`
+        },
+        {
+          name: 'by_age',
+          description: 'Indicadores laborales por grupo etario',
+          method: 'GET',
+          example: 'GET /api/v1/labor?view=by_age&quarter=2024-Q3',
+          parameters: [
+            { name: 'quarter', required: false, type: 'string', description: 'Trimestre (YYYY-Q1 a YYYY-Q4)' },
+            { name: 'age_group', required: false, type: 'string', description: 'Grupo específico (14-29, 30-49, 50-64, 65+)' }
+          ]
+        },
+        {
+          name: 'regional',
+          description: 'Mercado laboral por región',
+          method: 'GET',
+          example: 'GET /api/v1/labor?view=regional&quarter=2024-Q3',
+          parameters: [
+            { name: 'quarter', required: false, type: 'string', description: 'Trimestre (YYYY-Q1 a YYYY-Q4)' },
+            { name: 'region', required: false, type: 'string', description: 'Región específica' }
+          ]
+        },
+        {
+          name: 'historical',
+          description: 'Serie histórica de indicadores laborales',
+          method: 'GET',
+          example: 'GET /api/v1/labor?view=historical&from=2023-Q1&to=2024-Q3',
+          parameters: [
+            { name: 'from', required: true, type: 'string', description: 'Trimestre inicio (YYYY-Q1 a YYYY-Q4)' },
+            { name: 'to', required: true, type: 'string', description: 'Trimestre fin (YYYY-Q1 a YYYY-Q4)' },
+            { name: 'indicator', required: false, type: 'string', description: 'Indicador específico (activity, employment, unemployment, underemployment)' }
+          ]
+        }
+      ]
     }
   };
 
@@ -324,16 +633,16 @@ const ApiDocumentationClient = () => {
                     {section.icon}
                     <span>{section.name}</span>
                   </button>
-                  {section.subsections && activeSection === key && (
+                  {'subsections' in section && section.subsections && (
                     <div className="ml-8 mt-2 space-y-1">
                       {section.subsections.map(sub => (
-                        <a
-                          key={sub}
-                          href={`#${sub}`}
-                          className="block py-1 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                        <button
+                          key={sub.id}
+                          onClick={() => scrollToSection(`api-${sub.id}`)}
+                          className="block w-full text-left py-1 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                         >
-                          {sub.charAt(0).toUpperCase() + sub.slice(1).replace('-', ' ')}
-                        </a>
+                          {sub.name}
+                        </button>
                       ))}
                     </div>
                   )}
@@ -348,7 +657,7 @@ const ApiDocumentationClient = () => {
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                 Contactanos para soporte técnico
               </p>
-              <Button size="sm" className="w-full cursor-pointer">
+              <Button size="sm" className="w-full cursor-pointer" onClick={() => window.location.href = '/contacto'}>
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Contactar Soporte
               </Button>
@@ -401,7 +710,11 @@ const ApiDocumentationClient = () => {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Creá tu cuenta gratuita en menos de 1 minuto
                     </p>
-                    <Button className="w-full mt-4 cursor-pointer" variant="outline">
+                    <Button 
+                      className="w-full mt-4 cursor-pointer" 
+                      variant="outline"
+                      onClick={() => handleAuthRedirect('/api')}
+                    >
                       Registrarse
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -421,7 +734,11 @@ const ApiDocumentationClient = () => {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Generá tu clave de acceso desde tu perfil
                     </p>
-                    <Button className="w-full mt-4 cursor-pointer" variant="outline">
+                    <Button 
+                      className="w-full mt-4 cursor-pointer" 
+                      variant="outline"
+                      onClick={() => handleAuthRedirect('/api')}
+                    >
                       Ver Perfil
                       <Settings className="w-4 h-4 ml-2" />
                     </Button>
@@ -441,7 +758,11 @@ const ApiDocumentationClient = () => {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Comenzá a consumir datos al instante
                     </p>
-                    <Button className="w-full mt-4 cursor-pointer" variant="outline">
+                    <Button 
+                      className="w-full mt-4 cursor-pointer" 
+                      variant="outline"
+                      onClick={() => scrollToSection('apis')}
+                    >
                       Ver Ejemplos
                       <Code2 className="w-4 h-4 ml-2" />
                     </Button>
@@ -503,8 +824,8 @@ const ApiDocumentationClient = () => {
                           1. Ingresá a tu Perfil
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-  Iniciá sesión en tu cuenta y dirigite a la sección &quot;API Keys&quot; en tu perfil.
-</p>
+                          Iniciá sesión en tu cuenta y dirigite a la sección "API Keys" en tu perfil.
+                        </p>
                       </div>
                     </div>
 
@@ -519,7 +840,7 @@ const ApiDocumentationClient = () => {
                           2. Creá una nueva API Key
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Hacé click en &quot;Generar Nueva Key&quot; y asignale un nombre descriptivo.
+                          Hacé click en "Generar Nueva Key" y asignale un nombre descriptivo.
                         </p>
                       </div>
                     </div>
@@ -673,7 +994,7 @@ $data = json_decode($response, true);`}
 
               {/* Detailed API Documentation */}
               {Object.entries(apis).filter(([_, api]) => 'views' in api && api.views).map(([key, api]) => (
-                <div key={key} id={`api-${key}`} className="mb-12">
+                <div key={key} id={`api-${key}`} data-section={`api-${key}`} className="mb-12">
                   <Card>
                     <CardHeader>
                       <div className="flex items-center gap-3">
@@ -810,7 +1131,7 @@ $data = json_decode($response, true);`}
                       Contamos con diferentes planes adaptados a tus necesidades. 
                       Contactanos para conocer más detalles sobre nuestros servicios.
                     </p>
-                    <Button className="cursor-pointer">
+                    <Button className="cursor-pointer" onClick={() => window.location.href = '/contacto'}>
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Contactar para más información
                     </Button>
@@ -950,6 +1271,7 @@ $data = json_decode($response, true);`}
                       size="lg"
                       variant="secondary"
                       className="bg-white text-blue-600 hover:bg-blue-50 cursor-pointer"
+                      onClick={() => window.location.href = '/contacto'}
                     >
                       <HelpCircle className="w-5 h-5 mr-2" />
                       Centro de Ayuda
@@ -958,6 +1280,7 @@ $data = json_decode($response, true);`}
                       size="lg"
                       variant="outline"
                       className="bg-transparent border-white/30 text-white hover:bg-white/10 cursor-pointer"
+                      onClick={() => window.location.href = '/contacto'}
                     >
                       <ExternalLink className="w-5 h-5 mr-2" />
                       Contactar por Email

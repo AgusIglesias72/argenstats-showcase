@@ -1,0 +1,21 @@
+# Configuración de Cron para ArgenStats
+# Instalar con: crontab -e
+# O copiar este contenido al archivo crontab
+
+# Actualización crítica cada 6 horas (dólar, riesgo país)
+0 */6 * * * /path/to/your/project/scripts/update-data.sh critical >> /var/log/argenstats-critical.log 2>&1
+
+# Actualización diaria completa a las 6:00 AM UTC (3:00 AM Argentina)
+0 6 * * * /path/to/your/project/scripts/update-data.sh daily >> /var/log/argenstats-daily.log 2>&1
+
+# Actualización semanal completa los domingos a las 2:00 AM UTC
+0 2 * * 0 /path/to/your/project/scripts/update-data.sh all >> /var/log/argenstats-weekly.log 2>&1
+
+# Limpiar logs antiguos (mantener solo 30 días)
+0 0 1 * * find /var/log/argenstats-*.log -mtime +30 -delete
+
+# Notas:
+# - Reemplaza /path/to/your/project con la ruta real de tu proyecto
+# - Asegúrate de que ADMIN_API_KEY esté configurado en el entorno
+# - Los logs se guardan en /var/log/ para facilitar el debugging
+# - Los horarios están en UTC, ajusta según tu zona horaria

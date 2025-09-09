@@ -457,11 +457,14 @@ const DollarConverter = memo(function DollarConverter() {
                         <div className="flex justify-center lg:block">
                             <button
                                 onClick={handleSwapDirection}
-                                className="p-3 bg-green-100 hover:bg-green-200 rounded-xl transition-colors duration-200 group"
+                                className="p-3 bg-green-100 hover:bg-green-200 rounded-xl transition-color
+                                dark:bg-green-700 duration-200 group"
                                 disabled={loadingHistorical || loading}
                                 aria-label="Intercambiar monedas"
                             >
-                                <ArrowUpDown className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+                                <ArrowUpDown className="h-5 w-5 text-green-600 group-hover:scale-110 
+                                dark:text-white
+                                transition-transform duration-200" />
                             </button>
                         </div>
 
@@ -491,7 +494,8 @@ const DollarConverter = memo(function DollarConverter() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="mt-6 p-4 bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl"
+                        className="mt-6 p-4 bg-green-50/50 dark:bg-green-900/20 border border-green-200
+                         dark:border-green-700 rounded-xl"
                     >
                         <div className="flex items-start gap-3">
                             <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
@@ -546,3 +550,5 @@ const DollarConverter = memo(function DollarConverter() {
 });
 
 export default DollarConverter;
+
+

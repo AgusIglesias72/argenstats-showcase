@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useHydrationFix } from '@/lib/hooks/useHydrationFix'
 import { motion } from 'framer-motion'
 import { 
   Mail, 
@@ -84,6 +85,9 @@ export default function ContactPage() {
   
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Handle hydration mismatch caused by browser extensions
+  useHydrationFix()
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}

@@ -1,12 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { Calculator, TrendingUp, ArrowRight, Calendar, ArrowUpDown, RefreshCw } from 'lucide-react';
+import { Calculator, TrendingUp, ArrowRight, ArrowUpDown, RefreshCw, CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Flag from 'react-world-flags';
 import { getCurrentCERAction, calculateCERAction } from '@/app/actions/cer-actions';
+import { Calendar } from '@/components/ui/calendar';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface CERData {
   date: string;
@@ -172,37 +180,57 @@ const InflationCalculator = memo(function InflationCalculator({ initialCERData }
     return parts.length === 2 ? `${parts[0]},${parts[1]}` : parts[0];
   }, [amount]);
 
-  // Date Input Component
+  // Date Input Component with shadcn Calendar
   const DateInput = ({ value, onChange, label }: { value: Date; onChange: (date: Date) => void; label: string }) => {
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newDate = new Date(e.target.value + 'T00:00:00');
-      onChange(newDate);
-      
-      // Limpiar el resultado cuando se cambia la fecha
-      if (result) {
-        setResult(null);
+    const handleDateChange = (newDate: Date | undefined) => {
+      if (newDate) {
+        onChange(newDate);
+        
+        // Limpiar el resultado cuando se cambia la fecha
+        if (result) {
+          setResult(null);
+        }
       }
     };
-
-    const dateString = value.toISOString().split('T')[0];
 
     return (
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {label}
         </label>
-        <div className="relative">
-          <input
-            type="date"
-            value={dateString}
-            onChange={handleDateChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-            disabled={isCalculating || loading}
-            min="2002-02-04"
-            max={new Date().toISOString().split('T')[0]}
-          />
-          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal h-10",
+                !value && "text-muted-foreground"
+              )}
+              disabled={isCalculating || loading}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {value ? (
+                format(value, "PPP", { locale: es })
+              ) : (
+                <span>Seleccionar fecha</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={value}
+              onSelect={(newDate: Date | undefined) => {
+                handleDateChange(newDate);
+              }}
+              disabled={(date: Date) =>
+                date > new Date() || date < new Date('2002-02-04')
+              }
+              initialFocus
+              locale={es}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
     );
   };

@@ -12,6 +12,14 @@ export interface DollarRate {
   spreadPercentage: string
 }
 
+interface DollarRateWithVariation extends DollarRate {
+  variation?: {
+    amount: number  // Diferencia en pesos
+    percentage: number  // Diferencia en porcentaje
+    previousPrice?: number  // Precio anterior para referencia
+  }
+}
+
 export interface DollarCurrentData {
   [key: string]: DollarRate
 }
@@ -74,6 +82,173 @@ class DollarService {
       console.error('Error fetching current dollar rates:', error)
       // En caso de error, retornar datos mock
       return this.generateMockCurrentData()
+    }
+  }
+
+  /**
+   * Obtiene las cotizaciones actuales con variaciones respecto al día anterior
+   * NUEVO MÉTODO
+   */
+  async getCurrentRatesWithVariations(): Promise<Record<string, DollarRateWithVariation>> {
+    try {
+      // Obtener cotizaciones actuales
+      const currentRates = await this.getCurrentRates()
+      
+      // Obtener datos históricos de los últimos 2 días para calcular variaciones
+      const now = new Date()
+      const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000)
+      
+      const historicalData = await this.getHistoricalRates({
+        from: twoDaysAgo.toISOString().split('T')[0],
+        to: now.toISOString().split('T')[0],
+        interval: 'daily'
+      })
+      
+      // Crear un mapa de precios anteriores
+      const previousPricesMap: Record<string, number> = {}
+      
+      if (historicalData && historicalData.series && historicalData.series.length > 1) {
+        // Ordenar por fecha para asegurar que obtenemos el día anterior
+        const sortedSeries = [...historicalData.series].sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        )
+        
+        // El penúltimo elemento debería ser el día anterior
+        const previousDayData = sortedSeries[sortedSeries.length - 2]
+        
+        if (previousDayData) {
+          // Extraer precios del día anterior para cada tipo
+          Object.keys(currentRates).forEach(type => {
+            if (previousDayData[type]) {
+              // Los datos pueden venir en diferentes formatos
+              if (typeof previousDayData[type] === 'object') {
+                previousPricesMap[type] = previousDayData[type].sell || 
+                                         previousDayData[type].avg || 
+                                         previousDayData[type].buy || 0
+              } else if (typeof previousDayData[type] === 'number') {
+                previousPricesMap[type] = previousDayData[type]
+              }
+            }
+          })
+        }
+      }
+      
+      // Si no tenemos datos históricos, intentar con una llamada histórica de 2 días
+      if (Object.keys(previousPricesMap).length === 0) {
+        // Intentar obtener datos del día anterior usando el método getHistoricalRates
+        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        const yesterdayStr = yesterday.toISOString().split('T')[0]
+        
+        try {
+          const recentHistorical = await this.getHistoricalRates({
+            from: yesterdayStr,
+            to: yesterdayStr,
+            interval: 'daily'
+          })
+          
+          if (recentHistorical && recentHistorical.series && recentHistorical.series.length > 0) {
+            const yesterdayData = recentHistorical.series[0]
+            
+            Object.keys(currentRates).forEach(type => {
+              if (yesterdayData[type]) {
+                if (typeof yesterdayData[type] === 'object') {
+                  previousPricesMap[type] = yesterdayData[type].sell || 
+                                           yesterdayData[type].avg || 
+                                           yesterdayData[type].buy || 0
+                } else if (typeof yesterdayData[type] === 'number') {
+                  previousPricesMap[type] = yesterdayData[type]
+                }
+              }
+            })
+          }
+        } catch (error) {
+          console.warn('Could not fetch yesterday data from historical:', error)
+        }
+      }
+      
+      // Calcular variaciones para cada tipo de dólar
+      const ratesWithVariations: Record<string, DollarRateWithVariation> = {}
+      
+      Object.entries(currentRates).forEach(([type, rate]) => {
+        const previousPrice = previousPricesMap[type]
+        
+        let variation = undefined
+        if (previousPrice && previousPrice > 0) {
+          const amount = rate.sellPrice - previousPrice
+          const percentage = (amount / previousPrice) * 100
+          
+          variation = {
+            amount: parseFloat(amount.toFixed(2)),
+            percentage: parseFloat(percentage.toFixed(2)),
+            previousPrice
+          }
+        }
+        
+        ratesWithVariations[type] = {
+          ...rate,
+          variation
+        }
+      })
+      
+      return ratesWithVariations
+      
+    } catch (error) {
+      console.error('Error getting rates with variations:', error)
+      // En caso de error, retornar datos actuales sin variaciones
+      const currentRates = await this.getCurrentRates()
+      const ratesWithoutVariations: Record<string, DollarRateWithVariation> = {}
+      
+      Object.entries(currentRates).forEach(([type, rate]) => {
+        ratesWithoutVariations[type] = { ...rate }
+      })
+      
+      return ratesWithoutVariations
+    }
+  }
+
+  /**
+   * Obtiene la variación de un tipo de dólar específico
+   * NUEVO MÉTODO
+   */
+  async getDollarVariation(dollarType: string): Promise<{
+    current: number
+    previous: number
+    variation: number
+    percentage: number
+    date: string
+  } | null> {
+    try {
+      // Obtener cotizaciones con variaciones
+      const ratesWithVariations = await this.getCurrentRatesWithVariations()
+      const rateData = ratesWithVariations[dollarType]
+      
+      if (!rateData) {
+        console.warn(`No data found for dollar type: ${dollarType}`)
+        return null
+      }
+      
+      if (!rateData.variation) {
+        // Si no hay variación calculada, retornar valores por defecto
+        return {
+          current: rateData.sellPrice,
+          previous: rateData.sellPrice,
+          variation: 0,
+          percentage: 0,
+          date: rateData.date
+        }
+      }
+      
+      return {
+        current: rateData.sellPrice,
+        previous: rateData.variation.previousPrice || rateData.sellPrice,
+        variation: rateData.variation.amount,
+        percentage: rateData.variation.percentage,
+        date: rateData.date
+      }
+      
+    } catch (error) {
+      console.error('Error getting dollar variation:', error)
+      return null
     }
   }
 
@@ -141,6 +316,7 @@ class DollarService {
         buyPrice: basePrice + variation,
         sellPrice: basePrice + variation + 20,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice + variation + 10,
         spread: 20,
         spreadPercentage: '1.67'
@@ -150,6 +326,7 @@ class DollarService {
         buyPrice: basePrice - 200,
         sellPrice: basePrice - 180,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice - 190,
         spread: 20,
         spreadPercentage: '1.67'
@@ -159,6 +336,7 @@ class DollarService {
         buyPrice: basePrice + variation - 50,
         sellPrice: basePrice + variation - 30,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice + variation - 40,
         spread: 20,
         spreadPercentage: '1.67'
@@ -168,6 +346,7 @@ class DollarService {
         buyPrice: basePrice + variation - 30,
         sellPrice: basePrice + variation - 10,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice + variation - 20,
         spread: 20,
         spreadPercentage: '1.67'
@@ -177,6 +356,7 @@ class DollarService {
         buyPrice: basePrice + variation - 20,
         sellPrice: basePrice + variation,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice + variation - 10,
         spread: 20,
         spreadPercentage: '1.67'
@@ -186,6 +366,7 @@ class DollarService {
         buyPrice: basePrice - 150,
         sellPrice: basePrice - 130,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice - 140,
         spread: 20,
         spreadPercentage: '1.67'
@@ -195,6 +376,7 @@ class DollarService {
         buyPrice: basePrice + 400,
         sellPrice: basePrice + 420,
         date: new Date().toISOString().split('T')[0],
+        lastUpdate: new Date(),
         averagePrice: basePrice + 410,
         spread: 20,
         spreadPercentage: '1.67'
