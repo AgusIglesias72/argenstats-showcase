@@ -15,32 +15,51 @@ const PredictionSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();   
-    const userId = user?.id || null;
+    // Obtener el usuario actual de Clerk
+    const user = await currentUser();
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Usuario no autenticado' },
         { status: 401 }
       );
     }
 
+    // Validar los datos del body
     const body = await req.json();
+    console.log('Body recibido:', body); // Debug
+    
     const validatedData = PredictionSchema.parse(body);
+    console.log('Datos validados:', validatedData); // Debug
 
-    // Obtener email del usuario desde Clerk
-    const userData = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-      },
-    }).then(res => res.json());
+    // Obtener el email directamente del objeto user de Clerk
+    // currentUser() ya incluye toda la información del usuario
+    console.log(user)
+    const userEmail = user.emailAddresses?.[0]?.emailAddress || 
+                     user.primaryEmailAddress?.emailAddress || 
+                     '';
+    
+    console.log('Usuario:', {
+      id: user.id,
+      email: userEmail,
+      emailAddresses: user.emailAddresses
+    }); // Debug
 
-        const userEmail = userData.emailAddresses[0]?.emailAddress || '';
+    // Si no hay email, usar un valor por defecto o lanzar error
+    if (!userEmail) {
+      console.warn('No se encontró email para el usuario:', user.id);
+      // Podrías decidir si esto es crítico o no
+      // return NextResponse.json(
+      //   { error: 'No se pudo obtener el email del usuario' },
+      //   { status: 400 }
+      // );
+    }
 
+    // Crear la predicción
     const prediction = await EventsService.createPrediction(
       validatedData.eventId,
-      userId,
-      userEmail,
+      user.id,
+      userEmail || 'email_no_disponible', // Fallback si decides continuar sin email
       {
         ipcGeneral: validatedData.ipcGeneral,
         ipcBienes: validatedData.ipcBienes,
@@ -49,28 +68,49 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({ success: true, prediction });
+    return NextResponse.json({ 
+      success: true, 
+      prediction,
+      message: 'Predicción creada exitosamente'
+    });
+    
   } catch (error: any) {
     console.error('Error creating prediction:', error);
     
-    if (error.message.includes('El evento no está activo')) {
+    // Si es un error de validación de Zod
+    if (error instanceof z.ZodError) {
+      console.error('Error de validación:', error.errors);
+      return NextResponse.json(
+        { 
+          error: 'Datos inválidos en el formulario',
+          details: error.errors 
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Errores específicos del servicio
+    if (error.message?.includes('El evento no está activo')) {
       return NextResponse.json(
         { error: 'El evento no está activo' },
         { status: 400 }
       );
     }
     
-    if (error.message.includes('El período de predicciones ha finalizado')) {
+    if (error.message?.includes('El período de predicciones ha finalizado')) {
       return NextResponse.json(
         { error: 'El período de predicciones ha finalizado' },
         { status: 400 }
       );
     }
 
+    // Error genérico
     return NextResponse.json(
-      { error: 'Error al crear la predicción' },
+      { 
+        error: 'Error al crear la predicción',
+        message: error.message 
+      },
       { status: 500 }
     );
   }
 }
-
