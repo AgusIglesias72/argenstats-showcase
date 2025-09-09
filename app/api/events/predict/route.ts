@@ -79,11 +79,11 @@ export async function POST(req: NextRequest) {
     
     // Si es un error de validación de Zod
     if (error instanceof z.ZodError) {
-      console.error('Error de validación:', error.errors);
+      console.error('Error de validación:', error.issues);
       return NextResponse.json(
         { 
           error: 'Datos inválidos en el formulario',
-          details: error.errors 
+          details: error.issues 
         },
         { status: 400 }
       );
