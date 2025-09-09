@@ -20,6 +20,17 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now()
     console.info('🚀 Iniciando actualización completa de todos los indicadores')
     
+
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+    const host = request.headers.get('host')
+    
+    if (!host) {
+      throw new Error('No se pudo determinar el host')
+    }
+    
+    const baseUrl = `${protocol}://${host}`
+    console.info(`📍 Base URL: ${baseUrl}`)
+
     // Lista de todos los servicios de actualización
     const updateServices = [
       { name: 'dollar', url: '/api/internal/update-dollar', priority: 'high' },
@@ -32,9 +43,7 @@ export async function GET(request: NextRequest) {
     ]
 
     const results: UpdateResult[] = []
-    const baseUrl = process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
-    : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+
 
     // Ejecutar actualizaciones en paralelo por prioridad
     const highPriority = updateServices.filter(s => s.priority === 'high')
