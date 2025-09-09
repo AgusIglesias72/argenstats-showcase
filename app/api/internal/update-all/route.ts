@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (apiKey !== process.env.ADMIN_API_KEY) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+  
     const startTime = Date.now()
     console.info('🚀 Iniciando actualización completa de todos los indicadores')
     
