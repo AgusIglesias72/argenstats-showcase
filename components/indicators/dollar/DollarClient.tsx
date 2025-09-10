@@ -233,6 +233,14 @@ export function DollarClient({ initialData }: DollarClientProps) {
           fromDate = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000)
           interval = 'weekly'
           break
+        case '10years':
+          fromDate = new Date(now.getTime() - 10 * 365 * 24 * 60 * 60 * 1000)
+          interval = 'monthly'
+          break
+        case '15years':
+          fromDate = new Date(now.getTime() - 15 * 365 * 24 * 60 * 60 * 1000)
+          interval = 'monthly'
+          break
         default:
           fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
       }

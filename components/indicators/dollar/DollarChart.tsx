@@ -60,49 +60,6 @@ export function DollarChart({
     { value: '15years', label: '15A', days: 5475 }
   ], [])
 
-  // Función para generar datos mock
-  const generateMockData = useCallback((range: string, types: string[]) => {
-    const option = timeRangeOptions.find(opt => opt.value === range)
-    if (!option) return []
-    
-    const days = option.days
-    const data = []
-    const now = new Date()
-    
-    for (let i = days; i >= 0; i--) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      
-      const point: any = {
-        date: date.toISOString().split('T')[0],
-        timestamp: date.getTime()
-      }
-      
-      types.forEach(type => {
-        // Precios base realistas para cada tipo
-        const basePrices: Record<string, number> = {
-          'BLUE': 1200,
-          'OFICIAL': 800,
-          'MEP': 1100,
-          'CCL': 1150,
-          'MAYORISTA': 850,
-          'TARJETA': 2000,
-          'CRYPTO': 1250
-        }
-        
-        const basePrice = basePrices[type] || 1000
-        const trend = Math.sin(i / 10) * 50 // Tendencia suave
-        const volatility = (Math.random() - 0.5) * 100 // Volatilidad
-        
-        point[type] = Math.round(basePrice + trend + volatility)
-      })
-      
-      data.push(point)
-    }
-    
-    return data
-  }, [timeRangeOptions])
-
   // Procesar datos cuando cambien
   useEffect(() => {
     if (data.series && data.series.length > 0) {
@@ -133,10 +90,9 @@ export function DollarChart({
       setChartData(processedData)
     } else {
       // Si no hay datos, generar algunos de ejemplo
-      const mockData = generateMockData(timeRange, selectedTypes)
-      setChartData(mockData)
+      setChartData([])
     }
-  }, [data.series, selectedTypes, timeRange, generateMockData])
+  }, [data.series, selectedTypes, timeRange])
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -309,7 +265,7 @@ export function DollarChart({
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart 
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: -10, bottom: 5 }}
               >
                 <defs>
                   {selectedTypes.map(type => (
@@ -337,6 +293,7 @@ export function DollarChart({
                   stroke="#9ca3af"
                   fontSize={12}
                   tickMargin={10}
+                  domain={['auto', 'auto']}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 

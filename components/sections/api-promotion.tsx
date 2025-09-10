@@ -78,8 +78,8 @@ export function APIPromotionSection() {
                 viewport={{ once: true }}
                 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
               >
-                Integración Simple y Poderosa
-                <span className="block text-blue-600 dark:text-blue-400">API para Desarrolladores</span>
+                Integración Simple y Poderosa 
+                <span className="block text-blue-600 dark:text-blue-400"> API para Desarrolladores</span>
               </motion.h2>
 
               {/* Description */}
