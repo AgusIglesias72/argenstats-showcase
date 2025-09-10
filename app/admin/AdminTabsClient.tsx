@@ -10,7 +10,6 @@ import {
   FileText
 } from 'lucide-react'
 import ApiUsageTab from '@/components/admin/tabs/ApiUsageTab'
-import ContactsTab from '@/components/admin/tabs/ContactsTab'
 import EventsTab from '@/components/admin/tabs/EventsTab'
 import BlogTab from '@/components/admin/tabs/BlogTab'
 
@@ -28,9 +27,10 @@ interface AdminTabsClientProps {
   initialTab?: TabId
   usersTabContent: React.ReactNode
   apiUsageTabContent: React.ReactNode
+  contactsTabContent: React.ReactNode
 }
 
-export default function AdminTabsClient({ initialTab = 'users', usersTabContent, apiUsageTabContent }: AdminTabsClientProps) {
+export default function AdminTabsClient({ initialTab = 'users', usersTabContent, apiUsageTabContent, contactsTabContent }: AdminTabsClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -86,7 +86,7 @@ export default function AdminTabsClient({ initialTab = 'users', usersTabContent,
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'users' && usersTabContent}
         {activeTab === 'api-usage' && apiUsageTabContent}
-        {activeTab === 'contacts' && <ContactsTab />}
+        {activeTab === 'contacts' && contactsTabContent}
         {activeTab === 'events' && <EventsTab />}
         {activeTab === 'blog' && <BlogTab />}
       </div>

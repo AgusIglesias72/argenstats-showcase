@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { 
   Users, 
   TrendingUp, 
@@ -64,7 +65,7 @@ export default function UsersTabClient({
 
   // Filtrar y ordenar usuarios
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = initialUsers.filter(user => {
+    const filtered = initialUsers.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            user.email.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
@@ -327,10 +328,12 @@ export default function UsersTabClient({
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         {user.imageUrl ? (
-                          <img
+                          <Image
                             className="h-10 w-10 rounded-full"
                             src={user.imageUrl}
                             alt={user.name}
+                            width={40}
+                            height={40}
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">

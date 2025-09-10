@@ -116,7 +116,7 @@ export function EmaeClient({ initialData }: EmaeClientProps) {
     startTransition(() => {
       fetchData()
     })
-  }, [selectedSector, dataType])
+  }, [selectedSector, dataType, chartPeriod])
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -145,7 +145,7 @@ export function EmaeClient({ initialData }: EmaeClientProps) {
     startTransition(() => {
       fetchHistoricalData()
     })
-  }, [chartPeriod])
+  }, [chartPeriod, selectedSector, dataType])
 
   // Calcular datos para el gráfico
   const chartData = useMemo(() => {

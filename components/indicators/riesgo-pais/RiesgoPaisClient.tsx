@@ -146,7 +146,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
     updateTime()
     const interval = setInterval(updateTime, 60000)
     return () => clearInterval(interval)
-  }, [data.current?.date, data.jpMorganData?.lastUpdate])
+  }, [data.current?.lastUpdate, data.jpMorganData?.lastUpdate])
 
   // Efectos para actualizar datos
   useEffect(() => {
@@ -204,7 +204,7 @@ export function RiesgoPaisClient({ initialData }: RiesgoPaisClientProps) {
     startTransition(() => {
       fetchHistoricalData()
     })
-  }, [chartPeriod])
+  }, [chartPeriod, dataSource])
 
   const refreshData = async () => {
     setIsRefreshing(true)

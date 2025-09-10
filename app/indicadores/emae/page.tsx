@@ -11,7 +11,7 @@ import {
 } from '@/lib/schemas'
 
 // Función para obtener los datos del EMAE
-async function getEmaeData() {  // eslint-disable-line @typescript-eslint/no-unused-vars
+async function getEmaeData() {
   try {
     const current = await emaeService.getCurrentEmae('GENERAL')
     const sectors = await emaeService.getEmaeSectors()

@@ -144,7 +144,7 @@ export function IPCClient({ initialData }: IPCClientProps) {
     startTransition(() => {
       fetchHistoricalData()
     })
-  }, [chartPeriod])
+  }, [chartPeriod, selectedComponent, selectedRegion])
 
   // useMemo para calcular datos del gráfico
   const chartData = useMemo(() => {

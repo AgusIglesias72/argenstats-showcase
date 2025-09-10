@@ -51,14 +51,14 @@ export function DollarChart({
   }, [])
 
   // Opciones de rango de tiempo
-  const timeRangeOptions = [
+  const timeRangeOptions = useMemo(() => [
     { value: '3months', label: '3M', days: 90 },
     { value: '6months', label: '6M', days: 180 },
     { value: '1year', label: '1A', days: 365 },
     { value: '5years', label: '5A', days: 1825 },
     { value: '10years', label: '10A', days: 3650 },
     { value: '15years', label: '15A', days: 5475 }
-  ]
+  ], [])
 
   // Función para generar datos mock
   const generateMockData = useCallback((range: string, types: string[]) => {
@@ -136,7 +136,7 @@ export function DollarChart({
       const mockData = generateMockData(timeRange, selectedTypes)
       setChartData(mockData)
     }
-  }, [data.series, selectedTypes, timeRange])
+  }, [data.series, selectedTypes, timeRange, generateMockData])
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {

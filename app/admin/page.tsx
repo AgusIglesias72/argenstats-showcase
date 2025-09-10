@@ -2,8 +2,10 @@
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Shield } from 'lucide-react'
+import Image from 'next/image'
 import UsersTabServer from '@/components/admin/tabs/UsersTabServer'
-import ApiUsageTabServer from '@/components/admin/tabs/ApiUsageTabServer'
+import ApiUsageTabServer from '@/components/admin/tabs/ApiUsageTabServer' 
+import ContactsTabServer from '@/components/admin/tabs/ContactsTabServer'
 import AdminTabsClient from './AdminTabsClient'
 
 export default async function AdminDashboard() {
@@ -39,9 +41,11 @@ export default async function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {user.imageUrl ? (
-                <img
+                <Image
                   src={user.imageUrl}
                   alt={user.fullName || 'Administrador'}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full border-2 border-purple-200 dark:border-purple-700"
                 />
               ) : (
@@ -72,6 +76,7 @@ export default async function AdminDashboard() {
       <AdminTabsClient 
         usersTabContent={<UsersTabServer />} 
         apiUsageTabContent={<ApiUsageTabServer />} 
+        contactsTabContent={<ContactsTabServer />}
       />
     </div>
   )
