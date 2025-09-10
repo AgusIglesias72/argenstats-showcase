@@ -181,9 +181,12 @@ export function RiesgoPaisChart({
             const totalTicks = chartData.length
             
             // Para temporalidades muy cortas (1M, 3M), limitar a 5 fechas máximo
-            if (totalTicks <= 40) return 8 // Mostrar cada 4
-            if (totalTicks <= 80) return 25 // Mostrar cada 5
-            if (totalTicks <= 150) return 12 // Mostrar cada 6
+            if (totalTicks <= 5) return 0 // Mostrar todos si son pocos
+            if (totalTicks <= 10) return 1 // Mostrar cada 2
+            if (totalTicks <= 20) return 2 // Mostrar cada 3
+            if (totalTicks <= 40) return 3 // Mostrar cada 4
+            if (totalTicks <= 80) return 4 // Mostrar cada 5
+            if (totalTicks <= 150) return 5 // Mostrar cada 6
             return Math.ceil(totalTicks / 5) // Máximo 5 fechas para mobile
           })()}
           textAnchor="end"

@@ -27,15 +27,33 @@ interface UserStats {
 
 export default async function UsersTabServer() {
   try {
-    // Obtener usuarios de Clerk
-    const users = await clerkClient()
-    const clerkUsers = users.users.getUserList({
-      limit: 100, // Clerk tiene un límite por defecto
-      orderBy: '-created_at'
-    })
+    // Obtener TODOS los usuarios de Clerk sin límite
+    const getAllUsers = async () => {
+      const users = []
+      let hasMore = true
+      let offset = 0
+      const limit = 500 // Máximo permitido por Clerk
+      
+      while (hasMore) {
+        const client = await clerkClient()
+        const response = await client.users.getUserList({
+          limit,
+          offset,
+          orderBy: '-created_at'
+        })
+        
+        users.push(...response.data)
+        hasMore = response.data.length === limit
+        offset += limit
+      }
+      
+      return users
+    }
+
+    const allClerkUsers = await getAllUsers()
 
     // Obtener estadísticas de API keys desde nuestra DB
-    const [totalApiKeys, activeApiKeys] = await Promise.all([
+    const [totalApiKeys, activeApiKeysCount] = await Promise.all([
       prisma.apiKey.count(),
       prisma.apiKey.count({ where: { isActive: true } })
     ])
@@ -46,19 +64,19 @@ export default async function UsersTabServer() {
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-    const totalUsers = (await clerkUsers).data.length
-    const newThisMonth = (await clerkUsers).data.filter(user => 
+    const totalUsers = allClerkUsers.length
+    const newThisMonth = allClerkUsers.filter(user => 
       new Date(user.createdAt) >= thisMonthStart
     ).length
-    const activeUsers = (await clerkUsers).data.filter(user => 
+    const activeUsers = allClerkUsers.filter(user => 
       user.lastSignInAt && new Date(user.lastSignInAt) >= thirtyDaysAgo
     ).length
 
     // Calcular crecimiento
-    const thisMonthUsers = (await clerkUsers).data.filter(user => 
+    const thisMonthUsers = allClerkUsers.filter(user => 
       new Date(user.createdAt) >= thisMonthStart
     ).length
-    const lastMonthUsers = (await clerkUsers).data.filter(user => {
+    const lastMonthUsers = allClerkUsers.filter(user => {
       const createdAt = new Date(user.createdAt)
       return createdAt >= lastMonthStart && createdAt < thisMonthStart
     }).length
@@ -71,65 +89,141 @@ export default async function UsersTabServer() {
       total: totalUsers,
       active: activeUsers,
       newThisMonth,
-      activeApiKeys,
+      activeApiKeys: activeApiKeysCount,
       growth: Math.round(growth * 10) / 10
     }
 
-    // Procesar usuarios para el formato esperado
-    const processedUsers = await Promise.all(
-      (await clerkUsers).data.map(async (user: ClerkUser) => {
-        // Obtener datos adicionales de nuestra DB si existen
-        const userProfile = await prisma.userProfile.findUnique({
-          where: { userId: user.id },
-          include: {
-            apiKeys: {
-              select: {
-                isActive: true,
-                lastUsedAt: true,
-                _count: {
-                  select: { usage: true }
-                }
-              }
-            },
-            _count: {
-              select: {
-                apiKeys: true,
-                favorites: true,
-                contactSubmissions: true
-              }
-            }
-          }
-        })
+    // Obtener todos los perfiles de usuario
+    const userProfiles = await prisma.userProfile.findMany({
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      }
+    })
 
-        const totalRequests = userProfile?.apiKeys.reduce((sum, key) => sum + key._count.usage, 0) || 0
-        const activeApiKeys = userProfile?.apiKeys.filter(key => key.isActive).length || 0
-        const lastApiUsage = userProfile?.apiKeys
-          .filter(key => key.lastUsedAt)
-          .sort((a, b) => new Date(b.lastUsedAt!).getTime() - new Date(a.lastUsedAt!).getTime())[0]?.lastUsedAt
+    // Obtener conteos de favoritos
+    const favoritesCounts = await prisma.userFavorite.groupBy({
+      by: ['userId'],
+      _count: {
+        _all: true
+      },
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      }
+    })
 
-        return {
-          id: user.id,
-          userId: user.id,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Sin nombre',
-          email: user.emailAddresses[0]?.emailAddress || 'Sin email',
-          role: user.publicMetadata?.role || 'user',
-          imageUrl: user.imageUrl,
-          createdAt: new Date(user.createdAt).toISOString(),
-          updatedAt: userProfile?.updatedAt?.toISOString() || new Date(user.createdAt).toISOString(),
-          lastActive: lastApiUsage?.toISOString() || new Date(user.lastSignInAt || user.createdAt).toISOString(),
-          apiKeys: activeApiKeys,
-          totalApiKeys: userProfile?._count.apiKeys || 0,
-          requests: totalRequests,
-          favorites: userProfile?._count.favorites || 0,
-          contactSubmissions: userProfile?._count.contactSubmissions || 0
+    // Obtener conteos de contactSubmissions
+    const contactCounts = await prisma.contactSubmission.groupBy({
+      by: ['userId'],
+      _count: {
+        _all: true
+      },
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      }
+    })
+
+    // Obtener conteos de predicciones de eventos (participaciones)
+    const eventPredictionCounts = await prisma.eventPrediction.groupBy({
+      by: ['userId'],
+      _count: {
+        _all: true
+      },
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      }
+    })
+
+    // Obtener API keys por usuario
+    const apiKeysByUser = await prisma.apiKey.groupBy({
+      by: ['userId'],
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      },
+      _count: {
+        _all: true
+      }
+    })
+
+    // Obtener API keys activas por usuario
+    const activeApiKeysByUser = await prisma.apiKey.groupBy({
+      by: ['userId'],
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) },
+        isActive: true
+      },
+      _count: {
+        _all: true
+      }
+    })
+
+    // Obtener uso total de API keys y última fecha de uso
+    const apiKeysWithUsage = await prisma.apiKey.findMany({
+      where: {
+        userId: { in: allClerkUsers.map(u => u.id) }
+      },
+      select: {
+        userId: true,
+        lastUsedAt: true,
+        _count: {
+          select: { usage: true }
         }
+      }
+    })
+
+    // Crear mapas para búsqueda rápida
+    const profileMap = new Map(userProfiles.map(p => [p.userId, p]))
+    const favoritesMap = new Map(favoritesCounts.map((f: any) => [f.userId, f._count._all]))
+    const contactsMap = new Map(contactCounts.map((c: any) => [c.userId, c._count._all]))
+    const eventsMap = new Map(eventPredictionCounts.map((e: any) => [e.userId, e._count._all]))
+    const apiKeysMap = new Map(apiKeysByUser.map((a: any) => [a.userId, a._count._all]))
+    const activeApiKeysMap = new Map(activeApiKeysByUser.map((a: any) => [a.userId, a._count._all]))
+    
+    // Agrupar uso de API por usuario
+    const usageMap = new Map<string, { total: number, lastUsed: Date | null }>()
+    apiKeysWithUsage.forEach(apiKey => {
+      const current = usageMap.get(apiKey.userId) || { total: 0, lastUsed: null }
+      usageMap.set(apiKey.userId, {
+        total: current.total + apiKey._count.usage,
+        lastUsed: !current.lastUsed || (apiKey.lastUsedAt && apiKey.lastUsedAt > current.lastUsed) 
+          ? apiKey.lastUsedAt 
+          : current.lastUsed
       })
-    )
+    })
+
+    // Procesar usuarios para el formato esperado
+    const processedUsers = allClerkUsers.map((user: ClerkUser) => {
+      const userProfile = profileMap.get(user.id)
+      const apiKeysCount = apiKeysMap.get(user.id) || 0
+      const activeApiKeysNum = activeApiKeysMap.get(user.id) || 0
+      const usage = usageMap.get(user.id)
+      const favoritesCount = favoritesMap.get(user.id) || 0
+      const contactsCount = contactsMap.get(user.id) || 0
+      const eventsCount = eventsMap.get(user.id) || 0
+
+      return {
+        id: user.id,
+        userId: user.id,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Sin nombre',
+        email: user.emailAddresses[0]?.emailAddress || 'Sin email',
+        role: user.publicMetadata?.role || 'user',
+        imageUrl: user.imageUrl,
+        createdAt: new Date(user.createdAt).toISOString(),
+        updatedAt: userProfile?.updatedAt?.toISOString() || new Date(user.createdAt).toISOString(),
+        lastActive: usage?.lastUsed?.toISOString() || new Date(user.lastSignInAt || user.createdAt).toISOString(),
+        apiKeys: activeApiKeysNum,
+        totalApiKeys: apiKeysCount,
+        requests: usage?.total || 0,
+        favorites: favoritesCount,
+        contactSubmissions: contactsCount,
+        events: eventsCount
+      }
+    })
 
     return (
       <UsersTabClient 
         initialUsers={processedUsers}
         initialStats={stats}
+        totalUsers={totalUsers}
       />
     )
   } catch (error) {

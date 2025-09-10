@@ -90,7 +90,7 @@ export default function SignUpPage() {
     signUp?.authenticateWithRedirect({
       strategy: 'oauth_google',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/profile',
+      redirectUrlComplete: '/',
     })
   }
 
@@ -98,7 +98,7 @@ export default function SignUpPage() {
     signUp?.authenticateWithRedirect({
       strategy: 'oauth_x',
       redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/profile',
+      redirectUrlComplete: '/',
     })
   }
 
