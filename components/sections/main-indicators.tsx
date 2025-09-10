@@ -1,7 +1,11 @@
 import { getMainIndicatorsData, formatMonthYear, formatCurrency, formatPercentage } from '@/lib/data/indicators'
 import { MainIndicatorsClient } from './main-indicators-client'
+import { unstable_noStore as noStore } from 'next/cache'
 
 export async function MainIndicators() {
+  // Forzar que no se cachee este componente
+  noStore()
+  
   const data = await getMainIndicatorsData()
   
   const indicators = [

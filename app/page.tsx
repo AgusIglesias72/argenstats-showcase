@@ -5,10 +5,13 @@ import { EconomicIndicatorsSection } from '@/components/sections/economic-indica
 import { AdditionalToolsSection } from '@/components/sections/additional-tools'
 import { APIPromotionSection } from '@/components/sections/api-promotion'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 60  // Actualiza cada minuto
+
+
 export default function HomePage() {
   return (
     <>
-
       
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <HeroSection />

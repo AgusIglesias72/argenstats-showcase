@@ -2,18 +2,14 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import EventsAdminPanel from '@/components/admin/tabs/EventsAdminPanel'
 
 export default function EventsTab() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchEvents()
-  }, [])
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/admin/events', {
@@ -21,7 +17,7 @@ export default function EventsTab() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Importante para incluir cookies de sesión
+        credentials: 'include',
       })
       
       if (response.status === 403) {
@@ -43,6 +39,15 @@ export default function EventsTab() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
+
+  const handleEventUpdate = () => {
+    // Refrescar la lista de eventos después de cualquier cambio
+    fetchEvents()
   }
 
   if (loading) {
@@ -53,5 +58,5 @@ export default function EventsTab() {
     )
   }
 
-  return <EventsAdminPanel events={events} />
+    return <EventsAdminPanel events={events} onEventUpdate={handleEventUpdate} />
 }

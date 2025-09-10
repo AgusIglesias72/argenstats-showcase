@@ -12,13 +12,32 @@ export class EventsService {
         predictions: {
           select: {
             id: true,
+            userId: true,
+            userEmail: true,
             ipcGeneral: true,
             ipcBienes: true,
             ipcServicios: true,
             ipcAlimentos: true,
             createdAt: true,
+            // Campos calculados del ranking
             rank: true,
+            generalMatch: true,
+            exactMatchesCount: true,
+            totalDeviation: true,
+            isWinner: true,
+            // Incluir datos del usuario
+            user: {
+              select: {
+                userId: true,
+                email: true,
+                name: true,
+                imageUrl: true,
+              }
+            }
           },
+          orderBy: {
+            rank: 'asc'
+          }
         },
         winner: true,
       },

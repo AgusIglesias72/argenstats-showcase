@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trophy, Plus, Edit, Trash2, CheckCircle, Clock, Users, TrendingUp, Package, Utensils, Wrench, Award, Calendar, DollarSign, Activity } from 'lucide-react';
+import { Trophy, Plus, Edit, Trash2, CheckCircle, Clock, Users, TrendingUp, Package, Utensils, Wrench, Award, Calendar, DollarSign, Activity, Flag } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -20,17 +20,19 @@ interface Event {
   officialIpcServicios?: number;
   officialIpcAlimentos?: number;
   winnerId?: string;
+  resultsPublishedAt?: string;
 }
 
 interface EventsAdminPanelProps {
   events: Event[];
+  onEventUpdate: () => void;
 }
 
-export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
+export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminPanelProps) {
   const router = useRouter();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showResultsModal, setShowResultsModal] = useState(false);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -43,7 +45,7 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
     prizeCurrency: 'USD',
   });
 
-  const [resultsData, setResultsData] = useState({
+  const [officialResults, setOfficialResults] = useState({
     ipcGeneral: '',
     ipcBienes: '',
     ipcServicios: '',
@@ -87,57 +89,86 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
     }
   };
 
-  const handlePublishResults = async (e: React.FormEvent) => {
+  const handleFinalizeEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
     
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/admin/events/${selectedEvent.id}/results`, {
+      const response = await fetch(`/api/admin/events/${selectedEvent.id}/finalize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ipcGeneral: parseFloat(resultsData.ipcGeneral),
-          ipcBienes: parseFloat(resultsData.ipcBienes),
-          ipcServicios: parseFloat(resultsData.ipcServicios),
-          ipcAlimentos: parseFloat(resultsData.ipcAlimentos),
+          officialIpcGeneral: parseFloat(officialResults.ipcGeneral),
+          officialIpcBienes: parseFloat(officialResults.ipcBienes),
+          officialIpcServicios: parseFloat(officialResults.ipcServicios),
+          officialIpcAlimentos: parseFloat(officialResults.ipcAlimentos),
         }),
       });
 
       if (response.ok) {
-        setShowResultsModal(false);
+        setShowFinalizeModal(false);
+        setOfficialResults({
+          ipcGeneral: '',
+          ipcBienes: '',
+          ipcServicios: '',
+          ipcAlimentos: '',
+        });
         router.refresh();
+        // Llamar al callback para refrescar la lista de eventos
+        if (onEventUpdate) onEventUpdate();
+        // Opcionalmente mostrar un mensaje de éxito
+        alert('Evento finalizado exitosamente. Se han calculado las posiciones de todos los participantes.');
       }
     } catch (error) {
-      console.error('Error publishing results:', error);
+      console.error('Error finalizing event:', error);
+      alert('Error al finalizar el evento');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const canFinalizeEvent = (event: Event) => {
+    // Puede finalizar si está en estado SUBMISSION_CLOSED o AWAITING_RESULTS y no tiene resultados oficiales
+    return (
+      (event.status === 'SUBMISSION_CLOSED' || event.status === 'AWAITING_RESULTS') && 
+      !event.officialIpcGeneral
+    );
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       DRAFT: { 
         color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', 
-        icon: Clock 
+        icon: Clock,
+        label: 'Borrador'
       },
       ACTIVE: { 
         color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', 
-        icon: CheckCircle 
+        icon: CheckCircle,
+        label: 'Activo'
       },
       SUBMISSION_CLOSED: { 
         color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', 
-        icon: Clock 
+        icon: Clock,
+        label: 'Cerrado'
       },
       AWAITING_RESULTS: { 
         color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', 
-        icon: Clock 
+        icon: Clock,
+        label: 'Esperando Resultados'
       },
       COMPLETED: { 
         color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', 
-        icon: Trophy 
+        icon: Trophy,
+        label: 'Completado'
       },
+      CANCELLED: {
+        color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+        icon: Clock,
+        label: 'Cancelado'
+      }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.DRAFT;
@@ -146,7 +177,7 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
     return (
       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
         <Icon className="w-3 h-3" />
-        {status}
+        {config.label}
       </span>
     );
   };
@@ -282,22 +313,26 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      {event.status === 'SUBMISSION_CLOSED' && !event.officialIpcGeneral && (
+                      {canFinalizeEvent(event) && (
                         <button
                           onClick={() => {
                             setSelectedEvent(event);
-                            setShowResultsModal(true);
+                            setShowFinalizeModal(true);
                           }}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
+                          className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
                         >
-                          Publicar Resultados
+                          <Flag className="w-4 h-4" />
+                          Finalizar
                         </button>
                       )}
                       
                       {event.status === 'COMPLETED' && (
-                        <button className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium flex items-center gap-1">
+                        <button 
+                          onClick={() => router.push(`/admin/events/${event.id}/results`)}
+                          className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium flex items-center gap-1"
+                        >
                           <Award className="w-4 h-4" />
-                          Ver Ganador
+                          Ver Resultados
                         </button>
                       )}
                       
@@ -447,15 +482,19 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
         </div>
       )}
 
-      {/* Publish Results Modal */}
-      {showResultsModal && selectedEvent && (
+      {/* Finalize Event Modal */}
+      {showFinalizeModal && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-              Publicar Resultados - {selectedEvent.name}
+              Finalizar Evento - {selectedEvent.name}
             </h3>
             
-            <form onSubmit={handlePublishResults} className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Ingresa los valores oficiales del IPC para calcular las posiciones de los participantes.
+            </p>
+            
+            <form onSubmit={handleFinalizeEvent} className="space-y-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   <TrendingUp className="w-4 h-4" />
@@ -466,8 +505,9 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                   step="0.1"
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  value={resultsData.ipcGeneral}
-                  onChange={(e) => setResultsData({ ...resultsData, ipcGeneral: e.target.value })}
+                  value={officialResults.ipcGeneral}
+                  onChange={(e) => setOfficialResults({ ...officialResults, ipcGeneral: e.target.value })}
+                  placeholder="Ej: 4.2"
                 />
               </div>
 
@@ -481,8 +521,9 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                   step="0.1"
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  value={resultsData.ipcBienes}
-                  onChange={(e) => setResultsData({ ...resultsData, ipcBienes: e.target.value })}
+                  value={officialResults.ipcBienes}
+                  onChange={(e) => setOfficialResults({ ...officialResults, ipcBienes: e.target.value })}
+                  placeholder="Ej: 3.8"
                 />
               </div>
 
@@ -496,8 +537,9 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                   step="0.1"
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  value={resultsData.ipcServicios}
-                  onChange={(e) => setResultsData({ ...resultsData, ipcServicios: e.target.value })}
+                  value={officialResults.ipcServicios}
+                  onChange={(e) => setOfficialResults({ ...officialResults, ipcServicios: e.target.value })}
+                  placeholder="Ej: 4.5"
                 />
               </div>
 
@@ -511,22 +553,42 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                   step="0.1"
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  value={resultsData.ipcAlimentos}
-                  onChange={(e) => setResultsData({ ...resultsData, ipcAlimentos: e.target.value })}
+                  value={officialResults.ipcAlimentos}
+                  onChange={(e) => setOfficialResults({ ...officialResults, ipcAlimentos: e.target.value })}
+                  placeholder="Ej: 5.1"
                 />
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>ℹ️ Proceso de Cálculo:</strong> Al confirmar, el sistema:
+                </p>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 ml-4 list-disc">
+                  <li>Calculará las desviaciones de cada predicción</li>
+                  <li>Asignará posiciones según el algoritmo de ranking</li>
+                  <li>Determinará y registrará al ganador</li>
+                  <li>Actualizará el estado del evento a COMPLETED</li>
+                </ul>
               </div>
 
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>⚠️ Importante:</strong> Una vez publicados los resultados, se calcularán automáticamente 
-                  los rankings y se determinará el ganador. Esta acción no se puede deshacer.
+                  <strong>⚠️ Importante:</strong> Esta acción no se puede deshacer. Asegúrate de que los valores sean correctos antes de continuar.
                 </p>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowResultsModal(false)}
+                  onClick={() => {
+                    setShowFinalizeModal(false);
+                    setOfficialResults({
+                      ipcGeneral: '',
+                      ipcBienes: '',
+                      ipcServicios: '',
+                      ipcAlimentos: '',
+                    });
+                  }}
                   className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   Cancelar
@@ -534,9 +596,19 @@ export default function EventsAdminPanel({ events }: EventsAdminPanelProps) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
-                  {isSubmitting ? 'Publicando...' : 'Publicar Resultados'}
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Flag className="w-4 h-4" />
+                      Finalizar Evento
+                    </>
+                  )}
                 </button>
               </div>
             </form>

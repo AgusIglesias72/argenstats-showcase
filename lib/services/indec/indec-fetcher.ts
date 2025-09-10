@@ -226,7 +226,7 @@ export class IndecFetcher {
    */
   private async downloadWithRetry(
     url: string,
-    retries = 3,
+    retries = 10,
     delay = 10000
   ): Promise<any> {
     const axiosConfig = {

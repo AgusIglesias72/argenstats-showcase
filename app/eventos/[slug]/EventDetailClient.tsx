@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { toast } from 'sonner'; // <-- Agregar esta importación
+import { toast } from 'sonner';
+import EventResults from '@/components/events/EventResults';
 
 interface EventDetailClientProps {
   event: any;
@@ -84,7 +85,6 @@ export default function EventDetailClient({
   const hasUserPredicted = !!userPrediction;
   const canParticipate = isEventActive && !hasUserPredicted && isSignedIn;
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -125,7 +125,7 @@ export default function EventDetailClient({
         body: JSON.stringify({
           eventId: event.id,
           userId: user.id,
-          userEmail: userEmail,  // <-- Aquí se envía el email
+          userEmail: userEmail,
           ...formData,
         }),
       });
@@ -297,117 +297,231 @@ export default function EventDetailClient({
         </div>
       </div>
 
-      {/* User Prediction or Form */}
-      {hasUserPredicted ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+      {/* Mostrar resultados si el evento está completado */}
+      {event.status === 'COMPLETED' ? (
+        <>
+          {/* Sección de comparación: Tu Predicción vs Valores Reales - SOLO si participó */}
+          {hasUserPredicted && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
                 <CheckCircle className="w-7 h-7 text-green-500" />
-                Tu Predicción
+                Tu Predicción vs Resultado Real
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Registrada el {new Date(userPrediction.createdAt).toLocaleDateString('es-AR')} a las{' '}
-                {new Date(userPrediction.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Tu Predicción */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Tu Predicción</h3>
+                  <div className="space-y-3">
+                    {Object.entries(categoryConfig).map(([key, config]) => (
+                      <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          {config.icon}
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{config.label}</span>
+                        </div>
+                        <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                          {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    Enviada el {new Date(userPrediction.createdAt).toLocaleDateString('es-AR')} a las{' '}
+                    {new Date(userPrediction.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+
+                {/* Valores Reales */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Valores Oficiales INDEC</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-purple-600" />
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">IPC General</span>
+                      </div>
+                      <span className={`font-bold ${
+                        userPrediction.ipcGeneral === event.officialIpcGeneral 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-purple-600 dark:text-purple-400'
+                      }`}>
+                        {event.officialIpcGeneral}%
+                        {userPrediction.ipcGeneral === event.officialIpcGeneral && ' ✅'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-orange-600" />
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Bienes</span>
+                      </div>
+                      <span className={`font-bold ${
+                        userPrediction.ipcBienes === event.officialIpcBienes 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-orange-600 dark:text-orange-400'
+                      }`}>
+                        {event.officialIpcBienes}%
+                        {userPrediction.ipcBienes === event.officialIpcBienes && ' ✅'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Wrench className="w-5 h-5 text-green-600" />
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Servicios</span>
+                      </div>
+                      <span className={`font-bold ${
+                        userPrediction.ipcServicios === event.officialIpcServicios 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-green-600 dark:text-green-400'
+                      }`}>
+                        {event.officialIpcServicios}%
+                        {userPrediction.ipcServicios === event.officialIpcServicios && ' ✅'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Utensils className="w-5 h-5 text-pink-600" />
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Alimentos</span>
+                      </div>
+                      <span className={`font-bold ${
+                        userPrediction.ipcAlimentos === event.officialIpcAlimentos 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-pink-600 dark:text-pink-400'
+                      }`}>
+                        {event.officialIpcAlimentos}%
+                        {userPrediction.ipcAlimentos === event.officialIpcAlimentos && ' ✅'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tabla de resultados - visible para todos - YA incluye los valores oficiales */}
+          <EventResults 
+            event={event}
+            currentUserId={userId}
+            userRank={userPrediction?.rank}
+          />
+        </>
+      ) : (
+        /* Lógica para cuando el evento NO está completado */
+        <>
+          {hasUserPredicted ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="w-7 h-7 text-green-500" />
+                    Tu Predicción
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mt-2">
+                    Registrada el {new Date(userPrediction.createdAt).toLocaleDateString('es-AR')} a las{' '}
+                    {new Date(userPrediction.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(categoryConfig).map(([key, config]) => (
+                  <div
+                    key={key}
+                    className={`p-4 rounded-lg border bg-${config.color}-50 dark:bg-${config.color}-900/20 border-${config.color}-200 dark:border-${config.color}-800`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {config.icon}
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{config.label}</span>
+                    </div>
+                    <p className={`text-2xl font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                      {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <strong>Nota:</strong> No puedes modificar tu predicción. Los resultados se publicarán el {new Date(event.eventDate).toLocaleDateString('es-AR')}.
+                </p>
+              </div>
+            </div>
+          ) : canParticipate ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Realizar Predicción</h2>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.entries(categoryConfig).map(([key, config]) => (
+                    <div key={key}>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        {config.icon}
+                        {config.label} (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        required
+                        className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        placeholder="Ej: 2.4"
+                        value={formData[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof formData]}
+                        onChange={(e) => setFormData({ ...formData, [`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]: e.target.value })}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      Una vez enviada, no podrás modificar tu predicción. Asegúrate de que los valores sean correctos.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full bg-gradient-to-r from-blue-600
+                    ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}  
+                  to-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 
+                  hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50`}
+                >
+                  {isSubmitting ? 'Enviando...' : 'Enviar Predicción'}
+                </button>
+              </form>
+            </div>
+          ) : !isSignedIn ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+              <Trophy className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Inicia sesión para participar</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Necesitas una cuenta para participar en los eventos de predicción
+              </p>
+              <Link
+                href={`/sign-in?redirect_url=/eventos/${event.slug}`}
+                className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
+              >
+                Iniciar Sesión
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
+              <Clock className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Evento Cerrado</h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                El período de predicciones ha finalizado. Los resultados se publicarán pronto.
               </p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(categoryConfig).map(([key, config]) => (
-              <div
-                key={key}
-                className={`p-4 rounded-lg border bg-${config.color}-50 dark:bg-${config.color}-900/20 border-${config.color}-200 dark:border-${config.color}-800`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {config.icon}
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{config.label}</span>
-                </div>
-                <p className={`text-2xl font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
-                  {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Nota:</strong> No puedes modificar tu predicción. Los resultados se publicarán el {new Date(event.eventDate).toLocaleDateString('es-AR')}.
-            </p>
-          </div>
-        </div>
-      ) : canParticipate ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Realizar Predicción</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(categoryConfig).map(([key, config]) => (
-                <div key={key}>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    {config.icon}
-                    {config.label} (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-                    placeholder="Ej: 2.4"
-                    value={formData[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof formData]}
-                    onChange={(e) => setFormData({ ...formData, [`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]: e.target.value })}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Una vez enviada, no podrás modificar tu predicción. Asegúrate de que los valores sean correctos.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full bg-gradient-to-r from-blue-600
-                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}  
-              to-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 
-              hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50`}
-            >
-              {isSubmitting ? 'Enviando...' : 'Enviar Predicción'}
-            </button>
-          </form>
-        </div>
-      ) : !isSignedIn ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <Trophy className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Inicia sesión para participar</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Necesitas una cuenta para participar en los eventos de predicción
-          </p>
-          <Link
-            href={`/sign-in?redirect_url=/eventos/${event.slug}`}
-            className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
-          >
-            Iniciar Sesión
-          </Link>
-        </div>
-      ) : (
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
-          <Clock className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Evento Cerrado</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            El período de predicciones ha finalizado. Los resultados se publicarán pronto.
-          </p>
-        </div>
+          )}
+        </>
       )}
 
-      {/* Statistics Section with Tabs */}
-      {statistics && (
+      {/* Statistics Section with Tabs - Solo mostrar si el evento NO está completado */}
+      {statistics && event.status !== 'COMPLETED' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Header with participant count */}
           <div className="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -498,7 +612,6 @@ export default function EventDetailClient({
                   <h3 className="font-semibold text-gray-900 dark:text-white">
                     Todas las Predicciones ({sortedPredictions.length})
                   </h3>
-
                 </div>
 
                 {/* Table */}

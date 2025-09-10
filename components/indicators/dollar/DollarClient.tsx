@@ -59,12 +59,32 @@ export function DollarClient({ initialData }: DollarClientProps) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   // Manejar hidratación
   useEffect(() => {
     setIsClient(true)
-    setLastUpdate(new Date())
   }, [])
+
+  // Auto-actualización al cargar la página
+  useEffect(() => {
+    if (isClient && isInitialLoad) {
+      // Actualizar datos inmediatamente al cargar
+      refreshData()
+      setIsInitialLoad(false)
+    }
+  }, [isClient])
+
+  // Opcional: Auto-refresh cada 5 minutos (300000 ms)
+  useEffect(() => {
+    if (isClient) {
+      const interval = setInterval(() => {
+        refreshDataSilently()
+      }, 300000) // 5 minutos
+
+      return () => clearInterval(interval)
+    }
+  }, [isClient])
 
   // Agrupar tipos de dólar por categoría
   const financialDollars = ['MEP', 'CCL', 'CRYPTO']
@@ -267,7 +287,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
     }
   }, [isClient])
 
-  // Función para actualizar datos
+  // Función para actualizar datos con indicador de carga
   const refreshData = async () => {
     startTransition(async () => {
       try {
@@ -290,12 +310,81 @@ export function DollarClient({ initialData }: DollarClientProps) {
     })
   }
 
+  // Función para actualizar datos silenciosamente (sin indicador de carga)
+  const refreshDataSilently = async () => {
+    try {
+      const result = await fetchCurrentDollarRates()
+      
+      if (result.success && result.data) {
+        setData(prev => ({
+          ...prev,
+          current: result.data
+        }))
+        if (isClient) {
+          setLastUpdate(new Date())
+        }
+      }
+      
+      // También actualizar datos históricos silenciosamente
+      const now = new Date()
+      let fromDate: Date
+      let interval: 'daily' | 'weekly' | 'monthly' = 'daily'
+      
+      switch (timeRange) {
+        case '3months':
+          fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+          interval = 'daily'
+          break
+        case '6months':
+          fromDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
+          interval = 'daily'
+          break
+        case '1year':
+          fromDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+          interval = 'daily'
+          break
+        case '5years':
+          fromDate = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000)
+          interval = 'weekly'
+          break
+        case '10years':
+          fromDate = new Date(now.getTime() - 10 * 365 * 24 * 60 * 60 * 1000)
+          interval = 'monthly'
+          break
+        case '15years':
+          fromDate = new Date(now.getTime() - 15 * 365 * 24 * 60 * 60 * 1000)
+          interval = 'monthly'
+          break
+        default:
+          fromDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+      }
+      
+      const from = fromDate.toISOString().split('T')[0]
+      const to = now.toISOString().split('T')[0]
+      
+      const historicalResult = await fetchHistoricalDollarRates({
+        from,
+        to,
+        interval
+      })
+      
+      if (historicalResult.success && historicalResult.data) {
+        setData(prevData => ({
+          ...prevData,
+          historical: historicalResult.data
+        }))
+      }
+    } catch (error) {
+      console.error('Error in silent refresh:', error)
+    }
+  }
+
   // Efecto para cargar datos históricos cuando cambie el período
   useEffect(() => {
-    if (timeRange && isClient) {
+    if (timeRange && isClient && !isInitialLoad) {
       fetchHistoricalData(timeRange)
     }
-  }, [timeRange, isClient, fetchHistoricalData])
+  }, [timeRange, isClient, isInitialLoad, fetchHistoricalData])
 
   // Componente para mostrar una tarjeta de cotización
   const DollarCard = ({ type, rate }: { type: string; rate: DollarRate }) => {
@@ -453,9 +542,7 @@ export function DollarClient({ initialData }: DollarClientProps) {
               <RefreshCw className={`h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
               <span>Actualizar</span>
             </Button>
-            <div className="text-xs md:text-sm text-muted-foreground">
-              Última actualización: {isClient && lastUpdate ? format(lastUpdate, 'HH:mm', { locale: es }) : '--:--'}
-            </div>
+     
           </div>
         </div>
 
