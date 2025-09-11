@@ -8,9 +8,12 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    // Resolver los parámetros
+    const { eventId } = await params;
+    
     // Verificar autenticación
     const { userId } = await auth();
     if (!userId) {
@@ -28,7 +31,7 @@ export async function GET(
 
     // Obtener las predicciones del evento
     const predictions = await prisma.eventPrediction.findMany({
-      where: { eventId: params.eventId },
+      where: { eventId: eventId },
       include: {
         user: {
           select: {
@@ -147,7 +150,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="predicciones_${params.eventId}.csv"`,
+        'Content-Disposition': `attachment; filename="predicciones_${eventId}.csv"`,
       },
     });
 
