@@ -7,7 +7,9 @@ import EventsAdminPanel from '@/components/admin/tabs/EventsAdminPanel'
 
 export default function EventsTab() {
   const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)   
+
+  
 
   const fetchEvents = useCallback(async () => {
     setLoading(true)
