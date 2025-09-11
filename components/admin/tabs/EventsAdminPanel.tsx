@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trophy, Plus, Edit, Trash2, CheckCircle, Clock, Users, TrendingUp, Package, Utensils, Wrench, Award, Calendar, DollarSign, Activity, Flag } from 'lucide-react';
+import { 
+  Trophy, Plus, Edit, Trash2, CheckCircle, Clock, Users, TrendingUp, 
+  Package, Utensils, Wrench, Award, Calendar, DollarSign, Activity, 
+  Flag, Download, Database
+} from 'lucide-react';
 
 interface Event {
   id: string;
@@ -34,6 +38,8 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportingEventId, setExportingEventId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -58,6 +64,92 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
   const totalParticipants = events.reduce((sum, e) => sum + (e.participantsCount || 0), 0);
   const totalPrizeAmount = events.reduce((sum, e) => sum + (e.prizeAmount || 0), 0);
 
+  // Función para exportar datos de predicciones de un evento
+  const handleExportPredictions = async (eventId: string, eventName: string) => {
+    console.log('Exportando evento:', eventId, eventName); // Debug
+    setExportingEventId(eventId);
+    
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}/export`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      console.log('Response status:', response.status); // Debug
+
+      if (response.ok) {
+        const text = await response.text();
+        const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Generar nombre del archivo con fecha
+        const date = new Date().toISOString().split('T')[0];
+        const fileName = `${eventName.replace(/\s+/g, '_')}_predicciones_${date}.csv`;
+        
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Error al exportar datos, status:', response.status);
+        const errorText = await response.text();
+        console.error('Error details:', errorText);
+        alert('Error al exportar los datos. Por favor, intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error exporting predictions:', error);
+      alert('Error al exportar los datos. Por favor, intenta nuevamente.');
+    } finally {
+      setExportingEventId(null);
+    }
+  };
+
+  // Función para exportar todos los eventos
+  const handleExportAllEvents = async () => {
+    setIsExporting(true);
+    
+    try {
+      const response = await fetch('/api/admin/events/export-all', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const text = await response.text();
+        const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        const date = new Date().toISOString().split('T')[0];
+        const fileName = `todas_predicciones_${date}.csv`;
+        
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Error al exportar todos los datos');
+        alert('Error al exportar los datos. Por favor, intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error exporting all predictions:', error);
+      alert('Error al exportar los datos. Por favor, intenta nuevamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -81,6 +173,7 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
           prizeCurrency: 'USD',
         });
         router.refresh();
+        onEventUpdate();
       }
     } catch (error) {
       console.error('Error creating event:', error);
@@ -116,9 +209,7 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
           ipcAlimentos: '',
         });
         router.refresh();
-        // Llamar al callback para refrescar la lista de eventos
         if (onEventUpdate) onEventUpdate();
-        // Opcionalmente mostrar un mensaje de éxito
         alert('Evento finalizado exitosamente. Se han calculado las posiciones de todos los participantes.');
       }
     } catch (error) {
@@ -130,7 +221,6 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
   };
 
   const canFinalizeEvent = (event: Event) => {
-    // Puede finalizar si está en estado SUBMISSION_CLOSED o AWAITING_RESULTS y no tiene resultados oficiales
     return (
       (event.status === 'SUBMISSION_CLOSED' || event.status === 'AWAITING_RESULTS') && 
       !event.officialIpcGeneral
@@ -242,13 +332,34 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
           <p className="text-gray-600 dark:text-gray-400 mt-1">Administra los eventos de predicción económica</p>
         </div>
         
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Crear Evento
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportAllEvents}
+            disabled={isExporting || events.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            title="Exportar todos los datos"
+          >
+            {isExporting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Exportando...
+              </>
+            ) : (
+              <>
+                <Database className="w-5 h-5" />
+                Exportar Todo
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+          >
+            <Plus className="w-5 h-5" />
+            Crear Evento
+          </button>
+        </div>
       </div>
 
       {/* Events Table */}
@@ -313,13 +424,29 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
+                      {/* Botón de Exportar Datos */}
+                      {event.participantsCount > 0 && (
+                        <button
+                          onClick={() => handleExportPredictions(event.id, event.name)}
+                          disabled={exportingEventId === event.id}
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 cursor-pointer"
+                          title="Exportar predicciones CSV"
+                        >
+                          {exportingEventId === event.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+
                       {canFinalizeEvent(event) && (
                         <button
                           onClick={() => {
                             setSelectedEvent(event);
                             setShowFinalizeModal(true);
                           }}
-                          className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
+                          className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer"
                         >
                           <Flag className="w-4 h-4" />
                           Finalizar
@@ -329,18 +456,18 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
                       {event.status === 'COMPLETED' && (
                         <button 
                           onClick={() => router.push(`/admin/events/${event.id}/results`)}
-                          className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium flex items-center gap-1"
+                          className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium flex items-center gap-1 cursor-pointer"
                         >
                           <Award className="w-4 h-4" />
                           Ver Resultados
                         </button>
                       )}
                       
-                      <button className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400">
+                      <button className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer">
                         <Edit className="w-4 h-4" />
                       </button>
                       
-                      <button className="text-red-400 dark:text-red-500 hover:text-red-500 dark:hover:text-red-400">
+                      <button className="text-red-400 dark:text-red-500 hover:text-red-500 dark:hover:text-red-400 cursor-pointer">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -465,14 +592,14 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   {isSubmitting ? 'Creando...' : 'Crear Evento'}
                 </button>
@@ -589,14 +716,14 @@ export default function EventsAdminPanel({ events, onEventUpdate }: EventsAdminP
                       ipcAlimentos: '',
                     });
                   }}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

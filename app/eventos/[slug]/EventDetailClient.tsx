@@ -258,44 +258,7 @@ export default function EventDetailClient({
         </div>
       )}
 
-      {/* Share Button */}
-      <div className="flex justify-end">
-        <div className="relative">
-          <button
-            onClick={() => setShowShareMenu(!showShareMenu)}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </button>
-
-          {showShareMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-              <button
-                onClick={() => shareEvent('twitter')}
-                className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Twitter className="w-4 h-4" />
-                Twitter
-              </button>
-              <button
-                onClick={() => shareEvent('linkedin')}
-                className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Linkedin className="w-4 h-4" />
-                LinkedIn
-              </button>
-              <button
-                onClick={() => shareEvent('copy')}
-                className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Copy className="w-4 h-4" />
-                {copiedLink ? 'Copiado!' : 'Copiar enlace'}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+    
 
       {/* Mostrar resultados si el evento está completado */}
       {event.status === 'COMPLETED' ? (
