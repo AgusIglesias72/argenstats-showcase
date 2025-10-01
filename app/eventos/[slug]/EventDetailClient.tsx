@@ -288,7 +288,7 @@ export default function EventDetailClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Countdown Timer con info de edición si corresponde */}
       {isEventActive && Object.keys(timeLeft).length > 0 && (
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-xl p-6 text-white">
@@ -313,12 +313,91 @@ export default function EventDetailClient({
         <>
           {/* Tu predicción vs Resultados reales */}
           {hasUserPredicted && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 mb-8">
-              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-                <CheckCircle className="w-7 h-7 text-green-500" />
-                Tu Predicción vs Resultado Real
-              </h2>
-              {/* ... contenido existente de comparación ... */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="w-7 h-7 text-green-500" />
+                    Tu Predicción vs Resultado Real
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2">
+                    {userPrediction.isPublic ? (
+                      <>
+                        <Eye className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600 font-medium">Visible públicamente</span>
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-500">Solo visible para vos</span>
+                      </>
+                    )}
+                  </p>
+                </div>
+                {/* Botón para cambiar visibilidad - SIEMPRE disponible */}
+                <button
+                  onClick={togglePredictionVisibility}
+                  disabled={isTogglingVisibility}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                  title={userPrediction.isPublic ? 'Hacer privada' : 'Hacer pública'}
+                >
+                  {userPrediction.isPublic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {userPrediction.isPublic ? 'Hacer Privada' : 'Hacer Pública'}
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Tu Predicción */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Tu Predicción</h3>
+                  <div className="space-y-3">
+                    {Object.entries(categoryConfig).map(([key, config]) => (
+                      <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          {config.icon}
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{config.label}</span>
+                        </div>
+                        <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                          {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    Enviada el {new Date(userPrediction.createdAt).toLocaleDateString('es-AR')} a las{' '}
+                    {new Date(userPrediction.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+
+                {/* Valores Reales */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Valores Oficiales INDEC</h3>
+                  <div className="space-y-3">
+                    {Object.entries(categoryConfig).map(([key, config]) => {
+                      const officialKey = `officialIpc${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                      const predictionKey = `ipc${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                      const isExactMatch = userPrediction[predictionKey] === event[officialKey];
+                      
+                      return (
+                        <div key={key} className={`flex items-center justify-between p-3 bg-${config.color}-50 dark:bg-${config.color}-900/20 rounded-lg`}>
+                          <div className="flex items-center gap-2">
+                            {config.icon}
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{config.label}</span>
+                          </div>
+                          <span className={`font-bold ${
+                            isExactMatch 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : `text-${config.color}-600 dark:text-${config.color}-400`
+                          }`}>
+                            {event[officialKey]}%
+                            {isExactMatch && ' ✅'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

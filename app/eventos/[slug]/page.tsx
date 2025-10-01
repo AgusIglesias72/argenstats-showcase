@@ -68,7 +68,7 @@ function formatDate(date: Date) {
 // Componente para renderizar la página de eventos IPC
 function IPCEventPage({ event, user, statistics }: any) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="bg-gray-50 dark:bg-gray-900">
       {/* Hero Section para IPC */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -76,7 +76,7 @@ function IPCEventPage({ event, user, statistics }: any) {
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-200 to-pink-200 dark:from-purple-900/20 dark:to-pink-900/20 rounded-full blur-3xl opacity-50" />
         </div>
 
-        <div className="relative container mx-auto px-4 py-16">
+        <div className="relative container mx-auto px-4 py-12">
           <div className="max-w-6xl mx-auto">
             {/* Event Header */}
             <div className="mb-8">
@@ -177,7 +177,7 @@ function IPCEventPage({ event, user, statistics }: any) {
 // Componente para renderizar la página de eventos Dólar
 function DollarEventPage({ event, statistics }: any) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="bg-gray-50 dark:bg-gray-900">
       {/* Hero Section para Dólar */}
       <section className="relative bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -185,7 +185,7 @@ function DollarEventPage({ event, statistics }: any) {
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-emerald-200 to-teal-200 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-full blur-3xl opacity-50" />
         </div>
 
-        <div className="relative container mx-auto px-4 py-16">
+        <div className="relative container mx-auto px-4 py-12">
           <div className="max-w-6xl mx-auto">
             {/* Event Header */}
             <div className="mb-8">
@@ -335,7 +335,7 @@ export default async function EventPage({ params }: Props) {
     return (
       <>
         <DollarEventPage event={event} statistics={statistics} />
-        <section className="py-12">
+        <section className="bg-gray-50 dark:bg-gray-900 py-8">
           <div className="container mx-auto px-4">
             <div className="max-w-7xl mx-auto">
               <DollarEventClient
@@ -362,7 +362,7 @@ export default async function EventPage({ params }: Props) {
     return (
       <>
         <IPCEventPage event={event} user={user} statistics={statistics} />
-        <section className="py-12">
+        <section className="bg-gray-50 dark:bg-gray-900 py-8">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <EventDetailClient
