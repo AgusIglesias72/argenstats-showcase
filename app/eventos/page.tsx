@@ -3,12 +3,12 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { EventsService } from '@/lib/services/events.service';
-import { type EventWithCount } from '@/lib/types/events';
-;
+import { DollarEventsService } from '@/lib/services/dollar-events.service';
+import { type Event, type EventType } from '@/lib/types/events';
 import { 
   Trophy, TrendingUp, Target, DollarSign, Calendar, Users, Clock, 
   CheckCircle, Sparkles, ArrowRight, Award, ChevronRight, BarChart3,
-  Package, Wrench, Utensils
+  Package, Wrench, Utensils, Edit3, Eye
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -72,7 +72,7 @@ function getTimeRemaining(deadline: Date) {
   return `${minutes}m`;
 }
 
-// Configuración de iconos para categorías
+// Configuración de iconos para categorías IPC
 const categoryConfig = {
   general: { 
     icon: TrendingUp, 
@@ -96,20 +96,127 @@ const categoryConfig = {
   },
 };
 
+// Funciones helper para tipos de evento
+const getEventIcon = (eventType: EventType) => {
+  switch (eventType) {
+    case 'IPC_PREDICTION':
+      return TrendingUp;
+    case 'DOLLAR_PREDICTION':
+      return DollarSign;
+    default:
+      return Target;
+  }
+};
+
+const getEventColor = (eventType: EventType) => {
+  switch (eventType) {
+    case 'IPC_PREDICTION':
+      return 'purple';
+    case 'DOLLAR_PREDICTION':
+      return 'green';
+    default:
+      return 'blue';
+  }
+};
+
+// Función para obtener estadísticas según el tipo de evento
+async function getEventStatistics(event: Event) {
+  if (event.eventType === 'IPC_PREDICTION') {
+    return await EventsService.getEventStatistics(event.id);
+  } else if (event.eventType === 'DOLLAR_PREDICTION') {
+    return await DollarEventsService.getEventStatistics(event.id);
+  }
+  return null;
+}
+
+// Componente para mostrar estadísticas del IPC
+function IPCStatistics({ statistics }: { statistics: any }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <h4 className="font-semibold text-gray-900 dark:text-white">
+          Mediana de Predicciones ({statistics.totalParticipants} participantes)
+        </h4>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        {Object.entries(categoryConfig).map(([key, config]) => {
+          const Icon = config.icon;
+          const value = statistics.medianPredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`];
+          return (
+            <div key={key} className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2">
+                <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <span className="text-xs text-gray-600 dark:text-gray-400">{config.label}</span>
+              </div>
+              <span className={`font-bold text-sm text-${config.color}-600 dark:text-${config.color}-400`}>
+                {value ? `${value.toFixed(2)}%` : '-'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Componente para mostrar estadísticas del Dólar
+function DollarStatistics({ statistics }: { statistics: any }) {
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <h4 className="font-semibold text-gray-900 dark:text-white">
+          Estadísticas del Evento ({statistics.totalParticipants} participantes)
+        </h4>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-gray-900 rounded-lg px-3 py-2">
+          <span className="text-xs text-gray-600 dark:text-gray-400">Promedio</span>
+          <p className="font-bold text-green-600 dark:text-green-400">
+            ${statistics.averagePrediction}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg px-3 py-2">
+          <span className="text-xs text-gray-600 dark:text-gray-400">Mediana</span>
+          <p className="font-bold text-green-600 dark:text-green-400">
+            ${statistics.medianPrediction}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg px-3 py-2">
+          <span className="text-xs text-gray-600 dark:text-gray-400">Rango</span>
+          <p className="font-bold text-green-600 dark:text-green-400 text-sm">
+            ${statistics.minPrediction} - ${statistics.maxPrediction}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg px-3 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-gray-500" />
+          <div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Públicas</span>
+            <p className="font-bold text-gray-900 dark:text-white">
+              {statistics.publicPredictions}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function EventosPage() {
   const events = await EventsService.getPublicEvents();
   
-  // Calcular estadísticas para cada evento
+  // Calcular estadísticas para cada evento según su tipo
   const eventsWithStats = await Promise.all(
-    events.map(async (event: EventWithCount) => {
-      const statistics = await EventsService.getEventStatistics(event.id);
+    events.map(async (event: Event) => {
+      const statistics = await getEventStatistics(event);
       return { ...event, statistics };
     })
   );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Hero Section - Estilo ArgenStats */}
+      {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -202,141 +309,140 @@ export default async function EventosPage() {
               </div>
             ) : (
               <div className="grid gap-6">
-                {eventsWithStats.map((event: any) => (
-                  <Link
-                    key={event.id}
-                    href={`/eventos/${event.slug}`}
-                    className="group"
-                  >
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700">
-                      <div className="p-6 lg:p-8">
-                        {/* Event Header */}
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
-                          <div className="mb-4 lg:mb-0">
-                            <div className="flex items-center gap-3 mb-3">
-                              <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                {event.name}
-                              </h3>
-                              {getEventStatusBadge(event.status)}
-                            </div>
-                            {event.description && (
-                              <p className="text-gray-600 dark:text-gray-400">
-                                {event.description}
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Prize Badge */}
-                          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
-                            <div className="flex items-center gap-3">
-                              <Trophy className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-                              <div>
-                                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Premio</p>
-                                <p className="text-xl font-bold text-gray-900 dark:text-white">
-                                  {event.prizeCurrency} {event.prizeAmount}
+                {eventsWithStats.map((event: any) => {
+                  const EventIcon = getEventIcon(event.eventType);
+                  const eventColor = getEventColor(event.eventType);
+                  
+                  return (
+                    <Link key={event.id} href={`/eventos/${event.slug}`} className="group">
+                      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700">
+                        <div className="p-6 lg:p-8">
+                          {/* Event Header */}
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
+                            <div className="mb-4 lg:mb-0">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className={`p-2 rounded-lg bg-${eventColor}-100 dark:bg-${eventColor}-900/30`}>
+                                  <EventIcon className={`w-5 h-5 text-${eventColor}-600 dark:text-${eventColor}-400`} />
+                                </div>
+                                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  {event.name}
+                                </h3>
+                                {getEventStatusBadge(event.status)}
+                                {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium rounded-full">
+                                    <Edit3 className="w-3 h-3 mr-1" />
+                                    Editable
+                                  </span>
+                                )}
+                              </div>
+                              {event.description && (
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  {event.description}
                                 </p>
+                              )}
+                              {event.eventType === 'DOLLAR_PREDICTION' && event.dollarSource && (
+                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                                  Fuente: {event.dollarSource}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Prize Badge */}
+                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+                              <div className="flex items-center gap-3">
+                                <Trophy className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+                                <div>
+                                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Premio</p>
+                                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                                    {event.prizeCurrency} {event.prizeAmount}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Statistics Section - NEW */}
-                        {event.statistics && event.statistics.totalParticipants > 0 && (
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                              <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                Mediana de Predicciones ({event.statistics.totalParticipants} participantes)
-                              </h4>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                              {Object.entries(categoryConfig).map(([key, config]) => {
-                                const Icon = config.icon;
-                                const value = event.statistics.medianPredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`];
-                                return (
-                                  <div key={key} className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                      <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                      <span className="text-xs text-gray-600 dark:text-gray-400">{config.label}</span>
-                                    </div>
-                                    <span className={`font-bold text-sm text-${config.color}-600 dark:text-${config.color}-400`}>
-                                      {value ? `${value.toFixed(2)}%` : '-'}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Event Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                              <Calendar className="w-4 h-4" />
-                              <span className="text-xs font-medium">Fecha</span>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                              {formatDate(event.eventDate)}
-                            </p>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs font-medium">Cierre</span>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                              {formatDate(event.submissionDeadline)}
-                            </p>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                              <Users className="w-4 h-4" />
-                              <span className="text-xs font-medium">Participantes</span>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                              {event._count?.predictions || event.participantsCount || 0}
-                            </p>
-                          </div>
-
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs font-medium">Tiempo</span>
-                            </div>
-                            <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
-                              {getTimeRemaining(event.submissionDeadline)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Event Actions */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span>Una predicción por usuario • Resultados transparentes</span>
-                          </div>
-                          
-                          {event.status === 'ACTIVE' && (
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg group-hover:bg-blue-700 transition-colors">
-                              Participar
-                              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                            </span>
+                          {/* Statistics Section */}
+                          {event.statistics && event.statistics.totalParticipants > 0 && (
+                            event.eventType === 'IPC_PREDICTION' ? (
+                              <IPCStatistics statistics={event.statistics} />
+                            ) : event.eventType === 'DOLLAR_PREDICTION' ? (
+                              <DollarStatistics statistics={event.statistics} />
+                            ) : null
                           )}
-                          
-                          {event.status === 'COMPLETED' && (
-                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg">
-                              Ver Resultados
-                              <Award className="w-4 h-4" />
-                            </span>
-                          )}
+
+                          {/* Event Stats */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                                <Calendar className="w-4 h-4" />
+                                <span className="text-xs font-medium">Fecha</span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                {formatDate(event.eventDate)}
+                              </p>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                                <Clock className="w-4 h-4" />
+                                <span className="text-xs font-medium">
+                                  {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit ? 'Edición hasta' : 'Cierre'}
+                                </span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                {formatDate(event.eventType === 'DOLLAR_PREDICTION' && event.editDeadline 
+                                  ? event.editDeadline 
+                                  : event.submissionDeadline)}
+                              </p>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                                <Users className="w-4 h-4" />
+                                <span className="text-xs font-medium">Participantes</span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                {event.participantsCount || 0}
+                              </p>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                                <Clock className="w-4 h-4" />
+                                <span className="text-xs font-medium">Tiempo</span>
+                              </div>
+                              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                                {getTimeRemaining(event.submissionDeadline)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Event Actions */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                              <span>Una predicción por usuario • Resultados transparentes</span>
+                            </div>
+                            
+                            {event.status === 'ACTIVE' && (
+                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg group-hover:bg-blue-700 transition-colors">
+                                Participar
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                              </span>
+                            )}
+                            
+                            {event.status === 'COMPLETED' && (
+                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg">
+                                Ver Resultados
+                                <Award className="w-4 h-4" />
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -365,7 +471,7 @@ export default async function EventosPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Predice</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Ingresá tus predicciones para los valores del IPC en sus 4 categorías principales
+                  Ingresá tus predicciones para los valores específicos de cada evento
                 </p>
               </div>
               
@@ -375,7 +481,7 @@ export default async function EventosPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">Espera</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  El INDEC publicará los datos oficiales en la fecha del evento
+                  Los datos oficiales se publicarán en la fecha del evento
                 </p>
               </div>
               
@@ -390,68 +496,130 @@ export default async function EventosPage() {
               </div>
             </div>
 
-            {/* Ranking System Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-              <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">
-                Sistema de Ranking
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                    1
+            {/* Ranking Systems */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* IPC Ranking */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  Sistema de Ranking - IPC
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      1
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">IPC General</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Solo quienes acierten el IPC General competirán por el premio
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">IPC General</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Prioridad máxima: Solo quienes acierten el IPC General competirán por el premio
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                    2
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      2
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Aciertos Exactos</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Gana quien tenga más aciertos exactos en las categorías
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Aciertos Exactos</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Entre quienes acertaron el General, gana quien tenga más aciertos exactos
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                    3
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      3
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Menor Desviación</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        En empate, gana quien tenga menor diferencia total
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Menor Desviación</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      En caso de empate, gana quien tenga menor diferencia total
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                    4
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Orden de Envío</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Como último criterio, gana quien haya enviado primero su predicción
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      4
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Orden de Envío</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Último criterio: gana quien envió primero
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  <strong>Transparencia Total:</strong> Todas las predicciones son públicas (anónimas) y los resultados 
-                  se calculan automáticamente al publicarse los datos oficiales del INDEC.
-                </p>
+              {/* Dollar Ranking */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-green-600" />
+                  Sistema de Ranking - Dólar
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      1
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Cercanía al Valor</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Gana quien más se acerque al valor oficial del dólar
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      2
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Última Actualización</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        En empate, gana quien actualizó primero su predicción
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      <Edit3 className="w-3 h-3" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Ediciones Permitidas</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Podés editar tu predicción hasta la fecha límite
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                      <Eye className="w-3 h-3" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Visibilidad Opcional</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Elegí si tu predicción es pública o privada
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>Transparencia Total:</strong> Todas las predicciones quedan registradas y los resultados 
+                se calculan automáticamente al publicarse los datos oficiales.
+              </p>
             </div>
           </div>
         </div>

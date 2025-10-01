@@ -1,26 +1,23 @@
-// app/api/events/predict/route.ts - Actualizado
+// app/api/events/dollar-predict/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { EventsService } from '@/lib/services/events.service';
+import { DollarEventsService } from '@/lib/services/dollar-events.service';
 import { z } from 'zod';
 
-const PredictionSchema = z.object({
+const DollarPredictionSchema = z.object({
   eventId: z.string(),
   userId: z.string(),
   userEmail: z.string().email(),
-  ipcGeneral: z.string().transform(Number),
-  ipcBienes: z.string().transform(Number),
-  ipcServicios: z.string().transform(Number),
-  ipcAlimentos: z.string().transform(Number),
-  isPublic: z.boolean().optional(), // NUEVO
+  dollarValue: z.number().min(1).max(10000), // Limites razonables
+  isPublic: z.boolean().optional(),
 });
 
 const ToggleVisibilitySchema = z.object({
   predictionId: z.string(),
 });
 
-// POST - Crear o actualizar predicción IPC
+// POST - Crear o actualizar predicción
 export async function POST(req: NextRequest) {
   try {
     const user = await currentUser();
@@ -33,10 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log('Body recibido:', body);
-    
-    const validatedData = PredictionSchema.parse(body);
-    console.log('Datos validados:', validatedData);
+    const validatedData = DollarPredictionSchema.parse(body);
 
     // Verificar que el userId del request coincida con el usuario autenticado
     if (validatedData.userId !== user.id) {
@@ -46,38 +40,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Usar el método actualizado que soporta ediciones
-    const prediction = await EventsService.upsertPrediction(
+    // Crear o actualizar la predicción
+    const prediction = await DollarEventsService.upsertPrediction(
       validatedData.eventId,
       validatedData.userId,
       validatedData.userEmail,
       {
-        ipcGeneral: validatedData.ipcGeneral,
-        ipcBienes: validatedData.ipcBienes,
-        ipcServicios: validatedData.ipcServicios,
-        ipcAlimentos: validatedData.ipcAlimentos,
+        dollarValue: validatedData.dollarValue,
         isPublic: validatedData.isPublic,
       }
     );
 
-    const isUpdate = prediction.editCount > 0;
-
     return NextResponse.json({ 
       success: true,
       prediction,
-      message: isUpdate 
-        ? 'Predicción actualizada exitosamente'
+      message: prediction.editCount > 0 
+        ? 'Predicción actualizada exitosamente' 
         : 'Predicción creada exitosamente'
     });
     
   } catch (error: any) {
-    console.error('Error handling prediction:', error);
+    console.error('Error handling dollar prediction:', error);
     
     if (error instanceof z.ZodError) {
-      console.error('Error de validación:', error.issues);
       return NextResponse.json(
         { 
-          error: 'Datos inválidos en el formulario',
+          error: 'Datos inválidos',
           details: error.issues 
         },
         { status: 400 }
@@ -87,12 +75,11 @@ export async function POST(req: NextRequest) {
     // Errores específicos del servicio
     const errorMessages: Record<string, number> = {
       'Evento no encontrado': 404,
-      'Este evento no es de tipo predicción IPC': 400,
+      'Este evento no es de tipo predicción del dólar': 400,
       'El evento no está activo': 400,
       'El período de predicciones ha finalizado': 400,
       'Este evento no permite editar predicciones': 400,
       'El período de edición ha finalizado': 400,
-      'Ya has realizado una predicción para este evento': 400,
     };
 
     const statusCode = errorMessages[error.message] || 500;
@@ -104,7 +91,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH - Cambiar visibilidad de predicción IPC
+// PATCH - Cambiar visibilidad de predicción
 export async function PATCH(req: NextRequest) {
   try {
     const user = await currentUser();
@@ -119,7 +106,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { predictionId } = ToggleVisibilitySchema.parse(body);
 
-    const prediction = await EventsService.togglePredictionVisibility(
+    const prediction = await DollarEventsService.togglePredictionVisibility(
       predictionId,
       user.id
     );
@@ -163,7 +150,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// GET - Obtener predicciones públicas de un evento IPC
+// GET - Obtener predicciones públicas de un evento
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -176,8 +163,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const predictions = await EventsService.getPublicPredictions(eventId);
-    const statistics = await EventsService.getEventStatistics(eventId);
+    const predictions = await DollarEventsService.getPublicPredictions(eventId);
+    const statistics = await DollarEventsService.getEventStatistics(eventId);
 
     return NextResponse.json({
       success: true,

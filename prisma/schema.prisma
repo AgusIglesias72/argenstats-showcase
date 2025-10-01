@@ -40,7 +40,8 @@ model UserProfile {
   favorites          UserFavorite[]
   contactSubmissions ContactSubmission[]
   eventPredictions   EventPrediction[]
-  eventsWon          Event[]             @relation("EventWinner")
+  dollarPredictions  DollarPrediction[] // NUEVO
+  eventsWon          Event[]            @relation("EventWinner")
   events             UserEvent[]
 
   @@index([email])
@@ -335,8 +336,6 @@ model CountryRisk {
   @@map("country_risk")
 }
 
-// Agregar este modelo al final de tu schema.prisma
-
 // Newsletter Subscriptions
 model Newsletter {
   id             String    @id @default(uuid())
@@ -472,22 +471,32 @@ enum EventStatus {
   CANCELLED
 }
 
+enum EventType {
+  IPC_PREDICTION
+  DOLLAR_PREDICTION
+}
+
 model Event {
   id                 String      @id @default(uuid())
   slug               String      @unique
   name               String
   description        String?     @db.Text
+  eventType          EventType   @default(IPC_PREDICTION) @map("event_type")
   eventDate          DateTime    @map("event_date")
   submissionDeadline DateTime    @map("submission_deadline")
   prizeAmount        Float       @map("prize_amount")
   prizeCurrency      String      @default("USD") @map("prize_currency")
   status             EventStatus @default(DRAFT)
 
-  // Valores oficiales (se llenan después del evento)
+  // Valores oficiales para IPC (opcionales para eventos de IPC)
   officialIpcGeneral   Float? @map("official_ipc_general")
   officialIpcBienes    Float? @map("official_ipc_bienes")
   officialIpcServicios Float? @map("official_ipc_servicios")
   officialIpcAlimentos Float? @map("official_ipc_alimentos")
+
+  // Valores oficiales para Dólar (opcionales para eventos de dólar)
+  officialDollarValue Float?  @map("official_dollar_value")
+  dollarSource        String? @map("dollar_source") // "MEP Ualá", etc.
 
   // Metadatos
   participantsCount  Int       @default(0) @map("participants_count")
@@ -495,20 +504,24 @@ model Event {
   resultsPublishedAt DateTime? @map("results_published_at")
 
   // Configuración adicional
-  maxParticipants Int?    @map("max_participants")
-  minParticipants Int?    @map("min_participants")
-  isHighlighted   Boolean @default(false) @map("is_highlighted")
+  maxParticipants     Int?     @map("max_participants")
+  minParticipants     Int?     @map("min_participants")
+  isHighlighted       Boolean  @default(false) @map("is_highlighted")
+  allowPredictionEdit Boolean  @default(false) @map("allow_prediction_edit")
+  editDeadline        DateTime? @map("edit_deadline")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relaciones
-  predictions EventPrediction[]
-  winner      UserProfile?      @relation("EventWinner", fields: [winnerId], references: [userId])
+  predictions       EventPrediction[]
+  dollarPredictions DollarPrediction[]
+  winner            UserProfile?       @relation("EventWinner", fields: [winnerId], references: [userId])
 
   @@index([status])
   @@index([eventDate])
   @@index([slug])
+  @@index([eventType])
   @@map("events")
 }
 
@@ -518,17 +531,24 @@ model EventPrediction {
   userId    String @map("user_id")
   userEmail String @map("user_email")
 
-  // Predicciones
+  // Predicciones IPC
   ipcGeneral   Float @map("ipc_general")
   ipcBienes    Float @map("ipc_bienes")
   ipcServicios Float @map("ipc_servicios")
   ipcAlimentos Float @map("ipc_alimentos")
+  
+  // Control de visibilidad - NUEVO
+  isPublic Boolean @default(false) @map("is_public")
+  
+  // Para tracking de ediciones - NUEVO
+  editCount    Int       @default(0) @map("edit_count")
+  lastEditedAt DateTime? @map("last_edited_at")
 
   // Resultados (calculados después)
-  generalMatch      Boolean? @map("general_match") // Si acertó el IPC general
-  exactMatchesCount Int?     @map("exact_matches_count") // Cuántos índices acertó exactamente
-  totalDeviation    Float?   @map("total_deviation") // Suma de desviaciones absolutas
-  rank              Int? // Posición final
+  generalMatch      Boolean? @map("general_match")
+  exactMatchesCount Int?     @map("exact_matches_count")
+  totalDeviation    Float?   @map("total_deviation")
+  rank              Int?
   isWinner          Boolean  @default(false) @map("is_winner")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -543,5 +563,43 @@ model EventPrediction {
   @@index([userId])
   @@index([rank])
   @@index([createdAt])
+  @@index([updatedAt]) // NUEVO - Para criterio de desempate con ediciones
   @@map("event_predictions")
+}
+
+model DollarPrediction {
+  id        String @id @default(uuid())
+  eventId   String @map("event_id")
+  userId    String @map("user_id")
+  userEmail String @map("user_email")
+
+  // Predicción del dólar
+  dollarValue Float @map("dollar_value")
+  
+  // Control de visibilidad
+  isPublic Boolean @default(false) @map("is_public")
+  
+  // Para tracking de ediciones
+  editCount    Int       @default(0) @map("edit_count")
+  lastEditedAt DateTime? @map("last_edited_at")
+
+  // Resultados (calculados después)
+  deviation Float?  @map("deviation")
+  rank      Int?
+  isWinner  Boolean @default(false) @map("is_winner")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relaciones
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  UserProfile @relation(fields: [userId], references: [userId])
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([rank])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("dollar_predictions")
 }

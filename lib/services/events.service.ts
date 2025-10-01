@@ -1,7 +1,7 @@
 // lib/services/events.service.ts
 
 import { prisma } from '@/lib/db/prisma';
-import { type EventStatus, type PredictionInput } from '@/lib/types/events';
+import { EventPrediction, PredictionInput, EventStatistics } from '@/lib/types/events';
 
 export class EventsService {
   // Obtener evento activo por slug
@@ -18,7 +18,11 @@ export class EventsService {
             ipcBienes: true,
             ipcServicios: true,
             ipcAlimentos: true,
+            isPublic: true, // NUEVO
+            editCount: true, // NUEVO
+            lastEditedAt: true, // NUEVO
             createdAt: true,
+            updatedAt: true, // NUEVO
             // Campos calculados del ranking
             rank: true,
             generalMatch: true,
@@ -80,14 +84,14 @@ export class EventsService {
     });
   }
 
-  // Crear predicción para un usuario
-  static async createPrediction(
+  // Crear o actualizar predicción (ACTUALIZADO para soportar ediciones)
+  static async upsertPrediction(
     eventId: string,
     userId: string,
     userEmail: string,
-    prediction: PredictionInput
-  ) {
-    // Verificar que el evento esté activo y aceptando predicciones
+    prediction: PredictionInput & { isPublic?: boolean }
+  ): Promise<EventPrediction> {
+    // Verificar que el evento existe y está activo
     const event = await prisma.event.findUnique({
       where: { id: eventId },
     });
@@ -96,35 +100,160 @@ export class EventsService {
       throw new Error('Evento no encontrado');
     }
 
+    if (event.eventType !== 'IPC_PREDICTION') {
+      throw new Error('Este evento no es de tipo predicción IPC');
+    }
+
     if (event.status !== 'ACTIVE') {
       throw new Error('El evento no está activo');
     }
 
-    if (new Date() > event.submissionDeadline) {
+    const now = new Date();
+    if (event.submissionDeadline < now) {
       throw new Error('El período de predicciones ha finalizado');
     }
 
-    // Crear la predicción
-    const newPrediction = await prisma.eventPrediction.create({
-      data: {
-        eventId,
-        userId,
-        userEmail,
-        ...prediction,
-      },
-    });
-
-    // Actualizar contador de participantes
-    await prisma.event.update({
-      where: { id: eventId },
-      data: {
-        participantsCount: {
-          increment: 1,
+    // Verificar si existe una predicción previa
+    const existingPrediction = await prisma.eventPrediction.findUnique({
+      where: {
+        eventId_userId: {
+          eventId,
+          userId,
         },
       },
     });
 
-    return newPrediction;
+    if (existingPrediction) {
+      // Verificar si se permite edición
+      if (!event.allowPredictionEdit) {
+        throw new Error('Este evento no permite editar predicciones');
+      }
+
+      if (event.editDeadline && event.editDeadline < now) {
+        throw new Error('El período de edición ha finalizado');
+      }
+
+      // Actualizar predicción existente
+      return await prisma.eventPrediction.update({
+        where: { id: existingPrediction.id },
+        data: {
+          ipcGeneral: prediction.ipcGeneral,
+          ipcBienes: prediction.ipcBienes,
+          ipcServicios: prediction.ipcServicios,
+          ipcAlimentos: prediction.ipcAlimentos,
+          isPublic: prediction.isPublic ?? existingPrediction.isPublic,
+          editCount: { increment: 1 },
+          lastEditedAt: now,
+        },
+      });
+    } else {
+      // Crear nueva predicción
+      const newPrediction = await prisma.eventPrediction.create({
+        data: {
+          eventId,
+          userId,
+          userEmail,
+          ipcGeneral: prediction.ipcGeneral,
+          ipcBienes: prediction.ipcBienes,
+          ipcServicios: prediction.ipcServicios,
+          ipcAlimentos: prediction.ipcAlimentos,
+          isPublic: prediction.isPublic ?? false,
+        },
+      });
+
+      // Actualizar contador de participantes
+      await prisma.event.update({
+        where: { id: eventId },
+        data: {
+          participantsCount: { increment: 1 },
+        },
+      });
+
+      return newPrediction;
+    }
+  }
+
+  // Método antiguo para compatibilidad (redirige al nuevo)
+  static async createPrediction(
+    eventId: string,
+    userId: string,
+    userEmail: string,
+    prediction: PredictionInput
+  ) {
+    return await this.upsertPrediction(eventId, userId, userEmail, prediction);
+  }
+
+  // Cambiar visibilidad de una predicción IPC (NUEVO)
+  static async togglePredictionVisibility(
+    predictionId: string,
+    userId: string
+  ): Promise<EventPrediction> {
+    const prediction = await prisma.eventPrediction.findUnique({
+      where: { id: predictionId },
+    });
+
+    if (!prediction) {
+      throw new Error('Predicción no encontrada');
+    }
+
+    if (prediction.userId !== userId) {
+      throw new Error('No tienes permisos para modificar esta predicción');
+    }
+
+    return await prisma.eventPrediction.update({
+      where: { id: predictionId },
+      data: {
+        isPublic: !prediction.isPublic,
+      },
+    });
+  }
+
+  // Obtener predicciones públicas de un evento IPC (NUEVO)
+  static async getPublicPredictions(eventId: string) {
+    return await prisma.eventPrediction.findMany({
+      where: {
+        eventId,
+        isPublic: true,
+      },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            email: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+      },
+      orderBy: [
+        { rank: 'asc' },
+        { updatedAt: 'asc' },
+      ],
+    });
+  }
+
+  // Obtener todas las predicciones (ACTUALIZADO para incluir solo públicas)
+  static async getEventPredictions(eventId: string) {
+    return await prisma.eventPrediction.findMany({
+      where: { 
+        eventId,
+        isPublic: true, // Solo mostrar públicas
+      },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            email: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+      },
+      orderBy: [
+        { rank: 'asc' },
+        { updatedAt: 'asc' },
+      ],
+    });
   }
 
   // Obtener predicción del usuario para un evento
@@ -139,7 +268,7 @@ export class EventsService {
     });
   }
 
-  // Calcular estadísticas del evento
+  // Calcular estadísticas del evento (ACTUALIZADO para incluir info de visibilidad)
   static async getEventStatistics(eventId: string) {
     const predictions = await prisma.eventPrediction.findMany({
       where: { eventId },
@@ -148,6 +277,7 @@ export class EventsService {
         ipcBienes: true,
         ipcServicios: true,
         ipcAlimentos: true,
+        isPublic: true, // NUEVO
       },
     });
 
@@ -174,8 +304,12 @@ export class EventsService {
     const serviciosValues = predictions.map(p => p.ipcServicios);
     const alimentosValues = predictions.map(p => p.ipcAlimentos);
 
+    // Contar predicciones públicas (NUEVO)
+    const publicPredictions = predictions.filter(p => p.isPublic).length;
+
     return {
       totalParticipants: predictions.length,
+      publicPredictions, // NUEVO
       medianPredictions: {
         ipcGeneral: getMedian([...generalValues]),
         ipcBienes: getMedian([...bienesValues]),
@@ -191,7 +325,7 @@ export class EventsService {
     };
   }
 
-  // Calcular rankings cuando se publican los resultados oficiales
+  // Calcular rankings cuando se publican los resultados oficiales (ACTUALIZADO para considerar ediciones)
   static async calculateRankings(
     eventId: string,
     officialValues: {
@@ -203,7 +337,7 @@ export class EventsService {
   ) {
     const predictions = await prisma.eventPrediction.findMany({
       where: { eventId },
-      orderBy: { createdAt: 'asc' }, // Para desempate por tiempo
+      orderBy: { updatedAt: 'asc' }, // CAMBIO: usar updatedAt para considerar ediciones
     });
 
     // Calcular métricas para cada predicción
@@ -251,8 +385,8 @@ export class EventsService {
         return a.totalDeviation - b.totalDeviation;
       }
 
-      // 4. Si todo es igual, gana quien envió primero (ya ordenado por createdAt)
-      return 0;
+      // 4. Si todo es igual, gana quien actualizó primero (updatedAt)
+      return a.updatedAt.getTime() - b.updatedAt.getTime();
     });
 
     // Actualizar rankings en la base de datos
