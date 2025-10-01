@@ -32,6 +32,7 @@ export default function DollarEventClient({
   );
   const [isPublic, setIsPublic] = useState(initialUserPrediction?.isPublic || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
   const [userPrediction, setUserPrediction] = useState(initialUserPrediction);
   const [publicPredictions, setPublicPredictions] = useState<any[]>([]);
   const [statistics, setStatistics] = useState<any>(null);
@@ -49,7 +50,6 @@ export default function DollarEventClient({
 
   useEffect(() => {
     fetchPublicPredictions();
-    // Actualizar cada 30 segundos para ver nuevas predicciones
     const interval = setInterval(fetchPublicPredictions, 30000);
     return () => clearInterval(interval);
   }, [event.id]);
@@ -133,8 +133,9 @@ export default function DollarEventClient({
   };
 
   const toggleVisibility = async () => {
-    if (!userPrediction) return;
+    if (!userPrediction || isTogglingVisibility) return;
 
+    setIsTogglingVisibility(true);
     const loadingToast = toast.loading('Cambiando visibilidad...');
 
     try {
@@ -156,6 +157,7 @@ export default function DollarEventClient({
           duration: 3000,
         });
         fetchPublicPredictions();
+        router.refresh();
       } else {
         toast.error('Error al cambiar la visibilidad', {
           duration: 3000,
@@ -166,6 +168,8 @@ export default function DollarEventClient({
       toast.error('Error de conexión', {
         duration: 3000,
       });
+    } finally {
+      setIsTogglingVisibility(false);
     }
   };
 
@@ -275,36 +279,37 @@ export default function DollarEventClient({
                 </p>
               </div>
 
-              {/* Toggle de Visibilidad */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center gap-3">
-                  {isPublic ? (
-                    <Eye className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      Predicción {isPublic ? 'pública' : 'privada'}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {isPublic ? 'Visible en el ranking con tu nombre' : 'Solo vos podés verla'}
-                    </p>
+              {/* Toggle de Visibilidad - SOLO en formulario nuevo */}
+              {!hasUserPredicted && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center gap-3">
+                    {isPublic ? (
+                      <Eye className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <EyeOff className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Predicción {isPublic ? 'pública' : 'privada'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {isPublic ? 'Visible en el ranking con tu nombre' : 'Solo vos podés verla'}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(!isPublic)}
+                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
+                      isPublic ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                      isPublic ? 'translate-x-6' : ''
+                    }`} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => !hasUserPredicted && setIsPublic(!isPublic)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    isPublic ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                  } ${hasUserPredicted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                  disabled={hasUserPredicted}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                    isPublic ? 'translate-x-6' : ''
-                  }`} />
-                </button>
-              </div>
+              )}
 
               {/* Info de Edición */}
               {canEdit && (
@@ -357,28 +362,43 @@ export default function DollarEventClient({
             </div>
           )}
 
-          {/* Confirmación de Predicción */}
+          {/* Confirmación de Predicción con botón de visibilidad SIEMPRE visible */}
           {hasUserPredicted && (
-            <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="font-medium text-green-700 dark:text-green-300">
-                    Tu predicción: ${userPrediction.dollarValue.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                    {userPrediction.isPublic ? '👁️ Visible públicamente' : '🔒 Solo visible para vos'}
-                  </p>
-                  {userPrediction.isPublic !== isPublic && (
-                    <button
-                      onClick={toggleVisibility}
-                      className="text-sm text-green-600 dark:text-green-400 hover:underline mt-2"
-                    >
-                      Cambiar a {userPrediction.isPublic ? 'privada' : 'pública'}
-                    </button>
-                  )}
+            <div className="mt-4 space-y-3">
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-700 dark:text-green-300">
+                      Tu predicción: ${userPrediction.dollarValue.toFixed(2)}
+                    </p>
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                      {userPrediction.isPublic ? (
+                        <>
+                          <Eye className="w-4 h-4" />
+                          Visible públicamente
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-4 h-4" />
+                          Solo visible para vos
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Botón para cambiar visibilidad - SIEMPRE disponible */}
+              <button
+                onClick={toggleVisibility}
+                disabled={isTogglingVisibility}
+                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                title={userPrediction.isPublic ? 'Hacer privada' : 'Hacer pública'}
+              >
+                {userPrediction.isPublic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {userPrediction.isPublic ? 'Hacer Privada' : 'Hacer Pública'}
+              </button>
             </div>
           )}
 

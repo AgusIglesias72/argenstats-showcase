@@ -249,41 +249,38 @@ export default function EventResults({ event, currentUserId, userRank }: EventRe
                     {/* Usuario */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        {isCurrentUser ? (
-                          <>
-                            {prediction.user?.imageUrl ? (
-                              <Image
-                                src={prediction.user.imageUrl}
-                                alt={prediction.user.name || 'Usuario'}
-                                width={32}
-                                height={32}
-                                className="rounded-full"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-white" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">
-                                {prediction.user?.name || 'Tú'}
-                                <Star className="w-3 h-3 text-blue-500" />
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {prediction.userEmail}
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                            </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              Usuario Anónimo
+                        {(isCurrentUser || prediction.isPublic) && prediction.user?.imageUrl ? (
+                          <Image
+                            src={prediction.user.imageUrl}
+                            alt={prediction.user.name || 'Usuario'}
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                          />
+                        ) : (isCurrentUser || prediction.isPublic) && prediction.user?.name ? (
+                          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                              {prediction.user.name.charAt(0)}
                             </span>
                           </div>
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                            <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                          </div>
                         )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">
+                            {(isCurrentUser || prediction.isPublic) && prediction.user?.name ? prediction.user.name : 'Usuario Anónimo'}
+                            {isCurrentUser && (
+                              <Star className="w-3 h-3 text-blue-500" />
+                            )}
+                          </p>
+                          {isCurrentUser && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                              (Tú)
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </td>
 

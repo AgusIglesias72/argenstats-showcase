@@ -8,7 +8,7 @@ import { type Event, type EventType } from '@/lib/types/events';
 import { 
   Trophy, TrendingUp, Target, DollarSign, Calendar, Users, Clock, 
   CheckCircle, Sparkles, ArrowRight, Award, ChevronRight, BarChart3,
-  Package, Wrench, Utensils, Edit3, Eye
+  Package, Wrench, Utensils, Edit3, Eye, AlertCircle
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -203,6 +203,142 @@ function DollarStatistics({ statistics }: { statistics: any }) {
   );
 }
 
+// Componente reutilizable para renderizar un evento
+function EventCard({ event }: { event: any }) {
+  const EventIcon = getEventIcon(event.eventType);
+  const eventColor = getEventColor(event.eventType);
+  
+  return (
+    <Link href={`/eventos/${event.slug}`} className="group">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700">
+        <div className="p-6 lg:p-8">
+          {/* Event Header */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
+            <div className="mb-4 lg:mb-0">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`p-2 rounded-lg bg-${eventColor}-100 dark:bg-${eventColor}-900/30`}>
+                  <EventIcon className={`w-5 h-5 text-${eventColor}-600 dark:text-${eventColor}-400`} />
+                </div>
+                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {event.name}
+                </h3>
+                {getEventStatusBadge(event.status)}
+                {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit && (
+                  <span className="inline-flex items-center px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium rounded-full">
+                    <Edit3 className="w-3 h-3 mr-1" />
+                    Editable
+                  </span>
+                )}
+              </div>
+              {event.description && (
+                <p className="text-gray-600 dark:text-gray-400">
+                  {event.description}
+                </p>
+              )}
+              {event.eventType === 'DOLLAR_PREDICTION' && event.dollarSource && (
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  Fuente: {event.dollarSource}
+                </p>
+              )}
+            </div>
+            
+            {/* Prize Badge */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+                <div>
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Premio</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {event.prizeCurrency} {event.prizeAmount}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics Section */}
+          {event.statistics && event.statistics.totalParticipants > 0 && (
+            event.eventType === 'IPC_PREDICTION' ? (
+              <IPCStatistics statistics={event.statistics} />
+            ) : event.eventType === 'DOLLAR_PREDICTION' ? (
+              <DollarStatistics statistics={event.statistics} />
+            ) : null
+          )}
+
+          {/* Event Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Fecha</span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {formatDate(event.eventDate)}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs font-medium">
+                  {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit ? 'Edición hasta' : 'Cierre'}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {formatDate(event.eventType === 'DOLLAR_PREDICTION' && event.editDeadline 
+                  ? event.editDeadline 
+                  : event.submissionDeadline)}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                <Users className="w-4 h-4" />
+                <span className="text-xs font-medium">Participantes</span>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {event.participantsCount || 0}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs font-medium">Tiempo</span>
+              </div>
+              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                {getTimeRemaining(event.submissionDeadline)}
+              </p>
+            </div>
+          </div>
+
+          {/* Event Actions */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>Una predicción por usuario • Resultados transparentes</span>
+            </div>
+            
+            {event.status === 'ACTIVE' && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg group-hover:bg-blue-700 transition-colors">
+                Participar
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            )}
+            
+            {event.status === 'COMPLETED' && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg">
+                Ver Resultados
+                <Award className="w-4 h-4" />
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default async function EventosPage() {
   const events = await EventsService.getPublicEvents();
   
@@ -213,6 +349,10 @@ export default async function EventosPage() {
       return { ...event, statistics };
     })
   );
+
+  // Segmentar eventos por estado
+  const activeEvents = eventsWithStats.filter((e: any) => e.status === 'ACTIVE');
+  const completedEvents = eventsWithStats.filter((e: any) => e.status === 'COMPLETED');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -282,24 +422,32 @@ export default async function EventosPage() {
         </div>
       </section>
 
-      {/* Events List Section */}
+      {/* Active Events Section */}
       <section id="eventos-activos" className="py-16 bg-white dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Section Header */}
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                Eventos Disponibles
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300">
-                Participá en nuestros eventos y competí por premios increíbles
-              </p>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  Eventos Activos
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Participá ahora y competí por premios
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+                  {activeEvents.length} {activeEvents.length === 1 ? 'Evento' : 'Eventos'}
+                </span>
+              </div>
             </div>
 
-            {/* Events Grid */}
-            {eventsWithStats.length === 0 ? (
-              <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-2xl">
-                <Trophy className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            {/* Active Events Grid */}
+            {activeEvents.length === 0 ? (
+              <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+                <AlertCircle className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
                   No hay eventos activos en este momento
                 </h3>
@@ -309,148 +457,43 @@ export default async function EventosPage() {
               </div>
             ) : (
               <div className="grid gap-6">
-                {eventsWithStats.map((event: any) => {
-                  const EventIcon = getEventIcon(event.eventType);
-                  const eventColor = getEventColor(event.eventType);
-                  
-                  return (
-                    <Link key={event.id} href={`/eventos/${event.slug}`} className="group">
-                      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700">
-                        <div className="p-6 lg:p-8">
-                          {/* Event Header */}
-                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
-                            <div className="mb-4 lg:mb-0">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className={`p-2 rounded-lg bg-${eventColor}-100 dark:bg-${eventColor}-900/30`}>
-                                  <EventIcon className={`w-5 h-5 text-${eventColor}-600 dark:text-${eventColor}-400`} />
-                                </div>
-                                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                  {event.name}
-                                </h3>
-                                {getEventStatusBadge(event.status)}
-                                {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit && (
-                                  <span className="inline-flex items-center px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium rounded-full">
-                                    <Edit3 className="w-3 h-3 mr-1" />
-                                    Editable
-                                  </span>
-                                )}
-                              </div>
-                              {event.description && (
-                                <p className="text-gray-600 dark:text-gray-400">
-                                  {event.description}
-                                </p>
-                              )}
-                              {event.eventType === 'DOLLAR_PREDICTION' && event.dollarSource && (
-                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                                  Fuente: {event.dollarSource}
-                                </p>
-                              )}
-                            </div>
-                            
-                            {/* Prize Badge */}
-                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
-                              <div className="flex items-center gap-3">
-                                <Trophy className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-                                <div>
-                                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Premio</p>
-                                  <p className="text-xl font-bold text-gray-900 dark:text-white">
-                                    {event.prizeCurrency} {event.prizeAmount}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Statistics Section */}
-                          {event.statistics && event.statistics.totalParticipants > 0 && (
-                            event.eventType === 'IPC_PREDICTION' ? (
-                              <IPCStatistics statistics={event.statistics} />
-                            ) : event.eventType === 'DOLLAR_PREDICTION' ? (
-                              <DollarStatistics statistics={event.statistics} />
-                            ) : null
-                          )}
-
-                          {/* Event Stats */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                                <Calendar className="w-4 h-4" />
-                                <span className="text-xs font-medium">Fecha</span>
-                              </div>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                {formatDate(event.eventDate)}
-                              </p>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-xs font-medium">
-                                  {event.eventType === 'DOLLAR_PREDICTION' && event.allowPredictionEdit ? 'Edición hasta' : 'Cierre'}
-                                </span>
-                              </div>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                {formatDate(event.eventType === 'DOLLAR_PREDICTION' && event.editDeadline 
-                                  ? event.editDeadline 
-                                  : event.submissionDeadline)}
-                              </p>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                                <Users className="w-4 h-4" />
-                                <span className="text-xs font-medium">Participantes</span>
-                              </div>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                {event.participantsCount || 0}
-                              </p>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-xs font-medium">Tiempo</span>
-                              </div>
-                              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
-                                {getTimeRemaining(event.submissionDeadline)}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Event Actions */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span>Una predicción por usuario • Resultados transparentes</span>
-                            </div>
-                            
-                            {event.status === 'ACTIVE' && (
-                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg group-hover:bg-blue-700 transition-colors">
-                                Participar
-                                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                              </span>
-                            )}
-                            
-                            {event.status === 'COMPLETED' && (
-                              <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg">
-                                Ver Resultados
-                                <Award className="w-4 h-4" />
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {activeEvents.map((event: any) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
               </div>
             )}
           </div>
         </div>
       </section>
 
+      {/* Completed Events Section */}
+      {completedEvents.length > 0 && (
+        <section className="py-16 bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              {/* Section Header */}
+              <div className="mb-8">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  Eventos Finalizados
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Revisá los resultados de eventos anteriores
+                </p>
+              </div>
+
+              {/* Completed Events Grid */}
+              <div className="grid gap-6">
+                {completedEvents.map((event: any) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* How it Works Section */}
-      <section id="como-funciona" className="py-16 bg-gray-50 dark:bg-gray-900">
+      <section id="como-funciona" className="py-16 bg-white dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             {/* Section Header */}
@@ -499,7 +542,7 @@ export default async function EventosPage() {
             {/* Ranking Systems */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* IPC Ranking */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-purple-600" />
                   Sistema de Ranking - IPC
@@ -557,7 +600,7 @@ export default async function EventosPage() {
               </div>
 
               {/* Dollar Ranking */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-green-600" />
                   Sistema de Ranking - Dólar

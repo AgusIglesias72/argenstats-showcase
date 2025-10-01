@@ -27,7 +27,7 @@ interface EventDetailClientProps {
 // Configuración de tabs
 const tabsConfig = [
   { id: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
-  { id: 'predicciones', label: 'Predicciones Públicas', icon: Table2 },
+  { id: 'predicciones', label: 'Todas las Predicciones', icon: Table2 },
 ];
 
 export default function EventDetailClient({
@@ -144,7 +144,7 @@ export default function EventDetailClient({
       if (response.ok) {
         setUserPrediction(data.prediction);
         setIsEditMode(false);
-        toast.success(data.message || '¡Predicción enviada exitosamente! 🎉', {
+        toast.success(data.message || '¡Predicción enviada exitosamente!', {
           duration: 4000,
         });
         setTimeout(() => router.refresh(), 1000);
@@ -207,7 +207,7 @@ export default function EventDetailClient({
   // Compartir evento
   const shareEvent = (platform: string) => {
     const url = window.location.href;
-    const text = `Participa en ${event.name} y gana ${event.prizeCurrency} ${event.prizeAmount}! 🏆`;
+    const text = `Participa en ${event.name} y gana ${event.prizeCurrency} ${event.prizeAmount}!`;
 
     switch (platform) {
       case 'twitter':
@@ -237,11 +237,11 @@ export default function EventDetailClient({
     setCurrentPage(1);
   };
 
-  // Filtrar solo predicciones públicas
-  const publicPredictions = event.predictions?.filter((p: any) => p.isPublic) || [];
+  // Obtener TODAS las predicciones (no filtrar por isPublic)
+  const allPredictions = event.predictions || [];
 
   // Sort predictions
-  const sortedPredictions = [...publicPredictions].sort((a: any, b: any) => {
+  const sortedPredictions = [...allPredictions].sort((a: any, b: any) => {
     let aValue = a[sortBy];
     let bValue = b[sortBy];
 
@@ -311,92 +311,98 @@ export default function EventDetailClient({
       {/* Mostrar resultados si el evento está completado */}
       {event.status === 'COMPLETED' ? (
         <>
-          {/* Tu predicción vs Resultados reales */}
+          {/* Tu predicción vs Resultados reales - Versión compacta */}
           {hasUserPredicted && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <CheckCircle className="w-7 h-7 text-green-500" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="w-6 h-6 text-green-500" />
                     Tu Predicción vs Resultado Real
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2">
-                    {userPrediction.isPublic ? (
-                      <>
-                        <Eye className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600 font-medium">Visible públicamente</span>
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-500">Solo visible para vos</span>
-                      </>
-                    )}
-                  </p>
-                </div>
-                {/* Botón para cambiar visibilidad - SIEMPRE disponible */}
-                <button
-                  onClick={togglePredictionVisibility}
-                  disabled={isTogglingVisibility}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
-                  title={userPrediction.isPublic ? 'Hacer privada' : 'Hacer pública'}
-                >
-                  {userPrediction.isPublic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  {userPrediction.isPublic ? 'Hacer Privada' : 'Hacer Pública'}
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tu Predicción */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Tu Predicción</h3>
-                  <div className="space-y-3">
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          {config.icon}
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{config.label}</span>
-                        </div>
-                        <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
-                          {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Enviada el {new Date(userPrediction.createdAt).toLocaleDateString('es-AR')} a las{' '}
                     {new Date(userPrediction.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
-
-                {/* Valores Reales */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Valores Oficiales INDEC</h3>
-                  <div className="space-y-3">
+                {/* Botón para cambiar visibilidad - SIEMPRE disponible */}
+                <div className="flex flex-col items-end gap-1">
+                  <button
+                    onClick={togglePredictionVisibility}
+                    disabled={isTogglingVisibility}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 text-sm"
+                    title={userPrediction.isPublic ? 'Ocultar mi nombre del ranking' : 'Hacer pública mi predicción'}
+                  >
+                    {userPrediction.isPublic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {userPrediction.isPublic ? 'Ocultar mi nombre' : 'Hacer pública mi predicción'}
+                  </button>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    {userPrediction.isPublic ? (
+                      <>
+                        <Eye className="w-3 h-3 text-green-600" />
+                        Nombre visible
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-3 h-3" />
+                        Nombre oculto
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Tabla comparativa compacta */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Categoría</th>
+                      <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Tu Predicción</th>
+                      <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Valor Oficial</th>
+                      <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {Object.entries(categoryConfig).map(([key, config]) => {
                       const officialKey = `officialIpc${key.charAt(0).toUpperCase() + key.slice(1)}`;
                       const predictionKey = `ipc${key.charAt(0).toUpperCase() + key.slice(1)}`;
                       const isExactMatch = userPrediction[predictionKey] === event[officialKey];
                       
                       return (
-                        <div key={key} className={`flex items-center justify-between p-3 bg-${config.color}-50 dark:bg-${config.color}-900/20 rounded-lg`}>
-                          <div className="flex items-center gap-2">
-                            {config.icon}
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{config.label}</span>
-                          </div>
-                          <span className={`font-bold ${
-                            isExactMatch 
-                              ? 'text-green-600 dark:text-green-400' 
-                              : `text-${config.color}-600 dark:text-${config.color}-400`
-                          }`}>
-                            {event[officialKey]}%
-                            {isExactMatch && ' ✅'}
-                          </span>
-                        </div>
+                        <tr key={key} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2">
+                              {config.icon}
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">{config.label}</span>
+                            </div>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                              {userPrediction[predictionKey]}%
+                            </span>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className="font-bold text-gray-900 dark:text-white">
+                              {event[officialKey]}%
+                            </span>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            {isExactMatch ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
+                                Exacto
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {(Math.abs(userPrediction[predictionKey] - event[officialKey])).toFixed(1)}% diff
+                              </span>
+                            )}
+                          </td>
+                        </tr>
                       );
                     })}
-                  </div>
-                </div>
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -409,25 +415,29 @@ export default function EventDetailClient({
         </>
       ) : (
         /* Lógica para cuando el evento NO está completado */
-        <>
+<>
           {hasUserPredicted ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <CheckCircle className="w-7 h-7 text-green-500" />
-                    Tu Predicción
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-500" />
+                    Tu predicción
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
                     {userPrediction.isPublic ? (
                       <>
-                        <Eye className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600 font-medium">Visible públicamente</span>
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-4 h-4 text-green-600" />
+                          <span className="text-green-600 font-medium">Nombre visible</span>
+                        </div>
                       </>
                     ) : (
                       <>
-                        <EyeOff className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-500">Solo visible para vos</span>
+                        <div className="flex items-center gap-1">
+                          <EyeOff className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-500">Nombre oculto</span>
+                        </div>
                       </>
                     )}
                     {userPrediction.editCount > 0 && (
@@ -435,28 +445,31 @@ export default function EventDetailClient({
                         • Editada {userPrediction.editCount} {userPrediction.editCount === 1 ? 'vez' : 'veces'}
                       </span>
                     )}
-                  </p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                
+                <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                   {/* Botón para cambiar visibilidad */}
                   <button
                     onClick={togglePredictionVisibility}
                     disabled={isTogglingVisibility}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
-                    title={userPrediction.isPublic ? 'Hacer privada' : 'Hacer pública'}
+                    className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
+                    title={userPrediction.isPublic ? 'Ocultar mi nombre' : 'Hacer pública mi predicción'}
                   >
                     {userPrediction.isPublic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    {userPrediction.isPublic ? 'Hacer Privada' : 'Hacer Pública'}
+                    <span className="whitespace-nowrap">
+                      {userPrediction.isPublic ? 'Ocultar nombre' : 'Hacer pública'}
+                    </span>
                   </button>
 
                   {/* Botón para editar (si está permitido) */}
                   {canEdit && !isEditMode && (
                     <button
                       onClick={() => setIsEditMode(true)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                      className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       <Edit3 className="w-4 h-4" />
-                      Editar Predicción
+                      <span className="whitespace-nowrap">Editar</span>
                     </button>
                   )}
                 </div>
@@ -465,12 +478,12 @@ export default function EventDetailClient({
               {isEditMode ? (
                 // Formulario de edición
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {Object.entries(categoryConfig).map(([key, config]) => (
                       <div key={key}>
                         <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           {config.icon}
-                          {config.label} (%)
+                          <span className="truncate">{config.label}</span> (%)
                         </label>
                         <input
                           type="number"
@@ -485,27 +498,27 @@ export default function EventDetailClient({
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <input
                       type="checkbox"
                       id="isPublic"
                       checked={formData.isPublic}
                       onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5 flex-shrink-0"
                     />
-                    <label htmlFor="isPublic" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                      <Eye className="w-4 h-4" />
-                      Hacer mi predicción pública (visible con tu nombre en el ranking)
+                    <label htmlFor="isPublic" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Eye className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>Mostrar mi nombre y foto en el ranking (otros usuarios podrán ver tu identidad)</span>
                     </label>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="submit"
                       disabled={isSubmitting}
                       className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Actualizando...' : 'Actualizar Predicción'}
+                      {isSubmitting ? 'Actualizando...' : 'Actualizar predicción'}
                     </button>
                     <button
                       type="button"
@@ -527,7 +540,7 @@ export default function EventDetailClient({
                 </form>
               ) : (
                 // Vista de predicción (no editable)
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {Object.entries(categoryConfig).map(([key, config]) => (
                     <div
                       key={key}
@@ -535,9 +548,9 @@ export default function EventDetailClient({
                     >
                       <div className="flex items-center gap-2 mb-2">
                         {config.icon}
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{config.label}</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">{config.label}</span>
                       </div>
-                      <p className={`text-2xl font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                      <p className={`text-xl sm:text-2xl font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
                         {userPrediction[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]}%
                       </p>
                     </div>
@@ -547,7 +560,7 @@ export default function EventDetailClient({
 
               {!isEditMode && (
                 <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
                     <strong>Nota:</strong> 
                     {canEdit 
                       ? ` Podés editar tu predicción hasta el ${new Date(event.editDeadline).toLocaleDateString('es-AR')} a las ${new Date(event.editDeadline).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`
@@ -559,16 +572,16 @@ export default function EventDetailClient({
             </div>
           ) : canParticipate ? (
             // Formulario para nueva predicción
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Realizar Predicción</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-900 dark:text-white">Realizar predicción</h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6">
                   {Object.entries(categoryConfig).map(([key, config]) => (
                     <div key={key}>
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         {config.icon}
-                        {config.label} (%)
+                        <span className="truncate">{config.label}</span> (%)
                       </label>
                       <input
                         type="number"
@@ -583,28 +596,28 @@ export default function EventDetailClient({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <input
                     type="checkbox"
                     id="isPublic"
                     checked={formData.isPublic}
                     onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5 flex-shrink-0"
                   />
-                  <label htmlFor="isPublic" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Eye className="w-4 h-4" />
-                    Hacer mi predicción pública (otros usuarios podrán ver tu nombre y predicción)
+                  <label htmlFor="isPublic" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Eye className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>Mostrar mi nombre y foto en el ranking (otros usuarios podrán ver tu identidad)</span>
                   </label>
                 </div>
 
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <div className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200">
                       {event.allowPredictionEdit && event.editDeadline
                         ? `Podrás editar tu predicción hasta el ${new Date(event.editDeadline).toLocaleDateString('es-AR')} a las ${new Date(event.editDeadline).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`
                         : 'Una vez enviada, no podrás modificar tu predicción.'}
-                      {' '}Podrás cambiar la visibilidad (pública/privada) en cualquier momento.
+                      {' '}Podrás cambiar la visibilidad de tu identidad en cualquier momento.
                     </div>
                   </div>
                 </div>
@@ -612,33 +625,33 @@ export default function EventDetailClient({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-lg font-bold text-base sm:text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Enviando...' : 'Enviar Predicción'}
+                  {isSubmitting ? 'Enviando...' : 'Enviar predicción'}
                 </button>
               </form>
             </div>
           ) : !isSignedIn ? (
             // No está logueado
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-              <Trophy className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Inicia sesión para participar</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Necesitas una cuenta para participar en los eventos de predicción
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8 text-center">
+              <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 dark:text-white">Inicia sesión para participar</h2>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
+                Necesitas una cuenta para participar en los eventos de predicción.
               </p>
               <Link
                 href={`/sign-in?redirect_url=/eventos/${event.slug}`}
-                className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
+                className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 text-sm sm:text-base"
               >
                 Iniciar Sesión
               </Link>
             </div>
           ) : (
             // Evento cerrado
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
-              <Clock className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Evento Cerrado</h2>
-              <p className="text-gray-600 dark:text-gray-400">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 sm:p-8 text-center border border-gray-200 dark:border-gray-700">
+              <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 dark:text-white">Evento Cerrado</h2>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 El período de predicciones ha finalizado. Los resultados se publicarán pronto.
               </p>
             </div>
@@ -659,11 +672,6 @@ export default function EventDetailClient({
                 <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                   {statistics.totalParticipants} participantes
                 </span>
-                {statistics.publicPredictions !== undefined && (
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    ({statistics.publicPredictions} públicas)
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -693,171 +701,242 @@ export default function EventDetailClient({
           {/* Tab Content */}
           <div className="p-8">
             {activeTab === 'estadisticas' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Estadísticas existentes */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    Mediana de Predicciones
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {config.icon}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{config.label}</span>
-                        </div>
-                        <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
-                          {statistics.medianPredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]?.toFixed(2)}%
-                        </span>
+              <>
+                {statistics.totalParticipants >= 10 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Estadísticas existentes */}
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        Mediana de Predicciones
+                      </h3>
+                      <div className="space-y-3">
+                        {Object.entries(categoryConfig).map(([key, config]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {config.icon}
+                              <span className="text-sm text-gray-600 dark:text-gray-400">{config.label}</span>
+                            </div>
+                            <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                              {statistics.medianPredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]?.toFixed(2)}%
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    Media de Predicciones
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(categoryConfig).map(([key, config]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {config.icon}
-                          <span className="text-sm text-gray-600 dark:text-gray-400">{config.label}</span>
-                        </div>
-                        <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
-                          {statistics.averagePredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]?.toFixed(2)}%
-                        </span>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        Media de Predicciones
+                      </h3>
+                      <div className="space-y-3">
+                        {Object.entries(categoryConfig).map(([key, config]) => (
+                          <div key={key} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {config.icon}
+                              <span className="text-sm text-gray-600 dark:text-gray-400">{config.label}</span>
+                            </div>
+                            <span className={`font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                              {statistics.averagePredictions[`ipc${key.charAt(0).toUpperCase() + key.slice(1)}`]?.toFixed(2)}%
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-              </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      Estadísticas disponibles pronto
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Las estadísticas agregadas se mostrarán cuando haya al menos 10 participantes
+                    </p>
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        {statistics.totalParticipants} de 10 participantes
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {activeTab === 'predicciones' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 dark:text-white">
-                    Predicciones Públicas ({publicPredictions.length})
+                    Todas las Predicciones ({allPredictions.length})
                   </h3>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">#</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Participante</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                          onClick={() => handleSort('ipcGeneral')}>
-                          IPC General {sortBy === 'ipcGeneral' && (sortOrder === 'asc' ? '↑' : '↓')}
-                        </th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Bienes</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Servicios</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Alimentos</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Ediciones</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                          onClick={() => handleSort('updatedAt')}>
-                          Última Actualización {sortBy === 'updatedAt' && (sortOrder === 'asc' ? '↑' : '↓')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedPredictions?.map((pred: any, index: number) => (
-                        <tr key={pred.id} className={`border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                          pred.userId === userId ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                        }`}>
-                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                            {(currentPage - 1) * predictionsPerPage + index + 1}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              {pred.user?.imageUrl ? (
-                                <Image
-                                  src={pred.user.imageUrl} 
-                                  alt={pred.user.name || 'Usuario'}
-                                  width={32}
-                                  height={32}
-                                  className="rounded-full"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                    {pred.user?.name?.charAt(0) || '?'}
-                                  </span>
+                {allPredictions.length > 0 ? (
+                  <>
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">#</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Participante</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                              onClick={() => handleSort('ipcGeneral')}>
+                              IPC General {sortBy === 'ipcGeneral' && (sortOrder === 'asc' ? '↑' : '↓')}
+                            </th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Bienes</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Servicios</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Alimentos</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Ediciones</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                              onClick={() => handleSort('updatedAt')}>
+                              Última Actualización {sortBy === 'updatedAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedPredictions?.map((pred: any, index: number) => (
+                            <tr key={pred.id} className={`border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                              pred.userId === userId ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                            }`}>
+                              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                {(currentPage - 1) * predictionsPerPage + index + 1}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  {/* Para el usuario actual, usar información de Clerk si pred.user está vacío */}
+                                  {(() => {
+                                    const isCurrentUser = pred.userId === userId;
+                                    const shouldShowInfo = pred.isPublic || isCurrentUser;
+                                    
+                                    // Si es el usuario actual y pred.user está vacío, usar información de Clerk
+                                    const userInfo = isCurrentUser && (!pred.user?.name && !pred.user?.imageUrl) 
+                                      ? { 
+                                          name: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Usuario',
+                                          imageUrl: user?.imageUrl || null
+                                        }
+                                      : pred.user;
+                                    
+                                    if (!shouldShowInfo) {
+                                      return (
+                                        <>
+                                          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                              ?
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                              Usuario Anónimo
+                                            </p>
+                                          </div>
+                                        </>
+                                      );
+                                    }
+                                    
+                                    return (
+                                      <>
+                                        {userInfo?.imageUrl ? (
+                                          <Image
+                                            src={userInfo.imageUrl} 
+                                            alt={userInfo.name || 'Usuario'}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full"
+                                          />
+                                        ) : userInfo?.name ? (
+                                          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                              {userInfo.name.charAt(0).toUpperCase()}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                              ?
+                                            </span>
+                                          </div>
+                                        )}
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                            {userInfo?.name || 'Usuario Anónimo'}
+                                          </p>
+                                          {isCurrentUser && (
+                                            <span className="text-xs text-blue-600 dark:text-blue-400">(Tú)</span>
+                                          )}
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {pred.user?.name || 'Usuario Anónimo'}
-                                </p>
-                                {pred.userId === userId && (
-                                  <span className="text-xs text-blue-600 dark:text-blue-400">(Tú)</span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
+                                {pred.ipcGeneral}%
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
+                                {pred.ipcBienes}%
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
+                                {pred.ipcServicios}%
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
+                                {pred.ipcAlimentos}%
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center">
+                                {pred.editCount > 0 ? (
+                                  <span className="inline-flex items-center px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs rounded-full">
+                                    <Edit3 className="w-3 h-3 mr-1" />
+                                    {pred.editCount}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
                                 )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
-                            {pred.ipcGeneral}%
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
-                            {pred.ipcBienes}%
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
-                            {pred.ipcServicios}%
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center font-medium text-gray-900 dark:text-white">
-                            {pred.ipcAlimentos}%
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center">
-                            {pred.editCount > 0 ? (
-                              <span className="inline-flex items-center px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs rounded-full">
-                                <Edit3 className="w-3 h-3 mr-1" />
-                                {pred.editCount}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center text-gray-600 dark:text-gray-400">
-                            {new Date(pred.updatedAt).toLocaleDateString('es-AR')} {' '}
-                            {new Date(pred.updatedAt).toLocaleTimeString('es-AR', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-center text-gray-600 dark:text-gray-400">
+                                {new Date(pred.updatedAt).toLocaleDateString('es-AR')} {' '}
+                                {new Date(pred.updatedAt).toLocaleTimeString('es-AR', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-6">
-                    <button
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-6">
+                        <button
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
 
-                    <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-                      Página {currentPage} de {totalPages}
-                    </span>
+                        <span className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+                          Página {currentPage} de {totalPages}
+                        </span>
 
-                    <button
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
+                        <button
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          disabled={currentPage === totalPages}
+                          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <EyeOff className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                    <p className="text-lg font-medium">No hay predicciones aún</p>
+                    <p className="text-sm mt-2">Sé el primero en participar</p>
                   </div>
                 )}
               </div>
