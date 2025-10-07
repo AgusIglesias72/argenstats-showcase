@@ -10,6 +10,7 @@ import {
   CheckCircle, Sparkles, ArrowRight, Award, ChevronRight, BarChart3,
   Package, Wrench, Utensils, Edit3, Eye, AlertCircle
 } from 'lucide-react';
+import TimeRemaining from '@/components/events/TimeRemaining';
 
 export const metadata: Metadata = {
   title: 'Eventos de Predicción | ArgenStats',
@@ -57,20 +58,6 @@ function formatDate(date: Date) {
   }).format(new Date(date));
 }
 
-function getTimeRemaining(deadline: Date) {
-  const now = new Date();
-  const diff = new Date(deadline).getTime() - now.getTime();
-  
-  if (diff <= 0) return 'Finalizado';
-  
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-}
 
 // Configuración de iconos para categorías IPC
 const categoryConfig = {
@@ -297,18 +284,15 @@ function EventCard({ event }: { event: any }) {
                 <span className="text-xs font-medium">Participantes</span>
               </div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {event.participantsCount || 0}
+                {event.statistics?.totalParticipants || 0}
               </p>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
-                <Clock className="w-4 h-4" />
-                <span className="text-xs font-medium">Tiempo</span>
-              </div>
-              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
-                {getTimeRemaining(event.submissionDeadline)}
-              </p>
+              <TimeRemaining 
+                deadline={event.submissionDeadline}
+                className="mb-1"
+              />
             </div>
           </div>
 

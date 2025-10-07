@@ -158,7 +158,7 @@ function IPCEventPage({ event, user, statistics }: any) {
                       <span className="text-xs font-medium text-purple-700 dark:text-purple-400">PARTICIPANTES</span>
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {event.participantsCount || 0}
+                      {statistics?.totalParticipants || 0}
                     </p>
                   </div>
                   <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -279,7 +279,7 @@ function DollarEventPage({ event, statistics }: any) {
                       <span className="text-xs font-medium text-purple-700 dark:text-purple-400">PARTICIPANTES</span>
                     </div>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {event.participantsCount || 0}
+                      {statistics?.totalParticipants || 0}
                     </p>
                     {statistics?.publicPredictions > 0 && (
                       <p className="text-xs text-purple-600 dark:text-purple-400">
