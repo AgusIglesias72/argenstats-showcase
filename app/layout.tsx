@@ -43,6 +43,9 @@ export default function RootLayout({
             {children}
           </Providers>
           <ClarityScript />
+
+
+          
           <GoogleAnalytics gaId="G-WFK681BVSD" />
           <Analytics />
         </body>
