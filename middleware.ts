@@ -33,10 +33,13 @@ const isAdminRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   // Las rutas internas de API requieren API key, no auth de Clerk
   if (isInternalApiRoute(req)) {
+    /*
     const apiKey = req.headers.get('x-api-key')
     if (apiKey !== process.env.ADMIN_API_KEY) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    return
+    */
     return
   }
 
