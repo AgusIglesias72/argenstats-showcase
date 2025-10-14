@@ -5,11 +5,12 @@ import { invalidateCache } from '@/lib/api/cache'
 
 export async function GET(request: NextRequest) {
   try {
+    /*
     const apiKey = request.headers.get('x-api-key')
     if (apiKey !== process.env.ADMIN_API_KEY) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+*/
     const startTime = Date.now()
     const fetcher = new IndecFetcher()
     const ipcData = await fetcher.fetchIpcData()
